@@ -7,7 +7,7 @@ RL78 sources
 
 > これは RL78 と、そのコンパイラである rl78-elf-gcc,g++ によるプログラムです。
 >
-> 現在は、主に「R5F100L」(G11、G13)に対応した、ヘッダー、関連ライブラリーなどです。
+> 現在は、主に「R5F100L」(G13 グループ) に対応した、ヘッダー、関連ライブラリーなどです。
 >
 > ※R5F100LGAFB、R5F100LEAFB
 >
@@ -59,8 +59,8 @@ RL78 sources
    cd
    tar xfvz binutils-2.25.1.tar.gz
    cd binutils-2.25.1
-   mkdir m32c_build
-   cd m32c_build
+   mkdir rl78_build
+   cd rl78_build
    ../configure --target=rl78c-elf --prefix=/usr/local/rl78-elf --disable-nls
    make
    make install
@@ -126,7 +126,7 @@ RL78 sources
     make
 ```
 
- - プログラムの書き込み（r8c_prog が必要）
+ - プログラムの書き込み（rl78_prog が必要）
 ``` sh
     make run
 ```
