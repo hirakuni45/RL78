@@ -61,7 +61,7 @@ RL78 sources
    cd binutils-2.25.1
    mkdir rl78_build
    cd rl78_build
-   ../configure --target=rl78c-elf --prefix=/usr/local/rl78-elf --disable-nls
+   ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf --disable-nls
    make
    make install
 ```
