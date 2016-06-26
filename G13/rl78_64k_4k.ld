@@ -127,7 +127,11 @@ SECTIONS
     *(.stack)
   }
 
+/*
   .rodata (MAX(__romdatastart + __romdatacopysize, 0x2000)) : {
+
+*/
+	.rodata (MAX(__romdatastart + __romdatacopysize, 0x0000)) : {
     . = ALIGN(2);
     *(.plt)
     *(.rodata C C_2 C_1 .rodata.* .gnu.linkonce.r.*)
