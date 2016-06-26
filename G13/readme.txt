@@ -1,0 +1,17 @@
+
+
+
+現在サポートしている RL78/G13 デバイスの型番と、基本的な仕様
+
+
+ベクターテーブル領域： 128 (0x00000 - 0x0007F)
+※２バイト（６４Ｋ以内）
+
+
+型番: Program Flash / RAM / Data Flash
+
+R5F100LCAFB:   32K (0x00000 - 0x03FFF) /  2K (0xFF700 - 0xFFEFF) / 4K (0xF1000 - 0xF1FFF)
+R5F100LEAFB:   64K (0x00000 - 0x0FFFF) /  4K (0xFEF00 - 0xFFEFF) / 4K (0xF1000 - 0xF1FFF)
+R5F100LGAFB:  128K (0x00000 - 0x1FFFF) / 12K (0xFCF00 - 0xFFEFF) / 8K (0xF1000 - 0xF2FFF)
+R5F100LJAFB:  256K (0x00000 - 0x3FFFF) / 20K (0xFAF00 - 0xFFEFF) / 8K (0xF1000 - 0xF2FFF)
+
