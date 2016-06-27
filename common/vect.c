@@ -5,7 +5,7 @@
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
-/// #include "vect.h"
+#include "common/vect.h"
 
 extern void start(void);
 
@@ -28,6 +28,7 @@ INTERRUPT_FUNC void undef_inst_(void)
 INTERRUPT_FUNC void brk_inst_(void)
 {
 }
+#endif
 
 
 //-----------------------------------------------------------------//
@@ -47,9 +48,7 @@ INTERRUPT_FUNC void null_task_(void)
 //-----------------------------------------------------------------//
 void di(void)
 {
-	asm("fclr i");
-	asm("nop");
-	asm("nop");
+	asm("di");
 }
 
 
@@ -60,12 +59,15 @@ void di(void)
 //-----------------------------------------------------------------//
 void ei(void)
 {
-	asm("fset i");
-	asm("nop");
-	asm("nop");
+	asm("ei");
 }
-#endif
 
+
+//-----------------------------------------------------------------//
+/*!
+	@brief  リセットベクター設定
+*/
+//-----------------------------------------------------------------//
 const void* vec_[] __attribute__ ((section (".vec"))) = {
 	start,
 };
