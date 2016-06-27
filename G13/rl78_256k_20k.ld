@@ -52,15 +52,15 @@ SECTIONS
 {
   .vec :
   {
-    *(.vec)
+    KEEP(*(.vec))
   } > VEC
   .ivec :
   {
-    *(.ivec)
+    KEEP(*(.ivec))
   } > IVEC
   .opt :
   {
-    *(.opt)
+    KEEP(*(.opt))
   } > OPT
 
   /* CubeSuite always starts at 0xd8.  */
