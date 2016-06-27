@@ -11,6 +11,7 @@ _start:
 
 	;; we're copying from 00:[_romdatastart] to 0F:[_datastart]
 	;; and our data is not in the mirrored area.
+
 	mov		es, #0
 
 	sel		rb0		; bank 0
