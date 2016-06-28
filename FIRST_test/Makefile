@@ -5,6 +5,8 @@
 #=======================================================#
 TARGET		=	first_test
 
+DEVICE		=	R5F100LGAFB
+
 BUILD		=	release
 
 VPATH		=	../
@@ -16,12 +18,11 @@ CSOURCES	=	common/init.c \
 
 PSOURCES	=	main.cpp
 
-
 USER_LIBS	=	stdc++
 
-LDSCRIPT	=	../G13/rl78_128k_12k.ld
+LDSCRIPT	=	../G13/$(DEVICE).ld
 
-USER_DEFS	=	F_CLK=32000000
+USER_DEFS	=	F_CLK=32000000 DEVICE_SIG=$(DEVICE)
 
 MCU_TARGET	=	-mmul=g13
 
