@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
 	bool f = false;
 	while(1) {
-		for(long i = 0; i < 100000; ++i) {
+		for(uint32_t i = 0; i < 100000; ++i) {
 			wait_();
 		}
 		device::P4.B3 = f;
