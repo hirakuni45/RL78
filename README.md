@@ -120,7 +120,16 @@ RL78 sources
 ```
 
  - 以下は、まだ未完、実装中です・・・・・
+ - RL78 フラッシュプログラマーの構築
+ - rl78prog のビルドには「boost_1_60_0」が必要です。
+ - boost はヘッダーのみ利用なので、ビルドの必要はありません、boost_1_60_0.zip を展開するだけです。
+``` cd /usr/local
+    unzip boost_1_60_0.zip
+```
+
  - rl78prog のビルド（MSYS2）
+ - ビルドした実行ファイルは、~/bin に配置します。
+
 ``` sh
     cd rl78prog
     make
