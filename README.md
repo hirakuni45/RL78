@@ -70,6 +70,7 @@ RL78 sources
 ```
 
  -  /usr/local/rl78-elf/bin へパスを通す（.bash_profile を編集して、パスを追加）
+
 ```PATH=$PATH:/usr/local/rl78-elf/bin
 ```
 
