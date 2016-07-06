@@ -119,6 +119,7 @@ RL78 sources
     make install
 ```
 
+ - 以下は、まだ未完、実装中です・・・・・
  - rl78prog のビルド（MSYS2）
 ``` sh
     cd rl78prog
