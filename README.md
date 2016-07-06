@@ -21,9 +21,7 @@ RL78 sources
 ## RL78 プロジェクト・リスト
 
  - /rl78prog        --->   RL78 フラッシュへのプログラム書き込みツール（Windows、OS-X、※Linux 対応）
-
  - /RL78            --->   デバイス、Ｉ／Ｏポート定義
-
  - /common          --->   RL78 共有クラス、小規模なクラスライブラリーなど
 
 ## RL78 開発環境
@@ -45,9 +43,11 @@ RL78 sources
  - アップデートは、通常複数回行われ、その際、コンソールの指示に従う事。
  - ※複数回、コンソールを開きなおす必要がある。
 
-コンパイラのビルド方法：（MSYS2）
+---
 
- - gcc、texinfo、gmp、mpfr、mpc、diffutils コマンドなどをインストール
+### RL78-elf-gcc コンパイラのビルド方法：（MSYS2）
+
+ - gcc、texinfo、gmp、mpfr、mpc、diffutils、automake、tar、make、unzip コマンドなどをインストール
 ```sh
    pacman -S gcc
    pacman -S texinfo
@@ -56,9 +56,10 @@ RL78 sources
    pacman -S automake
    pacman -S tar
    pacman -S make
+   pacman -S unzip
 ```
 
- - binutils-2.25.1 をビルド
+#### binutils-2.25.1 をビルド
 ```sh
    cd
    tar xfvz binutils-2.25.1.tar.gz
@@ -83,7 +84,8 @@ RL78 sources
 ```
 
  -  アセンブラコマンドを実行してみて、パスが有効か確かめる。
- -  C コンパイラをビルド
+  
+#### C コンパイラをビルド
  -  gcc-4.9.3では、MSYS2 環境を認識しない為、automake の設定をコピーする
 ``` sh
     cd
@@ -96,8 +98,8 @@ RL78 sources
     make
     make install
 ```
-
- -  newlib をビルド
+  
+#### newlib をビルド
 ``` sh
     cd
     tar xfvz newlib-2.2.0.tar.gz
@@ -108,8 +110,8 @@ RL78 sources
 	make
     make install
 ```
-
- -  C++ コンパイラをビルド
+  
+#### C++ コンパイラをビルド
 ``` sh
     cd
     cd gcc-4.9.3
@@ -118,12 +120,14 @@ RL78 sources
     make
     make install
 ```
-
+  
+## RL78 フラッシュプログラマーの構築
  - 以下は、まだ未完、実装中です・・・・・
- - RL78 フラッシュプログラマーの構築
  - rl78prog のビルドには「boost_1_60_0」が必要です。
  - boost はヘッダーのみ利用なので、ビルドの必要はありません、boost_1_60_0.zip を展開するだけです。
-``` cd /usr/local
+
+``` 
+    cd /usr/local
     unzip boost_1_60_0.zip
 ```
 
