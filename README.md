@@ -42,6 +42,7 @@ RL78 sources
 ```sh
    pacman -Su
 ```
+ - アップデートは、通常複数回行われ、その際、コンソールの指示に従う事。
 
 コンパイラのビルド方法：（MSYS2）
 
@@ -52,6 +53,7 @@ RL78 sources
    pacman -S mpc-devel
    pacman -S diffutils
    pacman -S automake
+   pacman -S tar
 ```
 
  - binutils-2.25.1 をビルド
