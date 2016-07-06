@@ -1,0 +1,8 @@
+*~
+*.[aod]
+*.map
+*.lst
+*.elf
+*.mot
+*.exe
+release/
