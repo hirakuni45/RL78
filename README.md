@@ -54,6 +54,7 @@ RL78 sources
    pacman -S diffutils
    pacman -S automake
    pacman -S tar
+   pacman -S make
 ```
 
  - binutils-2.25.1 をビルド
