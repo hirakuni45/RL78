@@ -69,7 +69,10 @@ RL78 sources
    make install
 ```
 
- -  /usr/local/rl78-elf/bin へパスを通す
+ -  /usr/local/rl78-elf/bin へパスを通す（.bash_profile を編集して、パスを追加）
+```PATH=$PATH:/usr/local/rl78-elf/bin
+```
+
  -  コンソールを開きなおす。
  -  C コンパイラをビルド
  -  ※少し古い gcc では、MSYS2 環境を認識しない為、automake の設定をコピーする
