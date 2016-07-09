@@ -121,12 +121,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  8 bits アクセス・テンプレート(RO)
+		@brief  8 bits アクセス・テンプレート(Read Only)
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct io8_ro {
+	struct i8 {
 		typedef uint8_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -143,12 +143,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  8 bits アクセス・テンプレート(WO)
+		@brief  8 bits アクセス・テンプレート(Write Only)
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct io8_wo {
+	struct o8 {
 		typedef uint8_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -199,12 +199,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  16 bits アクセス・テンプレート(RO)
+		@brief  16 bits アクセス・テンプレート(Read Only)
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct io16_ro {
+	struct i16 {
 		typedef uint16_t value_type;
 
 
@@ -222,12 +222,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  16 bits アクセス・テンプレート(WO)
+		@brief  16 bits アクセス・テンプレート(Write Only)
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct io16_wo {
+	struct o16 {
 		typedef uint16_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -394,6 +394,23 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
+		@brief  １ビット・アクセス・テンプレート(WO)
+		@param[in]	T	アクセス・クラス
+		@param[in]	pos	ビット位置
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T, uint8_t pos>
+	struct bit_wo_t {
+		static void set(bool v) {
+			T::write((T::read() & ~(1 << pos)) | (v << pos));
+		}
+
+		void operator = (bool v) const { set(v); }
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
 		@brief  ビット・アクセス・テンプレート(RO)
 		@param[in]	T	アクセス・クラス
 		@param[in]	pos	初期位置
@@ -407,4 +424,24 @@ namespace device {
 		}
 		typename T::value_type operator () () const { return get(); }
 	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  ビット・アクセス・テンプレート(WO)
+		@param[in]	T	アクセス・クラス
+		@param[in]	pos	初期位置
+		@param[in]	len	ビット幅
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T, uint8_t pos, uint8_t len, typename R = typename T::value_type>
+	struct bits_wo_t {
+		static void set(R v) {
+			typename T::value_type m = ((1 << static_cast<typename T::value_type>(len)) - 1) << pos;
+			T::write((T::read() & ~m) | (static_cast<typename T::value_type>(v) << pos));
+		}
+
+		void operator = (R v) const { set(v); }
+	};
+
 }
