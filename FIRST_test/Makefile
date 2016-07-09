@@ -162,5 +162,3 @@ verify:
 	r78prog -P COM11 -v $(TARGET).mot
 
 -include $(DEPENDS)
-
-
