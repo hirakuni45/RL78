@@ -50,16 +50,22 @@ RL78 sources
 
 ### RL78-elf-gcc コンパイラのビルド方法：（MSYS2）
 
- - gcc、texinfo、gmp、mpfr、mpc、diffutils、automake、tar、make、unzip コマンドなどをインストール
+ - gcc、texinfo、gmp、mpfr、mpc、diffutils、automake、zlib tar、make、unzip コマンドなどをインストール
 ```sh
    pacman -S gcc
    pacman -S texinfo
    pacman -S mpc-devel
    pacman -S diffutils
    pacman -S automake
+   pacman -S zlib
    pacman -S tar
    pacman -S make
    pacman -S unzip
+```
+  
+ - git コマンドをインストール
+```sh
+   pacman -S git
 ```
 
 #### binutils-2.25.1 をビルド
