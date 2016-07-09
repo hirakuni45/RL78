@@ -87,12 +87,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  8 bits アクセス・テンプレート
+		@brief  Read/Write 8 bits アクセス・テンプレート
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <address_type adr, uint8_t with_data = 0>
-	struct io8 {
+	template <address_type adr>
+	struct rw8_t {
 		typedef uint8_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -101,7 +101,7 @@ namespace device {
 			@param[in]	data	書き込み値
 		*/
 		//-----------------------------------------------------------------//
-		static void write(uint8_t data) { wr8_(adr, data | with_data); }
+		static void write(uint8_t data) { wr8_(adr, data); }
 
 
 		//-----------------------------------------------------------------//
@@ -121,12 +121,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  8 bits アクセス・テンプレート(Read Only)
+		@brief  Read Only 8 bits アクセス・テンプレート
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct i8 {
+	struct ro8_t {
 		typedef uint8_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -143,12 +143,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  8 bits アクセス・テンプレート(Write Only)
+		@brief  Write Only 8 bits アクセス・テンプレート
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct o8 {
+	struct wo8_t {
 		typedef uint8_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -165,12 +165,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  16 bits アクセス・テンプレート
+		@brief  Read/Write 16 bits アクセス・テンプレート
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct io16 {
+	struct rw16_t {
 		typedef uint16_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -199,14 +199,13 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  16 bits アクセス・テンプレート(Read Only)
+		@brief  Read Only 16 bits アクセス・テンプレート
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct i16 {
+	struct ro16_t {
 		typedef uint16_t value_type;
-
 
 		//-----------------------------------------------------------------//
 		/*!
@@ -222,12 +221,12 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  16 bits アクセス・テンプレート(Write Only)
+		@brief  Write Only 16 bits アクセス・テンプレート
 		@param[in]	adr	アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <address_type adr>
-	struct o16 {
+	struct wo16_t {
 		typedef uint16_t value_type;
 
 		//-----------------------------------------------------------------//
@@ -244,106 +243,25 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  32 bits アクセス・テンプレート
-		@param[in]	adr	アドレス
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <address_type adr>
-	struct io32 {
-		typedef uint32_t	value_type;
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  書き込み
-			@param[in]	data	書き込み値
-		*/
-		//-----------------------------------------------------------------//
-		static void write(uint32_t data) { wr32_(adr, data); }
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  書き込み
-			@param[in]	data	書き込み値
-		*/
-		//-----------------------------------------------------------------//
-		static uint32_t read() { return rd32_(adr); }
-
-		void operator = (value_type data) const { write(data); }
-		value_type operator () () const { return read(); }
-		void operator |= (value_type data) const { write(read() | data); }
-		void operator &= (value_type data) const { write(read() & data); }
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
-		@brief  １ビット・アクセス・テンプレート(R/W direct)
-		@param[in]	T	アクセス・クラス
-		@param[in]	pos	ビット位置
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos>
-	struct bit {
-		static bool get() {
-			return (T::read() & (1 << pos)) != 0;
-		}
-		static void set(bool v) {
-			T::write(v << pos);
-		}
-
-	    typename T::value_type b(bool f = true) const {
-			return f << pos;
-		}
-
-		void operator = (bool v) const { set(v); }
-		bool operator () () const { return get(); }
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
-		@brief  １ビット・アクセス・テンプレート(R/W)
-		@param[in]	T	アクセス・クラス
-		@param[in]	pos	ビット位置
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos>
-	struct bit_t {
-		static bool get() {
-			return (T::read() & (1 << pos)) != 0;
-		}
-		static void set(bool v) {
-			T::write((T::read() & ~(1 << pos)) | (v << pos));
-		}
-
-	    typename T::value_type b(bool v = true) const {
-			return v << pos;
-		}
-
-		void operator = (bool v) const { set(v); }
-		bool operator () () const { return get(); }
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
-		@brief  ビット・アクセス・テンプレート(R/W direct)
+		@brief  Read/Write ビット・アクセス・テンプレート
 		@param[in]	T	アクセス・クラス
 		@param[in]	pos	初期位置
 		@param[in]	len	ビット幅
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos, uint8_t len>
-	struct bits {
+	template <class T, uint8_t pos, uint8_t len = 1>
+	struct bit_rw_t {
 		static typename T::value_type get() {
-			return (T::read() >> pos) & ((1 << len) - 1);
+			return (typename T::read() >> pos) & ((1 << len) - 1);
 		}
 		static void set(typename T::value_type v) {
-			T::write(v << pos);
+			auto m = static_cast<typename T::value_type>(((1 << len) - 1) << pos);
+			T::write((T::read() & ~m) | (static_cast<typename T::value_type>(v) << pos));
 		}
 
-	    typename T::value_type b(typename T::value_type v) const { return v << pos; }
+	    typename T::value_type b(typename T::value_type v) const {
+			return (((1 << len) - 1) & v) << pos;
+		}
 
 		void operator = (typename T::value_type v) const { set(v); }
 		typename T::value_type operator () () const { return get(); }
@@ -352,96 +270,23 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  ビット・アクセス・テンプレート(R/W)
+		@brief  Read ビット・アクセス・テンプレート
 		@param[in]	T	アクセス・クラス
 		@param[in]	pos	初期位置
 		@param[in]	len	ビット幅
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos, uint8_t len, typename R = typename T::value_type>
-	struct bits_t {
-		static R get() {
-			return static_cast<R>(T::read() >> pos) & ((1 << len) - 1);
-		}
-		static void set(R v) {
-			typename T::value_type m = ((1 << static_cast<typename T::value_type>(len)) - 1) << pos;
-			T::write((T::read() & ~m) | (static_cast<typename T::value_type>(v) << pos));
-		}
-
-	    R b(R v) const { return v << pos; }
-
-		void operator = (R v) const { set(v); }
-		R operator () () const { return get(); }
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
-		@brief  １ビット・アクセス・テンプレート(RO)
-		@param[in]	T	アクセス・クラス
-		@param[in]	pos	ビット位置
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos>
+	template <class T, uint8_t pos, uint8_t len = 1>
 	struct bit_ro_t {
-		static bool get() {
-			return T::read() & (1 << pos);
-		}
-
-		bool operator () () const { return get(); }
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
-		@brief  １ビット・アクセス・テンプレート(WO)
-		@param[in]	T	アクセス・クラス
-		@param[in]	pos	ビット位置
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos>
-	struct bit_wo_t {
-		static void set(bool v) {
-			T::write((T::read() & ~(1 << pos)) | (v << pos));
-		}
-
-		void operator = (bool v) const { set(v); }
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
-		@brief  ビット・アクセス・テンプレート(RO)
-		@param[in]	T	アクセス・クラス
-		@param[in]	pos	初期位置
-		@param[in]	len	ビット幅
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos, uint8_t len>
-	struct bits_ro_t {
 		static typename T::value_type get() {
-			return (T::read() >> pos) & ((1 << len) - 1);
+			return (typename T::read() >> pos) & ((1 << len) - 1);
 		}
+
+	    typename T::value_type b(typename T::value_type v) const {
+			return (((1 << len) - 1) & v) << pos;
+		}
+
 		typename T::value_type operator () () const { return get(); }
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
-		@brief  ビット・アクセス・テンプレート(WO)
-		@param[in]	T	アクセス・クラス
-		@param[in]	pos	初期位置
-		@param[in]	len	ビット幅
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos, uint8_t len, typename R = typename T::value_type>
-	struct bits_wo_t {
-		static void set(R v) {
-			typename T::value_type m = ((1 << static_cast<typename T::value_type>(len)) - 1) << pos;
-			T::write((T::read() & ~m) | (static_cast<typename T::value_type>(v) << pos));
-		}
-
-		void operator = (R v) const { set(v); }
 	};
 
 }
