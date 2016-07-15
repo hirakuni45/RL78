@@ -135,7 +135,8 @@ RL78 sources
    
 ## RL78 プロジェクトのソースコードを取得
 
-```git clone git@github.com:hirakuni45/RL78.git
+```
+   git clone git@github.com:hirakuni45/RL78.git
 ```
    
 --- 
