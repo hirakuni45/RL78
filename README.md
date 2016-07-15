@@ -31,24 +31,25 @@ RL78 sources
 
  - RL78 用コンパイラ（rl78-elf）は gcc-4.9.3 を使っています。 
  - Windows では、事前に MSYS2 環境をインストールしておきます。
+ - MSYS2 には、msys2、mingw32、mingw64 と３つの異なった環境がありますが、msys2 で行います。 
 
- - msys のアップグレード
+ - msys2 のアップグレード
 
 ```sh
    update-core
 ```
 
- - コンソールを開きなおす
+ - コンソールを開きなおす。（コンソールを開きなおすように、メッセージが表示されるはずです）
 
 ```sh
    pacman -Su
 ```
- - アップデートは、通常複数回行われ、その際、コンソールの指示に従う事。
+ - アップデートは、複数回行われ、その際、コンソールの指示に従う事。
  - ※複数回、コンソールを開きなおす必要がある。
 
 ---
 
-### RL78-elf-gcc コンパイラのビルド方法：（MSYS2）
+### RL78-elf-gcc コンパイラのビルド方法：（msys2）
 
  - gcc、texinfo、gmp、mpfr、mpc、diffutils、automake、zlib tar、make、unzip コマンドなどをインストール
 ```sh
@@ -129,7 +130,16 @@ RL78 sources
     make
     make install
 ```
+   
 ---
+   
+## RL78 プロジェクトのソースコードを取得
+
+```git clone git@github.com:hirakuni45/RL78.git
+```
+   
+--- 
+   
 ## RL78 フラッシュプログラマーの構築
 
  - 以下は、まだ未完、実装中です・・・・・
