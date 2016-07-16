@@ -2,11 +2,11 @@
 //=====================================================================//
 /*! @file
     @brief  簡易 format クラス @n
-			Copyright 2013,2015 Kunihito Hiramatsu
+			Copyright 2013,2016 Kunihito Hiramatsu
     @author 平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
-#include <unistd.h>
+#include <cstdint>
 
 /// ８進数のサポート
 /// #define WITH_OCTAL_FORMAT
