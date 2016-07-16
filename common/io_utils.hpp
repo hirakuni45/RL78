@@ -246,11 +246,40 @@ namespace device {
 		@brief  Read/Write ビット・アクセス・テンプレート
 		@param[in]	T	アクセス・クラス
 		@param[in]	pos	初期位置
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T, uint8_t pos>
+	struct bit_rw_t {
+		static bool get() {
+			return (typename T::read() >> pos) & 1;
+		}
+		static void set(bool v) {
+			if(v) {
+				T::write(T::read() | (static_cast<typename T::value_type>(v) << pos));
+			} else {
+				T::write(T::read() & ~(static_cast<typename T::value_type>(1) << pos));
+			}
+		}
+
+	    typename T::value_type b(bool v) const {
+			return v << pos;
+		}
+
+		void operator = (bool v) const { set(v); }
+		bool operator () () const { return get(); }
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  Read/Write ビット・アクセス・テンプレート
+		@param[in]	T	アクセス・クラス
+		@param[in]	pos	初期位置
 		@param[in]	len	ビット幅
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos, uint8_t len = 1>
-	struct bit_rw_t {
+	template <class T, uint8_t pos, uint8_t len>
+	struct bits_rw_t {
 		static typename T::value_type get() {
 			return (typename T::read() >> pos) & ((1 << len) - 1);
 		}
@@ -276,14 +305,14 @@ namespace device {
 		@param[in]	len	ビット幅
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class T, uint8_t pos, uint8_t len = 1>
+	template <class T, uint8_t pos>
 	struct bit_ro_t {
 		static typename T::value_type get() {
-			return (typename T::read() >> pos) & ((1 << len) - 1);
+			return (typename T::read() >> pos) & 1;
 		}
 
 	    typename T::value_type b(typename T::value_type v) const {
-			return (((1 << len) - 1) & v) << pos;
+			return 1 << pos;
 		}
 
 		typename T::value_type operator () () const { return get(); }
