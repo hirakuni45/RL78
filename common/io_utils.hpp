@@ -292,25 +292,25 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  標準 Read/Write 8 ビットアクセス・テンプレート
-		@param[in]	address	アドレス
+		@brief  標準 Read/Write アクセス・テンプレート
+		@param[in]	T	アクセステンプレート
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint32_t address>
-	struct basic_rw8_t : public rw8_t<address> {
-		typedef rw8_t<address> public_type;
-		using public_type::operator =;
-		using public_type::operator ();
-		using public_type::operator |=;
-		using public_type::operator &=;
+	template <class T>
+	struct basic_rw_t : public T {
 
-		bit_rw_t<public_type, 7> B7;	///< B7 アクセス
-		bit_rw_t<public_type, 6> B6;	///< B6 アクセス
-		bit_rw_t<public_type, 5> B5;	///< B5 アクセス
-		bit_rw_t<public_type, 4> B4;	///< B4 アクセス
-		bit_rw_t<public_type, 3> B3;	///< B3 アクセス
-		bit_rw_t<public_type, 2> B2;	///< B2 アクセス
-		bit_rw_t<public_type, 1> B1;	///< B1 アクセス
-		bit_rw_t<public_type, 0> B0;	///< B0 アクセス
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, 7> B7;	///< B7 アクセス
+		bit_rw_t<T, 6> B6;	///< B6 アクセス
+		bit_rw_t<T, 5> B5;	///< B5 アクセス
+		bit_rw_t<T, 4> B4;	///< B4 アクセス
+		bit_rw_t<T, 3> B3;	///< B3 アクセス
+		bit_rw_t<T, 2> B2;	///< B2 アクセス
+		bit_rw_t<T, 1> B1;	///< B1 アクセス
+		bit_rw_t<T, 0> B0;	///< B0 アクセス
 	};
 }
