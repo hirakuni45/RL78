@@ -101,7 +101,7 @@ namespace device {
 			@param[in]	data	書き込み値
 		*/
 		//-----------------------------------------------------------------//
-		static void write(uint8_t data) { wr8_(adr, data); }
+		static void write(value_type data) { wr8_(adr, data); }
 
 
 		//-----------------------------------------------------------------//
@@ -110,7 +110,7 @@ namespace device {
 			@return 読み出し値
 		*/
 		//-----------------------------------------------------------------//
-		static uint8_t read() { return rd8_(adr); }
+		static value_type read() { return rd8_(adr); }
 
 		void operator = (value_type data) const { write(data); }
 		value_type operator () () const { return read(); }
@@ -135,7 +135,7 @@ namespace device {
 			@return 読み出し値
 		*/
 		//-----------------------------------------------------------------//
-		static uint8_t read() { return rd8_(adr); }
+		static value_type read() { return rd8_(adr); }
 
 		value_type operator () () const { return read(); }
 	};
@@ -307,15 +307,15 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class T, uint8_t pos>
 	struct bit_ro_t {
-		static typename T::value_type get() {
-			return (typename T::read() >> pos) & 1;
+		static bool get() {
+			return (T::read() >> pos) & 1;
 		}
 
 	    typename T::value_type b(typename T::value_type v) const {
 			return 1 << pos;
 		}
 
-		typename T::value_type operator () () const { return get(); }
+		bool operator () () const { return get(); }
 	};
 
 
