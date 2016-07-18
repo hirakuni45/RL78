@@ -44,7 +44,7 @@ MEMORY {
 	IVEC (r)  : ORIGIN = 0x00004, LENGTH = 0x0007c
 	OPT (r)   : ORIGIN = 0x000c0, LENGTH = 0x00004
 	ROM (r)   : ORIGIN = 0x000d8, LENGTH = 0x1ff28
-	RAM (w)   : ORIGIN = 0xfcf00, LENGTH = 0x01fe0
+	RAM (w)   : ORIGIN = 0xfcf00, LENGTH = 0x02fe0
 	STACK (w) : ORIGIN = 0xffee0, LENGTH = 0x00002
 }
 
@@ -127,10 +127,7 @@ SECTIONS
     *(.stack)
   }
 
-/*
-  .rodata (MAX(__romdatastart + __romdatacopysize, 0x2000)) : {
-*/
-  .rodata (MAX(__romdatastart + __romdatacopysize, 0x0000)) : {
+  .rodata (MAX(__romdatastart + __romdatacopysize, 0x3000)) : {
     . = ALIGN(2);
     *(.plt)
     *(.rodata C C_2 C_1 .rodata.* .gnu.linkonce.r.*)
