@@ -5,15 +5,12 @@
 */
 //=====================================================================//
 #include <cstdint>
-#include <functional>
 #include "G13/system.hpp"
 #include "G13/port.hpp"
 #include "common/uart_io.hpp"
 #include "common/format.hpp"
 
 namespace {
-	char data_[16];
-
 	void wait_()
 	{
 		asm("nop");
@@ -42,21 +39,20 @@ int main(int argc, char* argv[])
 	bool polling = true;
 	uart_io_.start(115200, polling);
 
-	uart_io_.puts("Start RL78/G13 uart\n");
+	uart_io_.puts("Start RL78/G13 uart test...\n");
 
 	bool f = false;
 ///	uint32_t n = 0;
 	while(1) {
-		for(uint32_t i = 0; i < 10000; ++i) {
-			if(uart_io_.recv_length()) {
-				auto ch = uart_io_.getch();
-				uart_io_.putch(ch);
-			}
+		if(uart_io_.recv_length()) {
+			auto ch = uart_io_.getch();
+			uart_io_.putch(ch);
+
+			device::P4.B3 = f;
+			f = !f;
 		}
 
 ///		utils::format("%d\n") % n;
 ///		++n;
-		device::P4.B3 = f;
-		f = !f;
 	}
 }
