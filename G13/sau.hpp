@@ -1,7 +1,7 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ・シリアル・アレイ・ユニット・レジスター定義 @n
+	@brief	RL78/G13 グループ・シリアル・アレイ・ユニット定義 @n
 			Copyright 2016 Kunihito Hiramatsu
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
