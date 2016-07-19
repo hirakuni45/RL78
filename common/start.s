@@ -1,5 +1,5 @@
 
-	.text
+	.section	.lowtext
 
 	.global _start
 	.type	_start, @function
