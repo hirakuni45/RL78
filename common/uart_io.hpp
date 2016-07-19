@@ -101,10 +101,22 @@ namespace device {
 			tx_.SO  = 1;	// シリアル出力設定
 			tx_.SOE = 1;	// シリアル出力許可(Txd)
 
-			PM1.B1 = 1;	/// P1-1 input  (RxD)
-			PM1.B2 = 0;	/// P1-2 output (TxD)
-
-			P1.B2  = 1;	/// ポートレジスター (TxD)
+			if(tx_.get_unit_no() == 0) {
+				if(tx_.get_chanel_no() == 0) {  // UART0
+					PM1.B1 = 1;	// P1-1 input  (RxD0)
+					PM1.B2 = 0;	// P1-2 output (TxD0)
+					P1.B2  = 1;	// ポートレジスター RxD 切り替え
+				} else if(tx_.get_chanel_no() == 2) {  // UART1
+					PM1.B4 = 1;	// P1-1 input  (RxD0)
+					PM1.B3 = 0;	// P1-2 output (TxD0)
+					P1.B3  = 1;	// ポートレジスター RxD 切り替え
+				}
+			} else {  // UART2
+				PM0.B3 = 1;	// P1-1 input  (RxD2)
+				PM0.B2 = 0;	// P1-2 output (TxD2)
+				PMC0.B2 = 0;  // ポートモードコントロール
+				P0.B2  = 1;	// ポートレジスター RxD 切り替え
+			}
 
 			tx_.SS = 1;	/// TxD enable
 			rx_.SS = 1;	/// RxD enable
