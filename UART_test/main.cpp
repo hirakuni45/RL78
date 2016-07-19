@@ -44,14 +44,15 @@ int main(int argc, char* argv[])
 	bool f = false;
 ///	uint32_t n = 0;
 	while(1) {
-		if(uart_io_.recv_length()) {
-			auto ch = uart_io_.getch();
-			uart_io_.putch(ch);
-
-			device::P4.B3 = f;
-			f = !f;
+		for(uint32_t i = 0; i < 100000; ++i) {
+			if(uart_io_.recv_length()) {
+				auto ch = uart_io_.getch();
+				if(ch == '\r') ch = '\n';
+				uart_io_.putch(ch);
+			}
 		}
-
+		device::P4.B3 = f;
+		f = !f;
 ///		utils::format("%d\n") % n;
 ///		++n;
 	}
