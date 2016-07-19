@@ -10,7 +10,7 @@
 
 namespace device {
 
-	/// @brief PER0 レジスタ定義
+	/// @brief PER0 レジスタ定義 
 	typedef rw8_t<0xF00F0> per0_rw;
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
@@ -24,9 +24,9 @@ namespace device {
 		using per0_rw::operator |=;
 		using per0_rw::operator &=;
 
-		bit_rw_t<per0_rw, 7> RTCEN;	///< リアルタイム・クロック、12ビット・インターバル・タイマの入力クロック供給の制御
+		bit_rw_t<per0_rw, 7> RTCEN;		///< リアルタイム・クロック、12ビット・インターバル・タイマの入力クロック供給の制御
 		bit_rw_t<per0_rw, 6> IICA1EN;	///< シリアル・インタフェース１の入力クロック供給の制御
-		bit_rw_t<per0_rw, 5> ADCEN;	///< A/Dコンバータの入力クロックの制御
+		bit_rw_t<per0_rw, 5> ADCEN;		///< A/Dコンバータの入力クロックの制御
 		bit_rw_t<per0_rw, 4> IICA0EN;	///< シリアル・インタフェース０の入力クロック供給の制御
 		bit_rw_t<per0_rw, 3> SAU1EN;	///< シリアル・アレイ・ユニット１の入力クロック供給の制御
 		bit_rw_t<per0_rw, 2> SAU0EN;	///< シリアル・アレイ・ユニット０の入力クロック供給の制御
