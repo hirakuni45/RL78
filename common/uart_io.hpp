@@ -20,21 +20,26 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  UART 制御クラス
-		@param[in]	recv_size	受信バッファサイズ
+		@param[in]	SAUtx	シリアル・アレイ・ユニット送信・クラス
+		@param[in]	SAUrx	シリアル・アレイ・ユニット受信・クラス
 		@param[in]	send+size	送信バッファサイズ
+		@param[in]	recv_size	受信バッファサイズ
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint16_t recv_size, uint16_t send_size>
+	template <class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
 	class uart_io {
 
-		static utils::fifo<recv_size> recv_;
+		static SAUtx tx_;	///< 送信リソース
+		static SAUrx rx_;	///< 受信リソース
+
 		static utils::fifo<send_size> send_;
+		static utils::fifo<recv_size> recv_;
 
 		bool	polling_ = false;
 		bool	crlf_ = true;
 
 		// ※必要なら、実装する
-		void sleep_() { }
+		void sleep_() { asm("nop"); }
 
 	public:
 		//-----------------------------------------------------------------//
@@ -48,22 +53,61 @@ namespace device {
 		bool start(uint32_t baud, bool polling = false) {
 			polling_ = polling;
 
-			PER0.SAU0EN = 1;
+			// ボーレートと分周比の計算
+			auto div = static_cast<uint32_t>(F_CLK) / baud;
+			uint8_t master = 0;
+			while(div > 256) {
+				div /= 2;
+				++master;
+				if(master >= 16) {
+					/// ボーレート設定範囲外
+					return false;
+				}
+			}
+			--div;
+			div &= 0xfe;
+			if(div <= 2) {
+				/// ボーレート設定範囲外
+				return false;
+			}
 
-			SPS0.PRS0 = 1;	// 16MHz
-			SMR00 = 0x20 | SMR00.MD.b(1);
-			// 1 stop, 8 data
-			SCR00 = 0x0004 | SCR00.TXE.b(1) | SCR00.RXE.b(1) | SCR00.SLC.b(1) | SCR00.DLS.b(3);
-			SDR00H = 68;  // 16MHz / 136 := 115200 (115942)
-			SOL00 = 0;
-			SO00 = 1;
-			SOE00 = 1;
+			// 対応するユニットを有効にする
+			if(tx_.get_unit_no() == 0) {
+				PER0.SAU0EN = 1;
+			} else {
+				PER0.SAU1EN = 1;
+			}
 
-			PM1.B2 = 0;	/// P12 output
-///			POM1.B2 = 1;  /// open drain output
-			P1.B2 = 1;	/// "1"
+			// チャネル０、１で共有の為、どちらか片方のみの設定
+			tx_.SPS = SAUtx::SPS.PRS0.b(master);
+			// rx_.SPS = SAUrx::SPS.PRS0.b(master);
 
-			SS00 = 1;
+			tx_.SMR = 0x20 | SAUtx::SMR.MD.b(1) | SAUtx::SMR.MD0.b(1);
+			rx_.SMR = 0x20 | SAUrx::SMR.STS.b(1) | SAUrx::SMR.MD.b(1);
+
+			// 8 date, 1 stop, no-parity LSB-first
+			// 送信設定
+			tx_.SCR = 0x0004 | SAUtx::SCR.TXE.b(1) | SAUtx::SCR.SLC.b(1) | SAUtx::SCR.DLS.b(3) |
+					  SAUtx::SCR.DIR.b(1);
+			// 受信設定
+			rx_.SCR = 0x0004 | SAUrx::SCR.RXE.b(1) | SAUrx::SCR.SLC.b(1) | SAUrx::SCR.DLS.b(3) |
+					  SAUrx::SCR.DIR.b(1);
+
+			// ボーレート・ジェネレーター設定
+			tx_.SDR = div << 8;
+			rx_.SDR = div << 8;
+
+			tx_.SOL = 0;	// TxD
+			tx_.SO  = 1;	// シリアル出力設定
+			tx_.SOE = 1;	// シリアル出力許可(Txd)
+
+			PM1.B1 = 1;	/// P1-1 input  (RxD)
+			PM1.B2 = 0;	/// P1-2 output (TxD)
+
+			P1.B2  = 1;	/// ポートレジスター (TxD)
+
+			tx_.SS = 1;	/// TxD enable
+			rx_.SS = 1;	/// RxD enable
 
 			return true;
 		}
@@ -71,15 +115,31 @@ namespace device {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	出力バッファのサイズを返す
+			@brief	送信バッファのサイズを返す
 			@return　バッファのサイズ
 		 */
 		//-----------------------------------------------------------------//
 		uint16_t send_length() const {
 			if(polling_) {
-				return 0;
+				return tx_.SSR.TSF();
 			} else {
 				return send_.length();
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	受信バッファのサイズを返す @n
+					※ポーリング時、データが無い：０、データがある：１
+			@return　バッファのサイズ
+		 */
+		//-----------------------------------------------------------------//
+		uint16_t recv_length() const {
+			if(polling_) {
+				return rx_.SSR.BFF();
+			} else {
+				return recv_.length();
 			}
 		}
 
@@ -96,8 +156,8 @@ namespace device {
 			}
 
 			if(polling_) {
-				while(SSR00.BFF() != 0) sleep_();
-				SDR00L = ch;
+				while(tx_.SSR.TSF() != 0) sleep_();
+				tx_.SDR_L = ch;
 			} else {
 				/// ７／８ を超えてた場合は、バッファが空になるまで待つ。
 				if(send_.length() >= (send_.size() * 7 / 8)) {
@@ -111,21 +171,40 @@ namespace device {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	文字入力
+			@return 文字コード
+		 */
+		//-----------------------------------------------------------------//
+		char getch() {
+			if(polling_) {
+				while(rx_.SSR.BFF() == 0) sleep_();
+				return rx_.SDR_L();
+			} else {
+				while(recv_.length() == 0) sleep_();
+				return recv_.get();
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	文字列出力
 			@param[in]	s	出力ストリング
 		 */
 		//-----------------------------------------------------------------//
 		void puts(const char* s) {
 			char ch;
-			while((ch = *s++) != 0) {
+			while((ch = *s) != 0) {
 				putch(ch);
+				++s;
 			}
 		}
 	};
 
-	// recv_、send_ の実体を定義
-	template<uint16_t recv_size, uint16_t send_size>
-		utils::fifo<recv_size> uart_io<recv_size, send_size>::recv_;
-	template<uint16_t recv_size, uint16_t send_size>
-		utils::fifo<send_size> uart_io<recv_size, send_size>::send_;
+	// send_、recv_ の実体を定義
+	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
+		utils::fifo<send_size> uart_io<SAUtx, SAUrx, send_size, recv_size>::send_;
+
+	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
+		utils::fifo<recv_size> uart_io<SAUtx, SAUrx, send_size, recv_size>::recv_;
 }
