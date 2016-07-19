@@ -5,4 +5,6 @@
 *.elf
 *.mot
 *.exe
+*.bak
+*.dcm
 release/
