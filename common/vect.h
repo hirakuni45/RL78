@@ -6,7 +6,7 @@
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
-#include <unistd.h>
+#include <stdint.h>
 
 #define INTERRUPT_FUNC __attribute__ ((interrupt))
 
