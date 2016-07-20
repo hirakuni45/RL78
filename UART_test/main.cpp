@@ -16,18 +16,18 @@ namespace {
 		asm("nop");
 	}
 
-	device::uart_io<device::SAU00, device::SAU01, 128, 128> uart_io_;
+	device::uart_io<device::SAU00, device::SAU01, 128, 128> uart0_io_;
 }
 
 extern "C" {
 	void sci_putch(char ch)
 	{
-		uart_io_.putch(ch);
+		uart0_io_.putch(ch);
 	}
 
 	void sci_puts(const char* str)
 	{
-		uart_io_.puts(str);
+		uart0_io_.puts(str);
 	}
 };
 
@@ -37,23 +37,25 @@ int main(int argc, char* argv[])
 	device::PM4.B3 = 0;  // output
 
 	bool polling = true;
-	uart_io_.start(115200, polling);
+	uart0_io_.start(115200, polling);
 
-	uart_io_.puts("Start RL78/G13 uart test...\n");
+	uart0_io_.puts("Start RL78/G13 UART0 test...\n");
 
 	bool f = false;
-///	uint32_t n = 0;
+	uint32_t n = 0;
 	while(1) {
 		for(uint32_t i = 0; i < 100000; ++i) {
-			if(uart_io_.recv_length()) {
-				auto ch = uart_io_.getch();
-				if(ch == '\r') ch = '\n';
-				uart_io_.putch(ch);
+			if(uart0_io_.recv_length()) {
+				auto ch = uart0_io_.getch();
+				if(ch == '\r') {
+					utils::format("%d\n") % n;
+					++n;
+				} else {
+					uart0_io_.putch(ch);
+				}
 			}
 		}
 		device::P4.B3 = f;
 		f = !f;
-///		utils::format("%d\n") % n;
-///		++n;
 	}
 }
