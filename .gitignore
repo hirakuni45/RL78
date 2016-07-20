@@ -7,4 +7,6 @@
 *.exe
 *.bak
 *.dcm
+*.bck
+*.lib
 release/
