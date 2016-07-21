@@ -20,10 +20,10 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  UART 制御クラス
-		@param[in]	SAUtx	シリアル・アレイ・ユニット送信・クラス
-		@param[in]	SAUrx	シリアル・アレイ・ユニット受信・クラス
-		@param[in]	send+size	送信バッファサイズ
+		@brief  UART 制御クラス・テンプレート
+		@param[in]	SAUtx	シリアル・アレイ・ユニット送信・クラス（偶数チャネル）
+		@param[in]	SAUrx	シリアル・アレイ・ユニット受信・クラス（奇数チャネル）
+		@param[in]	send_size	送信バッファサイズ
 		@param[in]	recv_size	受信バッファサイズ
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -50,6 +50,7 @@ namespace device {
 			if(send_.length()) {
 				tx_.SDR_L = send_.get();
 			} else {
+				intr::MK0H.STMK0 = 1;  // 送信完了割り込みマスク
 				send_stall_ = true;
 			}
 		}
@@ -69,6 +70,7 @@ namespace device {
 				char ch = send_.get();
 				send_stall_ = false;
 				tx_.SDR_L = ch;
+				intr::MK0H.STMK0 = 0;  // 送信完了割り込みマスク・クリア
 			}
 		}
 
@@ -100,7 +102,7 @@ namespace device {
 		bool start(uint32_t baud, bool level = 0) {
 			intr_level_ = level;
 
-			// ボーレートと分周比の計算
+			// ボーレートから分周比の算出
 			auto div = static_cast<uint32_t>(F_CLK) / baud;
 			uint8_t master = 0;
 			while(div > 256) {
@@ -152,23 +154,34 @@ namespace device {
 				if(tx_.get_chanel_no() == 0) {  // UART0
 					PM1.B1 = 1;	// P1-1 input  (RxD0)
 					PM1.B2 = 0;	// P1-2 output (TxD0)
-					P1.B2  = 1;	// ポートレジスター RxD 切り替え
+					P1.B2  = 1;	// ポートレジスター TxD 切り替え
 				} else if(tx_.get_chanel_no() == 2) {  // UART1
 					PM1.B4 = 1;	// P1-1 input  (RxD0)
 					PM1.B3 = 0;	// P1-2 output (TxD0)
-					P1.B3  = 1;	// ポートレジスター RxD 切り替え
+					P1.B3  = 1;	// ポートレジスター TxD 切り替え
 				}
-			} else {  // UART2
-				PM0.B3 = 1;	// P1-1 input  (RxD2)
-				PM0.B2 = 0;	// P1-2 output (TxD2)
-				PMC0.B2 = 0;  // ポートモードコントロール
-				P0.B2  = 1;	// ポートレジスター RxD 切り替え
+			} else {
+				if(tx_.get_chanel_no() == 0) {  // UART2
+					PM0.B3  = 1;  // P1-3 input  (RxD2)
+					PM0.B2  = 0;  // P1-2 output (TxD2)
+					PMC0.B2 = 0;  // ポートモードコントロール
+					P0.B2   = 1;  // ポートレジスター TxD 切り替え
+				} else {  // UART3（128ピンデバイスでサポート）
+					PM14.B3 = 1;  // P14-3 input (RxD3)
+					PM14.B4 = 0;  // P14-4 output (TxD3)
+					P14.B4  = 1;  // ポートレジスター TxD 切り替え
+				}
 			}
 
 			send_stall_ = true;
 
 			tx_.SS = 1;	/// TxD enable
 			rx_.SS = 1;	/// RxD enable
+
+			// 割り込み許可
+			if(intr_level_ > 0) {
+				intr::MK0H.SRMK0 = 0;  // 受信割り込みマスク・クリア
+			}
 
 			return true;
 		}

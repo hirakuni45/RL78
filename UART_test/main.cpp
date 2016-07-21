@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 {
 	device::PM4.B3 = 0;  // output
 
-	uint8_t intr_level = 0;
+	uint8_t intr_level = 1;
 	uart0_io_.start(115200, intr_level);
 
 	uart0_io_.puts("Start RL78/G13 UART0 test...\n");
