@@ -10,10 +10,10 @@ RL78
    
 現在は、主に「R5F100L」(G13 グループ) に対応した、ヘッダー、関連ライブラリーなどです。
    
-・R5F100LCAFB (FLASH: 32K, RAM: 2K, DATA-FLASH:4K) @250
-・R5F100LEAFB (FLASH: 64K, RAM: 4K, DATA-FLASH:4K) @290
-・R5F100LGAFB (FLASH:128K, RAM:12K, DATA-FLASH:8K) @340 (変換基板実装済み @420)
-・R5F100LJAFB (FLASH:256K, RAM:20K, DATA-FLASH:8K) @400
+・R5F100LCAFB (FLASH: 32K, RAM: 2K, DATA-FLASH:4K) @250   
+・R5F100LEAFB (FLASH: 64K, RAM: 4K, DATA-FLASH:4K) @290   
+・R5F100LGAFB (FLASH:128K, RAM:12K, DATA-FLASH:8K) @340 (変換基板実装済み @420)   
+・R5F100LJAFB (FLASH:256K, RAM:20K, DATA-FLASH:8K) @400   
 ※ @xxx は、[秋月電子販売の参考価格](http://akizukidenshi.com/catalog/c/crl78g13/)
    
 プロジェクトは、Makefile、及び、関連ヘッダー、ソースコードからなり、専用のスタートアップルーチン、
