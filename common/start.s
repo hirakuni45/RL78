@@ -78,10 +78,9 @@ L48:
 
 ;	call	!!_exit
 
-halt_loop:
-	br		$halt_loop
-
-
+	.global _halt
+_halt:
+	br		$_halt
 
 	.size	_start, . - _start
 
