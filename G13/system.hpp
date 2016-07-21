@@ -18,7 +18,10 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class T>
 	struct cmc_t : public T {
+		using T::operator =;
 		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
 
 		bit_rw_t<T, 7> EXCLK;      ///< 高速システム・クロック端子の動作モード
 		bit_rw_t<T, 6> OSCSEL;     ///< 高速システム・クロック端子の動作モード
@@ -42,7 +45,10 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class T>
 	struct ckc_t : public T {
+		using T::operator =;
 		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
 
 		bit_rw_t<T, 7> CLS;   ///< CPU／周辺ハードウエア・クロック（f CLK ）のステータス 
 		bit_rw_t<T, 6> CSS;   ///< CPU／周辺ハードウエア・クロック（f CLK ）の選択
@@ -60,7 +66,10 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class T>
 	struct csc_t : public T {
+		using T::operator =;
 		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
 
 		bit_rw_t<T, 7> MSTOP;    ///< 高速システム・クロックの動作制御
 		bit_rw_t<T, 6> XTSTOP;   ///< サブシステム・クロックの動作制御
