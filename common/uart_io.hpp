@@ -51,14 +51,14 @@ namespace device {
 			if(tx_.get_unit_no() == 0) {
 				if(tx_.get_chanel_no() == 0) {  // UART0
 					intr::MK0H.STMK0 = f;
-				} else {
-
+				} else {  // UART1
+					intr::MK1L.STMK1 = f;
 				}
 			} else {
 				if(tx_.get_chanel_no() == 0) {  // UART2
-///					intr::MK0H.STMK0 = f;
-				} else {
-
+					intr::MK0H.STMK2 = f;
+				} else {  // UART3
+					intr::MK1H.STMK3 = f;
 				}
 			}
 		}
@@ -67,16 +67,16 @@ namespace device {
 		static inline void recv_interrupt_mask_(bool f)
 		{
 			if(rx_.get_unit_no() == 0) {
-				if(rx_.get_chanel_no() == 0) {  // UART0
+				if(rx_.get_chanel_no() == 1) {  // UART0
 					intr::MK0H.SRMK0 = f;
-				} else {
-
+				} else {  // UART1
+					intr::MK1L.SRMK1 = f;
 				}
 			} else {
-				if(rx_.get_chanel_no() == 0) {  // UART2
-
-				} else {
-
+				if(rx_.get_chanel_no() == 1) {  // UART2
+					intr::MK0H.SRMK2 = f;
+				} else {  //UART3
+					intr::MK1H.SRMK3 = f;
 				}
 			}
 		}
