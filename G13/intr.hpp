@@ -25,14 +25,14 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  PIF5;
-			bit_rw_t<T, 6>  PIF4;
-			bit_rw_t<T, 5>  PIF3;
-			bit_rw_t<T, 4>  PIF2;
-			bit_rw_t<T, 3>  PIF1;
-			bit_rw_t<T, 2>  PIF0;
-			bit_rw_t<T, 1>  LVIIF;
-			bit_rw_t<T, 0>  WDTIIF;
+			bit_rw_t<T, 7>  PIF5;   ///< ( 7) 端子入力エッジ検出５
+			bit_rw_t<T, 6>  PIF4;   ///< ( 6) 端子入力エッジ検出４
+			bit_rw_t<T, 5>  PIF3;   ///< ( 5) 端子入力エッジ検出３
+			bit_rw_t<T, 4>  PIF2;   ///< ( 4) 端子入力エッジ検出２
+			bit_rw_t<T, 3>  PIF1;   ///< ( 3) 端子入力エッジ検出１
+			bit_rw_t<T, 2>  PIF0;   ///< ( 2) 端子入力エッジ検出０
+			bit_rw_t<T, 1>  LVIIF;  ///< ( 1) 電圧検出 
+			bit_rw_t<T, 0>  WDTIIF;	///< ( 0) ウォッチドッグ・タイマのインターバル
 		};
 		static if0l_t< rw8_t<0xFFFE0> > IF0L;
 
@@ -50,30 +50,30 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  SREIF0;
-			bit_rw_t<T, 7>  TMIF01H;
+			bit_rw_t<T, 7>  SREIF0;   ///< UART0受信の通信エラー発生
+			bit_rw_t<T, 7>  TMIF01H;  ///< タイマ・チャネル01のカウント完了またはキャプチャ完了（上位8ビット・タイマ動作時）
 
-			bit_rw_t<T, 6>  SRIF0;
-			bit_rw_t<T, 6>  CSIIF01;
-			bit_rw_t<T, 6>  IICIF01;
+			bit_rw_t<T, 6>  SRIF0;    ///< (14) UART0受信の転送完了
+			bit_rw_t<T, 6>  CSIIF01;  ///< (14) CSI01の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 6>  IICIF01;  ///< (14) IIC01の転送完了
 
-			bit_rw_t<T, 5>  STIF0;
-			bit_rw_t<T, 5>  CSIIF00;
-			bit_rw_t<T, 5>  IICIF00;
+			bit_rw_t<T, 5>  STIF0;    ///< (13) UART0送信の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 5>  CSIIF00;  ///< (13) CSI00の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 5>  IICIF00;  ///< (13) IIC00の転送完了
 
-			bit_rw_t<T, 4>  DMAIF1;
-			bit_rw_t<T, 3>  DMAIF0;
+			bit_rw_t<T, 4>  DMAIF1;   ///< (12) DMA1の転送完了
+			bit_rw_t<T, 3>  DMAIF0;   ///< (11) DMA0の転送完了
 
-			bit_rw_t<T, 2>  SREIF2;
-			bit_rw_t<T, 2>  TMIF11H;
+			bit_rw_t<T, 2>  SREIF2;   ///< (10) UART2受信の通信エラー発生
+			bit_rw_t<T, 2>  TMIF11H;  ///< (10) タイマ・チャネル11のカウント完了またはキャプチャ完了（上位8ビット・タイマ動作時）
 
-			bit_rw_t<T, 1>  SRIF2;
-			bit_rw_t<T, 1>  CSIIF21;
-			bit_rw_t<T, 1>  IICIF21;
+			bit_rw_t<T, 1>  SRIF2;    ///< ( 9) UART2受信の転送完了
+			bit_rw_t<T, 1>  CSIIF21;  ///< ( 9) CSI21の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 1>  IICIF21;  ///< ( 9) IIC21の転送完了
 
-			bit_rw_t<T, 0>  STIF2;
-			bit_rw_t<T, 0>  CSIIF20;
-			bit_rw_t<T, 0>  IICIF20;
+			bit_rw_t<T, 0>  STIF2;    ///< ( 8) UART2送信の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 0>  CSIIF20;  ///< ( 8) CSI20の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 0>  IICIF20;  ///< ( 8) IIC20の転送完了
 		};
 		static if0h_t< rw8_t<0xFFFE1> > IF0H;
 
@@ -91,22 +91,22 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  TMIF03;
-			bit_rw_t<T, 6>  TMIF02;
-			bit_rw_t<T, 5>  TMIF01;
-			bit_rw_t<T, 4>  TMIF00;
-			bit_rw_t<T, 3>  IICAIF0;
+			bit_rw_t<T, 7>  TMIF03;   ///< (23) タイマ・チャネル03のカウント完了またはキャプチャ完了（16ビット／下位8ビット・タイマ動作時）
+			bit_rw_t<T, 6>  TMIF02;   ///< (22) タイマ・チャネル02のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 5>  TMIF01;   ///< (21) タイマ・チャネル01のカウント完了またはキャプチャ完了（16ビット／下位8ビット・タイマ動作時）
+			bit_rw_t<T, 4>  TMIF00;   ///< (20) タイマ・チャネル00のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 3>  IICAIF0;  ///< (19) IICA0通信完了
 
-			bit_rw_t<T, 2>  SREIF1;
-			bit_rw_t<T, 2>  TMIF03H;
+			bit_rw_t<T, 2>  SREIF1;   ///< (18) UART1受信の通信エラー発生
+			bit_rw_t<T, 2>  TMIF03H;  ///< (18) タイマ・チャネル03のカウント完了またはキャプチャ完了（上位8ビット・タイマ動作時）
 
-			bit_rw_t<T, 1>  SRIF1;
-			bit_rw_t<T, 1>  CSIIF11;
-			bit_rw_t<T, 1>  IICIF11;
+			bit_rw_t<T, 1>  SRIF1;    ///< (17) UART1受信の転送完了
+			bit_rw_t<T, 1>  CSIIF11;  ///< (17) CSI11の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 1>  IICIF11;  ///< (17) IIC11の転送完了
 
-			bit_rw_t<T, 0>  STIF1;
-			bit_rw_t<T, 0>  CSIIF10;
-			bit_rw_t<T, 0>  IICIF10;
+			bit_rw_t<T, 0>  STIF1;    ///< (16) UART1送信の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 0>  CSIIF10;  ///< (16) CSI10の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 0>  IICIF10;  ///< (16) IIC10の転送完了
 		};
 		static if1l_t< rw8_t<0xFFFE2> > IF1L;
 
@@ -135,10 +135,10 @@ namespace device {
 			bit_rw_t<T, 4>  CSIIF30;
 			bit_rw_t<T, 4>  IICIF30;
 
-			bit_rw_t<T, 3>  KRIF;
-			bit_rw_t<T, 2>  ITIF;
-			bit_rw_t<T, 1>  RTCIF;
-			bit_rw_t<T, 0>  ADIF;
+			bit_rw_t<T, 3>  KRIF;     ///< (27)
+			bit_rw_t<T, 2>  ITIF;     ///< (26)
+			bit_rw_t<T, 1>  RTCIF;    ///< (25)
+			bit_rw_t<T, 0>  ADIF;     ///< (24)
 		};
 		static if1h_t< rw8_t<0xFFFE3> > IF1H;
 
