@@ -20,7 +20,7 @@ namespace utils {
 	class fifo {
 
 		typedef char DT;
-		typedef uint16_t PTS;	
+		typedef uint16_t PTS;
 
 		volatile PTS	get_ = 0;
 		volatile PTS	put_ = 0;
@@ -45,7 +45,7 @@ namespace utils {
 		void put(DT v) {
 			buff_[put_] = v;
 			++put_;
-			if(size_ != 256 && put_ >= size_) {
+			if(put_ >= size_) {
 				put_ = 0;
 			}
 		}
