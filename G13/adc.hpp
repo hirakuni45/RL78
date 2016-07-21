@@ -1,0 +1,166 @@
+#pragma once
+//=====================================================================//
+/*!	@file
+	@brief	RL78/G13 グループ・Ａ／Ｄコンバーター定義 @n
+			Copyright 2016 Kunihito Hiramatsu
+	@author	平松邦仁 (hira@rvf-rc45.net)
+*/
+//=====================================================================//
+#include "common/io_utils.hpp"
+
+namespace device {
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	A/Dコンバータ・モード・レジスタ0（ADM0）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct adm0_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, 7> ADCS;  ///< A/D変換動作の制御
+		bit_rw_t<T, 6> ADMD;  ///< A/D変換チャネル選択モードを設定
+		bit_rw_t<T, 5> FR2;
+		bit_rw_t<T, 4> FR1;
+		bit_rw_t<T, 3> FR0;
+		bits_rw_t<T, 3, 3> FR;
+		bit_rw_t<T, 2> LV1;
+		bit_rw_t<T, 1> LV0;
+		bits_rw_t<T, 1, 2> LV;
+		bit_rw_t<T, 0> ADCE;  ///< A/D電圧コンパレータの動作制御
+	};
+	static adm0_t< rw8_t<0xFFF30> > ADM0;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	A/Dコンバータ・モード・レジスタ1（ADM1）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct adm1_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, 7> ADTMD1;
+		bit_rw_t<T, 6> ADTMD0;
+		bits_rw_t<T, 6, 2> ADTMD;   ///< A/D変換トリガ・モードの選択
+
+		bit_rw_t<T, 5> ADSCM;       ///< A/D変換動作モードの設定
+
+		bit_rw_t<T, 1> ADTRS1; 
+		bit_rw_t<T, 0> ADTRS0;
+		bits_rw_t<T, 0, 2> ADTRS;   ///< ハードウエア・トリガ信号の選択
+	};
+	static adm1_t< rw8_t<0xFFF32> > ADM1;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	A/Dコンバータ・モード・レジスタ2（ADM2）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct adm2_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, 7> ADREFP1;
+		bit_rw_t<T, 6> ADREFP0;
+		bits_rw_t<T, 6, 2> ADREFP;  ///< A/Dコンバータの＋側の基準電圧の選択
+
+		bit_rw_t<T, 5> ADREFM;      ///< A/Dコンバータの－側の基準電圧の選択
+		bit_rw_t<T, 3> ADRCK;       ///< 変換結果上限／下限値チェック
+		bit_rw_t<T, 2> AWC;         ///< SNOOZEモードの設定
+		bit_rw_t<T, 0> ADTYP;       ///< A/D変換分解能の選択
+	};
+	static adm2_t< rw8_t<0xF0010> > ADM2;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	10ビットA/D変換結果レジスタ（ADCR）
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	static ro16_t<0xFFF1E> ADCR;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	8ビットA/D変換結果レジスタ（ADCRH）
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	static ro8_t<0xFFF1F> ADCRH;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	アナログ入力チャネル指定レジスタ（ADS）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct ads_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, 7> ADISS;
+
+		bit_rw_t<T, 4> ADS4;
+		bit_rw_t<T, 3> ADS3;
+		bit_rw_t<T, 2> ADS2;
+		bit_rw_t<T, 1> ADS1;
+		bit_rw_t<T, 0> ADS0;
+		bits_rw_t<T, 0, 5> ADS;
+	};
+	static ads_t< rw8_t<0xFFF31> > ADS;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	変換結果比較上限値設定レジスタ（ADUL）
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	static rw8_t<0xF0011> ADUL;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	変換結果比較下限値設定レジスタ（ADLL）
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	static rw8_t<0xF0012> ADLL;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	A/Dテスト・レジスタ（ADTES）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct adtes_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, 1> ADTES1;
+		bit_rw_t<T, 0> ADTES0;
+		bits_rw_t<T, 0, 2> ADTES;  ///< A/D変換対象
+	};
+	static adtes_t< rw8_t<0xF0013> > ADTES;
+}
