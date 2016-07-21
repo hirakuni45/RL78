@@ -50,8 +50,8 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  SREIF0;   ///< UART0受信の通信エラー発生
-			bit_rw_t<T, 7>  TMIF01H;  ///< タイマ・チャネル01のカウント完了またはキャプチャ完了（上位8ビット・タイマ動作時）
+			bit_rw_t<T, 7>  SREIF0;   ///< (15) UART0受信の通信エラー発生
+			bit_rw_t<T, 7>  TMIF01H;  ///< (15) タイマ・チャネル01のカウント完了またはキャプチャ完了（上位8ビット・タイマ動作時）
 
 			bit_rw_t<T, 6>  SRIF0;    ///< (14) UART0受信の転送完了
 			bit_rw_t<T, 6>  CSIIF01;  ///< (14) CSI01の転送完了，バッファ空き割り込み
@@ -124,21 +124,21 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  TMIF04;
-			bit_rw_t<T, 6>  TMIF13;
+			bit_rw_t<T, 7>  TMIF04;   ///< (31) タイマ・チャネル04のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 6>  TMIF13;   ///< (30) タイマ・チャネル13のカウント完了またはキャプチャ完了
 
-			bit_rw_t<T, 5>  SRIF3;
-			bit_rw_t<T, 5>  CSIIF31;
-			bit_rw_t<T, 5>  IICIF31;
+			bit_rw_t<T, 5>  SRIF3;    ///< (29) UART3受信の転送完了
+			bit_rw_t<T, 5>  CSIIF31;  ///< (29) CSI31の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 5>  IICIF31;  ///< (29) IIC31の転送完了
 
-			bit_rw_t<T, 4>  STIF3;
-			bit_rw_t<T, 4>  CSIIF30;
-			bit_rw_t<T, 4>  IICIF30;
+			bit_rw_t<T, 4>  STIF3;    ///< (28) UART3送信の転送完了、バッファ空き割り込み
+			bit_rw_t<T, 4>  CSIIF30;  ///< (28) CSI30の転送完了，バッファ空き割り込み
+			bit_rw_t<T, 4>  IICIF30;  ///< (28) IIC30の転送完了
 
-			bit_rw_t<T, 3>  KRIF;     ///< (27)
-			bit_rw_t<T, 2>  ITIF;     ///< (26)
-			bit_rw_t<T, 1>  RTCIF;    ///< (25)
-			bit_rw_t<T, 0>  ADIF;     ///< (24)
+			bit_rw_t<T, 3>  KRIF;     ///< (27) キー・リターン信号検出
+			bit_rw_t<T, 2>  ITIF;     ///< (26) 12ビット・インターバル・タイマのインターバル信号検出
+			bit_rw_t<T, 1>  RTCIF;    ///< (25) リアルタイム・クロックの定周期信号／アラーム一致検出
+			bit_rw_t<T, 0>  ADIF;     ///< (24) A/D変換終了
 		};
 		static if1h_t< rw8_t<0xFFFE3> > IF1H;
 
@@ -156,14 +156,14 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  PIF10;
-			bit_rw_t<T, 6>  PIF9;
-			bit_rw_t<T, 5>  PIF8;
-			bit_rw_t<T, 4>  PIF7;
-			bit_rw_t<T, 3>  PIF6;
-			bit_rw_t<T, 2>  TMIF07;
-			bit_rw_t<T, 1>  TMIF06;
-			bit_rw_t<T, 0>  TMIF05;
+			bit_rw_t<T, 7>  PIF10;   ///< (39) 端子入力エッジ検出１０
+			bit_rw_t<T, 6>  PIF9;    ///< (38) 端子入力エッジ検出９
+			bit_rw_t<T, 5>  PIF8;    ///< (37) 端子入力エッジ検出８
+			bit_rw_t<T, 4>  PIF7;    ///< (36) 端子入力エッジ検出７
+			bit_rw_t<T, 3>  PIF6;    ///< (35) 端子入力エッジ検出６
+			bit_rw_t<T, 2>  TMIF07;  ///< (34) タイマ・チャネル07のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 1>  TMIF06;  ///< (33) タイマ・チャネル06のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 0>  TMIF05;  ///< (32) タイマ・チャネル05のカウント完了またはキャプチャ完了
 		};
 		static if2l_t< rw8_t<0xFFFD0> > IF2L;
 
@@ -181,17 +181,17 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  FLIF;
-			bit_rw_t<T, 6>  IICAIF1;
-			bit_rw_t<T, 5>  MDIF;
+			bit_rw_t<T, 7>  FLIF;     ///< (47) 予約
+			bit_rw_t<T, 6>  IICAIF1;  ///< (46) IICA1通信完了
+			bit_rw_t<T, 5>  MDIF;     ///< (45) 除算演算終了／積和演算結果のオーバフロー発生
 
-			bit_rw_t<T, 4>  SREIF3;
-			bit_rw_t<T, 4>  TMIF13H;
+			bit_rw_t<T, 4>  SREIF3;   ///< (44) UART3受信の通信エラー発生
+			bit_rw_t<T, 4>  TMIF13H;  ///< (44) タイマ・チャネル13のカウント完了またはキャプチャ完了
 
-			bit_rw_t<T, 3>  TMIF12;
-			bit_rw_t<T, 2>  TMIF11;
-			bit_rw_t<T, 1>  TMIF10;
-			bit_rw_t<T, 0>  PIF11;
+			bit_rw_t<T, 3>  TMIF12;   ///< (43) タイマ・チャネル12のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 2>  TMIF11;   ///< (42) タイマ・チャネル11のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 1>  TMIF10;   ///< (41) タイマ・チャネル10のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 0>  PIF11;    ///< (40) 端子入力エッジ検出１１
 		};
 		static if2h_t< rw8_t<0xFFFD1> > IF2H;
 
@@ -209,12 +209,12 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 5>  TMIF17;
-			bit_rw_t<T, 4>  TMIF16;
-			bit_rw_t<T, 3>  TMIF15;
-			bit_rw_t<T, 2>  TMIF14;
-			bit_rw_t<T, 1>  DMAIF3;
-			bit_rw_t<T, 0>  DMAIF2;
+			bit_rw_t<T, 5>  TMIF17;  ///< (53) タイマ・チャネル17のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 4>  TMIF16;  ///< (52) タイマ・チャネル16のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 3>  TMIF15;  ///< (51) タイマ・チャネル15のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 2>  TMIF14;  ///< (50) タイマ・チャネル14のカウント完了またはキャプチャ完了
+			bit_rw_t<T, 1>  DMAIF3;  ///< (49) DMA3の転送完了
+			bit_rw_t<T, 0>  DMAIF2;  ///< (48) DMA2の転送完了
 		};
 		static if3l_t< rw8_t<0xFFFD2> > IF3L;
 
@@ -232,14 +232,14 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  PMK5;
-			bit_rw_t<T, 6>  PMK4;
-			bit_rw_t<T, 5>  PMK3;
-			bit_rw_t<T, 4>  PMK2;
-			bit_rw_t<T, 3>  PMK1;
-			bit_rw_t<T, 2>  PMK0;
-			bit_rw_t<T, 1>  LVIMK;
-			bit_rw_t<T, 0>  WDTIMK;
+			bit_rw_t<T, 7>  PMK5;    ///< ( 7)
+			bit_rw_t<T, 6>  PMK4;    ///< ( 6)
+			bit_rw_t<T, 5>  PMK3;    ///< ( 5)
+			bit_rw_t<T, 4>  PMK2;    ///< ( 4)
+			bit_rw_t<T, 3>  PMK1;    ///< ( 3)
+			bit_rw_t<T, 2>  PMK0;    ///< ( 2)
+			bit_rw_t<T, 1>  LVIMK;   ///< ( 1)
+			bit_rw_t<T, 0>  WDTIMK;  ///< ( 0)
 		};
 		static mk0l_t< rw8_t<0xFFFE4> > MK0L;
 
@@ -257,30 +257,30 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  SREMK0;
-			bit_rw_t<T, 7>  TMMK01H;
+			bit_rw_t<T, 7>  SREMK0;   ///< (15)
+			bit_rw_t<T, 7>  TMMK01H;  ///< (15)
 
-			bit_rw_t<T, 6>  SRMK0;
-			bit_rw_t<T, 6>  CSIMK01;
-			bit_rw_t<T, 6>  IICMK01;
+			bit_rw_t<T, 6>  SRMK0;    ///< (14)
+			bit_rw_t<T, 6>  CSIMK01;  ///< (14)
+			bit_rw_t<T, 6>  IICMK01;  ///< (14)
 
-			bit_rw_t<T, 5>  STMK0;
-			bit_rw_t<T, 5>  CSIMK00;
-			bit_rw_t<T, 5>  IICMK00;
+			bit_rw_t<T, 5>  STMK0;    ///< (13)
+			bit_rw_t<T, 5>  CSIMK00;  ///< (13)
+			bit_rw_t<T, 5>  IICMK00;  ///< (13)
 
-			bit_rw_t<T, 4>  DMAMK1;
-			bit_rw_t<T, 3>  DMAMK0;
+			bit_rw_t<T, 4>  DMAMK1;   ///< (12)
+			bit_rw_t<T, 3>  DMAMK0;   ///< (11)
 
-			bit_rw_t<T, 2>  SREMK2;
-			bit_rw_t<T, 2>  TMMK11H;
+			bit_rw_t<T, 2>  SREMK2;   ///< (10)
+			bit_rw_t<T, 2>  TMMK11H;  ///< (10)
 
-			bit_rw_t<T, 1>  SRMK2;
-			bit_rw_t<T, 1>  CSIMK21;
-			bit_rw_t<T, 1>  IICMK21;
+			bit_rw_t<T, 1>  SRMK2;    ///< ( 9)
+			bit_rw_t<T, 1>  CSIMK21;  ///< ( 9)
+			bit_rw_t<T, 1>  IICMK21;  ///< ( 9)
 
-			bit_rw_t<T, 0>  STMK2;
-			bit_rw_t<T, 0>  CSIMK20;
-			bit_rw_t<T, 0>  IICMK20;
+			bit_rw_t<T, 0>  STMK2;    ///< ( 8)
+			bit_rw_t<T, 0>  CSIMK20;  ///< ( 8)
+			bit_rw_t<T, 0>  IICMK20;  ///< ( 8)
 		};
 		static mk0h_t< rw8_t<0xFFFE5> > MK0H;
 
@@ -298,22 +298,22 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  TMMK03;
-			bit_rw_t<T, 6>  TMMK02;
-			bit_rw_t<T, 5>  TMMK01;
-			bit_rw_t<T, 4>  TMMK00;
-			bit_rw_t<T, 3>  IICAMK0;
+			bit_rw_t<T, 7>  TMMK03;   ///< (23)
+			bit_rw_t<T, 6>  TMMK02;   ///< (22)
+			bit_rw_t<T, 5>  TMMK01;   ///< (21)
+			bit_rw_t<T, 4>  TMMK00;   ///< (20)
+			bit_rw_t<T, 3>  IICAMK0;  ///< (19)
 
-			bit_rw_t<T, 2>  SREMK1;
-			bit_rw_t<T, 2>  TMMK03H;
+			bit_rw_t<T, 2>  SREMK1;   ///< (18)
+			bit_rw_t<T, 2>  TMMK03H;  ///< (18)
 
-			bit_rw_t<T, 1>  SRMK1;
-			bit_rw_t<T, 1>  CSIMK11;
-			bit_rw_t<T, 1>  IICMK11;
+			bit_rw_t<T, 1>  SRMK1;    ///< (17)
+			bit_rw_t<T, 1>  CSIMK11;  ///< (17)
+			bit_rw_t<T, 1>  IICMK11;  ///< (17)
 
-			bit_rw_t<T, 0>  STMK1;
-			bit_rw_t<T, 0>  CSIMK10;
-			bit_rw_t<T, 0>  IICMK10;
+			bit_rw_t<T, 0>  STMK1;    ///< (16)
+			bit_rw_t<T, 0>  CSIMK10;  ///< (16)
+			bit_rw_t<T, 0>  IICMK10;  ///< (16)
 		};
 		static mk1l_t< rw8_t<0xFFFE6> > MK1L;
 
@@ -331,21 +331,21 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  TMMK04;
-			bit_rw_t<T, 6>  TMMK13;
+			bit_rw_t<T, 7>  TMMK04;   ///< (31)
+			bit_rw_t<T, 6>  TMMK13;   ///< (30)
 
-			bit_rw_t<T, 5>  SRMK3;
-			bit_rw_t<T, 5>  CSIMK31;
-			bit_rw_t<T, 5>  IICMK31;
+			bit_rw_t<T, 5>  SRMK3;    ///< (29)
+			bit_rw_t<T, 5>  CSIMK31;  ///< (29)
+			bit_rw_t<T, 5>  IICMK31;  ///< (29)
 
-			bit_rw_t<T, 4>  STMK3;
-			bit_rw_t<T, 4>  CSIMK30;
-			bit_rw_t<T, 4>  IICMK30;
+			bit_rw_t<T, 4>  STMK3;    ///< (28)
+			bit_rw_t<T, 4>  CSIMK30;  ///< (28)
+			bit_rw_t<T, 4>  IICMK30;  ///< (28)
 
-			bit_rw_t<T, 3>  KRMK;
-			bit_rw_t<T, 2>  ITMK;
-			bit_rw_t<T, 1>  RTCMK;
-			bit_rw_t<T, 0>  ADMK;
+			bit_rw_t<T, 3>  KRMK;     ///< (27)
+			bit_rw_t<T, 2>  ITMK;     ///< (26)
+			bit_rw_t<T, 1>  RTCMK;    ///< (25)
+			bit_rw_t<T, 0>  ADMK;     ///< (24)
 		};
 		static mk1h_t< rw8_t<0xFFFE7> > MK1H;
 
@@ -363,14 +363,14 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  PMK10;
-			bit_rw_t<T, 6>  PMK9;
-			bit_rw_t<T, 5>  PMK8;
-			bit_rw_t<T, 4>  PMK7;
-			bit_rw_t<T, 3>  PMK6;
-			bit_rw_t<T, 2>  TMMK07;
-			bit_rw_t<T, 1>  TMMK06;
-			bit_rw_t<T, 0>  TMMK05;
+			bit_rw_t<T, 7>  PMK10;   ///< (39)
+			bit_rw_t<T, 6>  PMK9;    ///< (38)
+			bit_rw_t<T, 5>  PMK8;    ///< (37)
+			bit_rw_t<T, 4>  PMK7;    ///< (36)
+			bit_rw_t<T, 3>  PMK6;    ///< (35)
+			bit_rw_t<T, 2>  TMMK07;  ///< (34)
+			bit_rw_t<T, 1>  TMMK06;  ///< (33)
+			bit_rw_t<T, 0>  TMMK05;  ///< (32)
 		};
 		static mk2l_t< rw8_t<0xFFFD4> > MK2L;
 
@@ -388,17 +388,17 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  FLMK;
-			bit_rw_t<T, 6>  IICAMK1;
-			bit_rw_t<T, 5>  MDMK;
+			bit_rw_t<T, 7>  FLMK;     ///< (47)
+			bit_rw_t<T, 6>  IICAMK1;  ///< (46)
+			bit_rw_t<T, 5>  MDMK;     ///< (45)
 
-			bit_rw_t<T, 4>  SREMK3;
-			bit_rw_t<T, 4>  TMMK13H;
+			bit_rw_t<T, 4>  SREMK3;   ///< (44)
+			bit_rw_t<T, 4>  TMMK13H;  ///< (44)
 
-			bit_rw_t<T, 3>  TMMK12;
-			bit_rw_t<T, 2>  TMMK11;
-			bit_rw_t<T, 1>  TMMK10;
-			bit_rw_t<T, 0>  PMK11;
+			bit_rw_t<T, 3>  TMMK12;   ///< (43)
+			bit_rw_t<T, 2>  TMMK11;   ///< (42)
+			bit_rw_t<T, 1>  TMMK10;   ///< (41)
+			bit_rw_t<T, 0>  PMK11;    ///< (40)
 		};
 		static mk2h_t< rw8_t<0xFFFD5> > MK2H;
 
@@ -416,12 +416,12 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 5>  TMMK17;
-			bit_rw_t<T, 4>  TMMK16;
-			bit_rw_t<T, 3>  TMMK15;
-			bit_rw_t<T, 2>  TMMK14;
-			bit_rw_t<T, 1>  DMAMK3;
-			bit_rw_t<T, 0>  DMAMK2;
+			bit_rw_t<T, 5>  TMMK17;  ///< (53)
+			bit_rw_t<T, 4>  TMMK16;  ///< (52)
+			bit_rw_t<T, 3>  TMMK15;  ///< (51)
+			bit_rw_t<T, 2>  TMMK14;  ///< (50)
+			bit_rw_t<T, 1>  DMAMK3;  ///< (49)
+			bit_rw_t<T, 0>  DMAMK2;  ///< (48)
 		};
 		static mk3l_t< rw8_t<0xFFFD6> > MK3L;
 
@@ -445,8 +445,8 @@ namespace device {
 			bit_rw_t<T, 4>  PPR2;
 			bit_rw_t<T, 3>  PPR1;
 			bit_rw_t<T, 2>  PPR0;
-			bit_rw_t<T, 1>  LVIPR;
-			bit_rw_t<T, 0>  WDTIPR;
+			bit_rw_t<T, 1>  LVIPR;   ///< ( 1)
+			bit_rw_t<T, 0>  WDTIPR;  ///< ( 0)
 		};
 		static pr0l_t< rw8_t<0xFFFE8> > PR00L;
 		static pr0l_t< rw8_t<0xFFFEC> > PR10L;
