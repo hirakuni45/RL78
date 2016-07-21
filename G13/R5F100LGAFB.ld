@@ -50,14 +50,19 @@ MEMORY {
 
 SECTIONS
 {
+/*
+	SHORT(DEFINED(_INTWDTI) ? ABSOLUTE(_INTWDTI) : ABSOLUTE(_halt))
+*/
   .vec :
   {
     KEEP(*(.vec))
   } > VEC
+
   .ivec :
   {
     KEEP(*(.ivec))
   } > IVEC
+
   .opt :
   {
     KEEP(*(.opt))
