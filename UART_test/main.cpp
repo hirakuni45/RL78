@@ -19,6 +19,26 @@ namespace {
 	device::uart_io<device::SAU00, device::SAU01, 128, 128> uart0_io_;
 }
 
+const void* ivec_[] __attribute__ ((section (".ivec"))) = {
+	/*  0 */  nullptr,
+	/*  1 */  nullptr,
+	/*  2 */  nullptr,
+	/*  3 */  nullptr,
+	/*  4 */  nullptr,
+	/*  5 */  nullptr,
+	/*  6 */  nullptr,
+	/*  7 */  nullptr,
+	/*  8 */  nullptr,
+	/*  9 */  nullptr,
+	/* 10 */  nullptr,
+	/* 11 */  nullptr,
+	/* 12 */  nullptr,
+	/* 13 */  reinterpret_cast<void*>(uart0_io_.send_task),
+	/* 14 */  reinterpret_cast<void*>(uart0_io_.recv_task),
+	/* 15 */  reinterpret_cast<void*>(uart0_io_.error_task),
+};
+
+
 extern "C" {
 	void sci_putch(char ch)
 	{
@@ -36,8 +56,8 @@ int main(int argc, char* argv[])
 {
 	device::PM4.B3 = 0;  // output
 
-	bool polling = true;
-	uart0_io_.start(115200, polling);
+	uint8_t intr_level = 0;
+	uart0_io_.start(115200, intr_level);
 
 	uart0_io_.puts("Start RL78/G13 UART0 test...\n");
 

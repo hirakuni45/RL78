@@ -8,6 +8,7 @@
 //=====================================================================//
 #include "G13/system.hpp"
 #include "G13/sau.hpp"
+#include "G13/intr.hpp"
 #include "common/fifo.hpp"
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
@@ -35,23 +36,69 @@ namespace device {
 		static utils::fifo<send_size> send_;
 		static utils::fifo<recv_size> recv_;
 
-		bool	polling_ = false;
+		static volatile bool	send_stall_;
+
+		uint8_t	intr_level_ = 0;
 		bool	crlf_ = true;
 
 		// ※必要なら、実装する
 		void sleep_() { asm("nop"); }
 
 	public:
+		static __attribute__ ((interrupt)) void send_task()
+		{
+			if(send_.length()) {
+				tx_.SDR_L = send_.get();
+			} else {
+				send_stall_ = true;
+			}
+		}
+
+		static __attribute__ ((interrupt)) void recv_task()
+		{
+			recv_.put(rx_.SDR_L());
+		}
+
+		static __attribute__ ((interrupt)) void error_task()
+		{
+		}
+
+		void send_restart_() {
+			if(send_stall_ && send_.length() > 0) {
+				while(tx_.SSR.TSF() != 0) sleep_();
+				char ch = send_.get();
+				send_stall_ = false;
+				tx_.SDR_L = ch;
+			}
+		}
+
+		void putch_(char ch)
+		{
+			if(intr_level_) {
+				/// ７／８ を超えてた場合は、バッファが空になるまで待つ。
+				if(send_.length() >= (send_.size() * 7 / 8)) {
+					send_restart_();
+					while(send_.length() != 0) sleep_();
+				}
+				send_.put(ch);
+				send_restart_();
+			} else {
+				while(tx_.SSR.TSF() != 0) sleep_();
+				tx_.SDR_L = ch;
+			}
+		}
+
+
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  ボーレートを設定して、UART を有効にする
 			@param[in]	baud	ボーレート
-			@param[in]	polling	ポーリングの場合「true」
+			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
 			@return エラーなら「false」
 		*/
 		//-----------------------------------------------------------------//
-		bool start(uint32_t baud, bool polling = false) {
-			polling_ = polling;
+		bool start(uint32_t baud, bool level = 0) {
+			intr_level_ = level;
 
 			// ボーレートと分周比の計算
 			auto div = static_cast<uint32_t>(F_CLK) / baud;
@@ -118,6 +165,8 @@ namespace device {
 				P0.B2  = 1;	// ポートレジスター RxD 切り替え
 			}
 
+			send_stall_ = true;
+
 			tx_.SS = 1;	/// TxD enable
 			rx_.SS = 1;	/// RxD enable
 
@@ -141,10 +190,10 @@ namespace device {
 		 */
 		//-----------------------------------------------------------------//
 		uint16_t send_length() const {
-			if(polling_) {
-				return tx_.SSR.TSF();
-			} else {
+			if(intr_level_) {
 				return send_.length();
+			} else {
+				return tx_.SSR.TSF();
 			}
 		}
 
@@ -157,10 +206,10 @@ namespace device {
 		 */
 		//-----------------------------------------------------------------//
 		uint16_t recv_length() const {
-			if(polling_) {
-				return rx_.SSR.BFF();
-			} else {
+			if(intr_level_) {
 				return recv_.length();
+			} else {
+				return rx_.SSR.BFF();
 			}
 		}
 
@@ -173,20 +222,9 @@ namespace device {
 		//-----------------------------------------------------------------//
 		void putch(char ch) {
 			if(crlf_ && ch == '\n') {
-				putch('\r');
+				putch_('\r');
 			}
-
-			if(polling_) {
-				while(tx_.SSR.TSF() != 0) sleep_();
-				tx_.SDR_L = ch;
-			} else {
-				/// ７／８ を超えてた場合は、バッファが空になるまで待つ。
-				if(send_.length() >= (send_.size() * 7 / 8)) {
-					while(send_.length() != 0) sleep_();
-				}
-				send_.put(ch);
-///				SCIx::SCR.TEIE = 1;
-			}
+			putch_(ch);
 		}
 
 
@@ -197,12 +235,12 @@ namespace device {
 		 */
 		//-----------------------------------------------------------------//
 		char getch() {
-			if(polling_) {
-				while(rx_.SSR.BFF() == 0) sleep_();
-				return rx_.SDR_L();
-			} else {
+			if(intr_level_) {
 				while(recv_.length() == 0) sleep_();
 				return recv_.get();
+			} else {
+				while(rx_.SSR.BFF() == 0) sleep_();
+				return rx_.SDR_L();
 			}
 		}
 
@@ -222,10 +260,13 @@ namespace device {
 		}
 	};
 
-	// send_、recv_ の実体を定義
+	// send_、recv_, send_stall_ の実体を定義
 	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
 		utils::fifo<send_size> uart_io<SAUtx, SAUrx, send_size, recv_size>::send_;
 
 	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
 		utils::fifo<recv_size> uart_io<SAUtx, SAUrx, send_size, recv_size>::recv_;
+
+	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
+		volatile bool uart_io<SAUtx, SAUrx, send_size, recv_size>::send_stall_ = true; 
 }
