@@ -45,12 +45,48 @@ namespace device {
 		void sleep_() { asm("nop"); }
 
 	public:
+		// 送信完了割り込み設定
+		static inline void send_intrrupt_mask_(bool f)
+		{
+			if(tx_.get_unit_no() == 0) {
+				if(tx_.get_chanel_no() == 0) {  // UART0
+					intr::MK0H.STMK0 = f;
+				} else {
+
+				}
+			} else {
+				if(tx_.get_chanel_no() == 0) {  // UART2
+///					intr::MK0H.STMK0 = f;
+				} else {
+
+				}
+			}
+		}
+
+		// 受信割り込みマスク設定
+		static inline void recv_interrupt_mask_(bool f)
+		{
+			if(rx_.get_unit_no() == 0) {
+				if(rx_.get_chanel_no() == 0) {  // UART0
+					intr::MK0H.SRMK0 = f;
+				} else {
+
+				}
+			} else {
+				if(rx_.get_chanel_no() == 0) {  // UART2
+
+				} else {
+
+				}
+			}
+		}
+
 		static __attribute__ ((interrupt)) void send_task()
 		{
 			if(send_.length()) {
 				tx_.SDR_L = send_.get();
 			} else {
-				intr::MK0H.STMK0 = 1;  // 送信完了割り込みマスク
+				send_intrrupt_mask_(true);
 				send_stall_ = true;
 			}
 		}
@@ -70,7 +106,7 @@ namespace device {
 				char ch = send_.get();
 				send_stall_ = false;
 				tx_.SDR_L = ch;
-				intr::MK0H.STMK0 = 0;  // 送信完了割り込みマスク・クリア
+				send_intrrupt_mask_(false);
 			}
 		}
 
@@ -150,12 +186,13 @@ namespace device {
 			tx_.SO  = 1;	// シリアル出力設定
 			tx_.SOE = 1;	// シリアル出力許可(Txd)
 
+			// 対応するポートの設定
 			if(tx_.get_unit_no() == 0) {
 				if(tx_.get_chanel_no() == 0) {  // UART0
 					PM1.B1 = 1;	// P1-1 input  (RxD0)
 					PM1.B2 = 0;	// P1-2 output (TxD0)
 					P1.B2  = 1;	// ポートレジスター TxD 切り替え
-				} else if(tx_.get_chanel_no() == 2) {  // UART1
+				} else {  // UART1
 					PM1.B4 = 1;	// P1-1 input  (RxD0)
 					PM1.B3 = 0;	// P1-2 output (TxD0)
 					P1.B3  = 1;	// ポートレジスター TxD 切り替え
@@ -178,9 +215,9 @@ namespace device {
 			tx_.SS = 1;	/// TxD enable
 			rx_.SS = 1;	/// RxD enable
 
-			// 割り込み許可
+			// マスクをクリアして、割り込み許可
 			if(intr_level_ > 0) {
-				intr::MK0H.SRMK0 = 0;  // 受信割り込みマスク・クリア
+				recv_interrupt_mask_(0);
 			}
 
 			return true;
