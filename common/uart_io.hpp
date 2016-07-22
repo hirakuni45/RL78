@@ -44,6 +44,32 @@ namespace device {
 		// ※必要なら、実装する
 		void sleep_() { asm("nop"); }
 
+		void send_restart_() {
+			if(send_stall_ && send_.length() > 0) {
+				while(tx_.SSR.TSF() != 0) sleep_();
+				char ch = send_.get();
+				send_stall_ = false;
+				tx_.SDR_L = ch;
+				send_intrrupt_mask_(false);
+			}
+		}
+
+		void putch_(char ch)
+		{
+			if(intr_level_) {
+				/// ７／８ を超えてた場合は、バッファが空になるまで待つ。
+				if(send_.length() >= (send_.size() * 7 / 8)) {
+					send_restart_();
+					while(send_.length() != 0) sleep_();
+				}
+				send_.put(ch);
+				send_restart_();
+			} else {
+				while(tx_.SSR.TSF() != 0) sleep_();
+				tx_.SDR_L = ch;
+			}
+		}
+
 	public:
 		// 送信完了割り込み設定
 		static inline void send_intrrupt_mask_(bool f)
@@ -100,32 +126,6 @@ namespace device {
 		{
 		}
 
-		void send_restart_() {
-			if(send_stall_ && send_.length() > 0) {
-				while(tx_.SSR.TSF() != 0) sleep_();
-				char ch = send_.get();
-				send_stall_ = false;
-				tx_.SDR_L = ch;
-				send_intrrupt_mask_(false);
-			}
-		}
-
-		void putch_(char ch)
-		{
-			if(intr_level_) {
-				/// ７／８ を超えてた場合は、バッファが空になるまで待つ。
-				if(send_.length() >= (send_.size() * 7 / 8)) {
-					send_restart_();
-					while(send_.length() != 0) sleep_();
-				}
-				send_.put(ch);
-				send_restart_();
-			} else {
-				while(tx_.SSR.TSF() != 0) sleep_();
-				tx_.SDR_L = ch;
-			}
-		}
-
 
 		//-----------------------------------------------------------------//
 		/*!
@@ -164,11 +164,16 @@ namespace device {
 			}
 
 			// チャネル０、１で共有の為、どちらか片方のみの設定
-			tx_.SPS = SAUtx::SPS.PRS0.b(master);
-			// rx_.SPS = SAUrx::SPS.PRS0.b(master);
+			bool cks = false;
+			if(tx_.get_chanel_no() == 0) {
+				tx_.SPS = SAUtx::SPS.PRS0.b(master);
+			} else {
+				tx_.SPS = SAUtx::SPS.PRS1.b(master);
+				cks = true;
+			}
 
-			tx_.SMR = 0x20 | SAUtx::SMR.MD.b(1) | SAUtx::SMR.MD0.b(1);
-			rx_.SMR = 0x20 | SAUrx::SMR.STS.b(1) | SAUrx::SMR.MD.b(1);
+			tx_.SMR = 0x0020 | SAUtx::SMR.CKS.b(cks) | SAUtx::SMR.MD.b(1) | SAUtx::SMR.MD0.b(1);
+			rx_.SMR = 0x0020 | SAUtx::SMR.CKS.b(cks) | SAUrx::SMR.STS.b(1) | SAUrx::SMR.MD.b(1);
 
 			// 8 date, 1 stop, no-parity LSB-first
 			// 送信設定
