@@ -439,12 +439,12 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  PPR5;
-			bit_rw_t<T, 6>  PPR4;
-			bit_rw_t<T, 5>  PPR3;
-			bit_rw_t<T, 4>  PPR2;
-			bit_rw_t<T, 3>  PPR1;
-			bit_rw_t<T, 2>  PPR0;
+			bit_rw_t<T, 7>  PPR5;    ///< ( 7)
+			bit_rw_t<T, 6>  PPR4;    ///< ( 6)
+			bit_rw_t<T, 5>  PPR3;    ///< ( 5)
+			bit_rw_t<T, 4>  PPR2;    ///< ( 4)
+			bit_rw_t<T, 3>  PPR1;    ///< ( 3)
+			bit_rw_t<T, 2>  PPR0;    ///< ( 2)
 			bit_rw_t<T, 1>  LVIPR;   ///< ( 1)
 			bit_rw_t<T, 0>  WDTIPR;  ///< ( 0)
 		};
@@ -465,30 +465,30 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  SREPR0;
-			bit_rw_t<T, 7>  TMPR01H;
+			bit_rw_t<T, 7>  SREPR0;   ///< (15)
+			bit_rw_t<T, 7>  TMPR01H;  ///< (15)
 
-			bit_rw_t<T, 6>  SRPR0;
-			bit_rw_t<T, 6>  CSIPR01;
-			bit_rw_t<T, 6>  IICPR01;
+			bit_rw_t<T, 6>  SRPR0;    ///< (14)
+			bit_rw_t<T, 6>  CSIPR01;  ///< (14)
+			bit_rw_t<T, 6>  IICPR01;  ///< (14)
 
-			bit_rw_t<T, 5>  STPR0;
-			bit_rw_t<T, 5>  CSIPR00;
-			bit_rw_t<T, 5>  IICPR00;
+			bit_rw_t<T, 5>  STPR0;    ///< (13)
+			bit_rw_t<T, 5>  CSIPR00;  ///< (13)
+			bit_rw_t<T, 5>  IICPR00;  ///< (13)
 
-			bit_rw_t<T, 4>  DMAPR1;
-			bit_rw_t<T, 3>  DMAPR0;
+			bit_rw_t<T, 4>  DMAPR1;   ///< (12)
+			bit_rw_t<T, 3>  DMAPR0;   ///< (11)
 
-			bit_rw_t<T, 2>  SREPR2;
-			bit_rw_t<T, 2>  TMPR11H;
+			bit_rw_t<T, 2>  SREPR2;   ///< (10)
+			bit_rw_t<T, 2>  TMPR11H;  ///< (10)
 
-			bit_rw_t<T, 1>  SRPR2;
-			bit_rw_t<T, 1>  CSIPR21;
-			bit_rw_t<T, 1>  IICPR21;
+			bit_rw_t<T, 1>  SRPR2;    ///< ( 9)
+			bit_rw_t<T, 1>  CSIPR21;  ///< ( 9)
+			bit_rw_t<T, 1>  IICPR21;  ///< ( 9)
 
-			bit_rw_t<T, 0>  STPR2;
-			bit_rw_t<T, 0>  CSIPR20;
-			bit_rw_t<T, 0>  IICPR20;
+			bit_rw_t<T, 0>  STPR2;    ///< ( 8)
+			bit_rw_t<T, 0>  CSIPR20;  ///< ( 8)
+			bit_rw_t<T, 0>  IICPR20;  ///< ( 8)
 		};
 		static pr0h_t< rw8_t<0xFFFE9> > PR00H;
 		static pr0h_t< rw8_t<0xFFFED> > PR10H;
@@ -507,22 +507,22 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  TMPR03;
-			bit_rw_t<T, 6>  TMPR02;
-			bit_rw_t<T, 5>  TMPR01;
-			bit_rw_t<T, 4>  TMPR00;
-			bit_rw_t<T, 3>  IICAPR0;
+			bit_rw_t<T, 7>  TMPR03;   ///< (23)
+			bit_rw_t<T, 6>  TMPR02;   ///< (22)
+			bit_rw_t<T, 5>  TMPR01;   ///< (21)
+			bit_rw_t<T, 4>  TMPR00;   ///< (20)
+			bit_rw_t<T, 3>  IICAPR0;  ///< (19)
 
-			bit_rw_t<T, 2>  SREPR1;
-			bit_rw_t<T, 2>  TMPR03H;
+			bit_rw_t<T, 2>  SREPR1;   ///< (18)
+			bit_rw_t<T, 2>  TMPR03H;  ///< (18)
 
-			bit_rw_t<T, 1>  SRPR1;
-			bit_rw_t<T, 1>  CSIPR11;
-			bit_rw_t<T, 1>  IICPR11;
+			bit_rw_t<T, 1>  SRPR1;    ///< (17)
+			bit_rw_t<T, 1>  CSIPR11;  ///< (17)
+			bit_rw_t<T, 1>  IICPR11;  ///< (17)
 
-			bit_rw_t<T, 0>  STPR1;
-			bit_rw_t<T, 0>  CSIPR10;
-			bit_rw_t<T, 0>  IICPR10;
+			bit_rw_t<T, 0>  STPR1;    ///< (16)
+			bit_rw_t<T, 0>  CSIPR10;  ///< (16)
+			bit_rw_t<T, 0>  IICPR10;  ///< (16)
 		};
 		static pr1l_t< rw8_t<0xFFFEA> > PR01L;
 		static pr1l_t< rw8_t<0xFFFEE> > PR11L;
@@ -541,21 +541,21 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  TMPR04;
-			bit_rw_t<T, 6>  TMPR13;
+			bit_rw_t<T, 7>  TMPR04;   ///< (31)
+			bit_rw_t<T, 6>  TMPR13;   ///< (30)
 
-			bit_rw_t<T, 5>  SRPR3;
-			bit_rw_t<T, 5>  CSIPR31;
-			bit_rw_t<T, 5>  IICPR31;
+			bit_rw_t<T, 5>  SRPR3;    ///< (29)
+			bit_rw_t<T, 5>  CSIPR31;  ///< (29)
+			bit_rw_t<T, 5>  IICPR31;  ///< (29)
 
-			bit_rw_t<T, 4>  STPR3;
-			bit_rw_t<T, 4>  CSIPR30;
-			bit_rw_t<T, 4>  IICPR30;
+			bit_rw_t<T, 4>  STPR3;    ///< (28)
+			bit_rw_t<T, 4>  CSIPR30;  ///< (28)
+			bit_rw_t<T, 4>  IICPR30;  ///< (28)
 
-			bit_rw_t<T, 3>  KRPR;
-			bit_rw_t<T, 2>  ITPR;
-			bit_rw_t<T, 1>  RTCPR;
-			bit_rw_t<T, 0>  ADPR;
+			bit_rw_t<T, 3>  KRPR;     ///< (27)
+			bit_rw_t<T, 2>  ITPR;     ///< (26)
+			bit_rw_t<T, 1>  RTCPR;    ///< (25)
+			bit_rw_t<T, 0>  ADPR;     ///< (24)
 		};
 		static pr1h_t< rw8_t<0xFFFEB> > PR01H;
 		static pr1h_t< rw8_t<0xFFFEF> > PR11H;
@@ -574,14 +574,14 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  PPR10;
-			bit_rw_t<T, 6>  PPR9;
-			bit_rw_t<T, 5>  PPR8;
-			bit_rw_t<T, 4>  PPR7;
-			bit_rw_t<T, 3>  PPR6;
-			bit_rw_t<T, 2>  TMPR07;
-			bit_rw_t<T, 1>  TMPR06;
-			bit_rw_t<T, 0>  TMPR05;
+			bit_rw_t<T, 7>  PPR10;   ///< (39)
+			bit_rw_t<T, 6>  PPR9;    ///< (38)
+			bit_rw_t<T, 5>  PPR8;    ///< (37)
+			bit_rw_t<T, 4>  PPR7;    ///< (36)
+			bit_rw_t<T, 3>  PPR6;    ///< (35)
+			bit_rw_t<T, 2>  TMPR07;  ///< (34)
+			bit_rw_t<T, 1>  TMPR06;  ///< (33)
+			bit_rw_t<T, 0>  TMPR05;  ///< (32)
 		};
 		static pr2l_t< rw8_t<0xFFFD8> > PR02L;
 		static pr2l_t< rw8_t<0xFFFDC> > PR12L;
@@ -600,17 +600,17 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>  FLPR;
-			bit_rw_t<T, 6>  IICAPR1;
-			bit_rw_t<T, 5>  MDPR;
+			bit_rw_t<T, 7>  FLPR;     ///< (47)
+			bit_rw_t<T, 6>  IICAPR1;  ///< (46)
+			bit_rw_t<T, 5>  MDPR;     ///< (45)
 
-			bit_rw_t<T, 4>  SREPR3;
-			bit_rw_t<T, 4>  TMPR13H;
+			bit_rw_t<T, 4>  SREPR3;   ///< (44)
+			bit_rw_t<T, 4>  TMPR13H;  ///< (44)
 
-			bit_rw_t<T, 3>  TMPR12;
-			bit_rw_t<T, 2>  TMPR11;
-			bit_rw_t<T, 1>  TMPR10;
-			bit_rw_t<T, 0>  PPR11;
+			bit_rw_t<T, 3>  TMPR12;   ///< (43)
+			bit_rw_t<T, 2>  TMPR11;   ///< (42)
+			bit_rw_t<T, 1>  TMPR10;   ///< (41)
+			bit_rw_t<T, 0>  PPR11;    ///< (40)
 		};
 		static pr2h_t< rw8_t<0xFFFD9> > PR02H;
 		static pr2h_t< rw8_t<0xFFFDD> > PR12H;
@@ -629,12 +629,12 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 5>  TMPR17;
-			bit_rw_t<T, 4>  TMPR16;
-			bit_rw_t<T, 3>  TMPR15;
-			bit_rw_t<T, 2>  TMPR14;
-			bit_rw_t<T, 1>  DMAPR3;
-			bit_rw_t<T, 0>  DMAPR2;
+			bit_rw_t<T, 5>  TMPR17;  ///< (53)
+			bit_rw_t<T, 4>  TMPR16;  ///< (52)
+			bit_rw_t<T, 3>  TMPR15;  ///< (51)
+			bit_rw_t<T, 2>  TMPR14;  ///< (50)
+			bit_rw_t<T, 1>  DMAPR3;  ///< (49)
+			bit_rw_t<T, 0>  DMAPR2;  ///< (48)
 		};
 		static pr3l_t< rw8_t<0xFFFDA> > PR03L;
 		static pr3l_t< rw8_t<0xFFFDE> > PR13L;
