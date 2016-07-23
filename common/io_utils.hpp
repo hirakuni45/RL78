@@ -251,7 +251,7 @@ namespace device {
 	template <class T, uint8_t pos>
 	struct bit_rw_t {
 		static bool get() {
-			return (typename T::read() >> pos) & 1;
+			return (T::read() >> pos) & 1;
 		}
 		static void set(bool v) {
 			if(v) {
