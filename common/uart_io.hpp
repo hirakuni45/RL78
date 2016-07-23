@@ -107,7 +107,7 @@ namespace device {
 			}
 		}
 
-		static __attribute__ ((interrupt)) void send_task()
+		static __attribute__ ((interrupt)) void send_task() __attribute__ ((section (".lowtext")))
 		{
 			if(send_.length()) {
 				tx_.SDR_L = send_.get();
@@ -117,7 +117,7 @@ namespace device {
 			}
 		}
 
-		static __attribute__ ((interrupt)) void recv_task()
+		static __attribute__ ((interrupt)) void recv_task() __attribute__ ((section (".lowtext")))
 		{
 			recv_.put(rx_.SDR_L());
 		}
