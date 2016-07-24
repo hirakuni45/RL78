@@ -42,7 +42,7 @@ namespace device {
 		bool	crlf_ = true;
 
 		// ※必要なら、実装する
-		void sleep_() { asm("nop"); }
+		inline void sleep_() { asm("nop"); }
 
 		void send_restart_() {
 			if(send_stall_ && send_.length() > 0) {
