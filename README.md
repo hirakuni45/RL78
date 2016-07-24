@@ -216,6 +216,39 @@ USB シリアル変換モジュールなどを使うと、電源も取れて簡�
     make run
 ```
 ---
+## 各ファイル概略
+ - G13/R5F100LCAFB.ld　R5F100LCAFB ( 32K/ 2K/4K) 用リンカースクリプト   
+ - G13/R5F100LEAFB.ld　R5F100LEAFB ( 64K/ 4K/4K) 用リンカースクリプト   
+ - G13/R5F100LGAFB.ld　R5F100LGAFB (128K/12K/8K) 用リンカースクリプト   
+ - G13/R5F100LJAFB.ld　R5F100LJAFB (256K/20K/8K) 用リンカースクリプト   
+ - G13/readme.txt　リンカースクリプトの概略
+ - G13/adc.hpp　Ａ／Ｄコンバーター定義
+ - G13/dma.hpp　ＤＭＡコントローラー定義
+ - G13/iica.hpp　ＩＩＣＡ（Ｉ２Ｃ）定義
+ - G13/intr.hpp　割り込み制御関係定義
+ - G13/port.hpp　ポート関係定義
+ - G13/sau.hpp　シリアル・アレイ・ユニット定義
+ - G13/system.hpp　システム関係定義
+ - G13/timer.hpp　１２ビットインターバルタイマー定義
+   
+---
+ - common/start.s　ハードウェアー・リセット初期化
+ - common/init.c　main 初期化
+ - common/option_bytes.hpp　オプション・バイト設定
+ - common/vect.h　ハードウェアー・ベクター定義
+ - common/vect.c　ハードウェアー・ベクター設定
+ - common/time.h　時間関数定義（posix time.h にある機能の縮小版）
+ - common/time.c　時間関数実装（posix time.h にある機能の縮小版）
+ - common/command.hpp　行入力テンプレート
+ - common/delay.hpp　ソフトウェアー・ディレイ（３２ＭＨｚ動作、マイクロ秒単位）
+ - common/ds3231_io.hpp　ＤＳ３２３１、ＲＴＣ、入出力
+ - common/eeprom_io.hpp　ＥＥＰＲＯＭ入出力
+ - common/fifo.hpp　First-in first-out バッファ
+ - common/format.hpp　文字列整形テンプレート
+ - common/iica_io.hpp　ＩＩＣＡ入出力テンプレート
+ - common/uart_io.hpp　シリアル・コミュニケーション入出力（ＵＡＲＴ）
+   
+---
 License
 
 MIT
