@@ -135,7 +135,7 @@ namespace device {
 			@return エラーなら「false」
 		*/
 		//-----------------------------------------------------------------//
-		bool start(uint32_t baud, bool level = 0) {
+		bool start(uint32_t baud, uint8_t level = 0) {
 			intr_level_ = level;
 
 			// ボーレートから分周比の算出
