@@ -28,7 +28,7 @@ namespace device {
 
 		uint8_t	intr_level_ = 0;
 
-		inline void wait_() const { asm("nop"); }
+		inline void sleep_() const { asm("nop"); }
 
 	public:
 		//-----------------------------------------------------------------//
@@ -97,9 +97,9 @@ namespace device {
 		void sync() const {
 			if(intr_level_) {
 				volatile T counter = counter_;
-				while(counter == counter_) wait_();
+				while(counter == counter_) sleep_();
 			} else {
-				while(intr::IF1H.ITIF() == 0) wait_();
+				while(intr::IF1H.ITIF() == 0) sleep_();
 				intr::IF1H.ITIF = 0;
 				++counter_;
 			}
