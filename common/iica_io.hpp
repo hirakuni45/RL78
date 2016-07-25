@@ -8,11 +8,16 @@
 //=====================================================================//
 #include "G13/system.hpp"
 #include "G13/iica.hpp"
+#include "common/delay.hpp"
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
 #ifndef F_CLK
 #  error "uart_io.hpp requires F_CLK to be defined"
 #endif
+
+extern "C" {
+	void sci_puts(const char* str);
+}
 
 namespace device {
 
@@ -37,10 +42,25 @@ namespace device {
 			fast_plus,	///< 1M b.p.s. (Fast plus mode)
 		};
 
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  I2C エラー・タイプ
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class error : uint8_t {
+			none,		///< エラー無し
+			start,		///< スタート
+			address,	///< アドレス転送
+			data,		///< データ転送
+		};
+
 	private:
 		static IICA iica_;
 
 		uint16_t	speed_;
+
+		uint8_t		error_;
 
 		inline void sleep_()
 		{
@@ -51,7 +71,7 @@ namespace device {
 		//  予定サイクル以内に検出しなかったら「false」
 		bool probe_ack_()
 		{
-			uint16_t n = speed_;
+			auto n = speed_;
 			while(iica_.IICS.ACKD() == 0) {
 				if(n == 0) return false;
 				--n;
@@ -59,7 +79,30 @@ namespace device {
 			return true;
 		}
 
+		// バスの開放を同期する。
+		bool sync_open_(uint16_t cnt) {
+			while(iica_.IICF.IICBSY() != 0) {
+				if(cnt == 0) {
+					sci_puts("I2C bus open sync error...\n");
+					return false;
+				}
+				--cnt;
+			}
+			return true;
+		}
+
 	public:
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  割り込みタスク
+		*/
+		//-----------------------------------------------------------------//
+		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
+		{
+		}
+
+
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	動作開始
@@ -70,6 +113,8 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool start(speed spd_type, uint8_t intr_lvl)
 		{
+//			error_ = error::none;
+
 			// ハードウェアーマニュアル１３．４．２により計算
 			// tF: 立下り時間
 			// tR: 立ち上がり時間
@@ -82,14 +127,14 @@ namespace device {
 			case speed::standard:
 				wl = 151;
 				wh = 138;
-				speed_ = 2560;
+				speed_ = 2560 * 2;
 				break;
 
 			// 400K b.p.s. 時 tF: 0.2us、tR: 0.2us
 			case speed::fast:
 				wl = 42;
 				wh = 26;
-				speed_ = 640;
+				speed_ = 640 * 2;
 				// ※デジタル・フィルター有効
 				smc = iica_.IICCTL1.SMC.b(1) | iica_.IICCTL1.DFC.b(1);
 				break;
@@ -98,11 +143,12 @@ namespace device {
 			case speed::fast_plus:
 				wl = 16;
 				wh = 10;
-				speed_ = 256;
+				speed_ = 256 * 2;
 				// ※デジタル・フィルター有効
 				smc = iica_.IICCTL1.SMC.b(1) | iica_.IICCTL1.DFC.b(1);
 				break;
 			default:
+				// error_ = error::start;
 				return false;
 			}
 
@@ -113,30 +159,40 @@ namespace device {
 				PER0.IICA1EN = 1;
 			}
 
-			// 転送レート設定
+			// IICE(0) の時に設定
+			iica_.IICCTL1 = iica_.IICCTL1.PRS.b(1) | smc;
+
+			// 転送レート設定、IICE(0) の時に設定
 			iica_.IICWL = wl / 2;
 			iica_.IICWH = wh / 2;
-
-			iica_.IICCTL1 = iica_.IICCTL1.PRS.b(1) | smc;
 
 			// iica_.IICCTL0.SPIE.b(1);  // 割り込み許可
 			iica_.IICCTL0 = iica_.IICCTL0.IICE.b(1);  // 許可
 
-			// ポート・モード設定
+			// ポート・モード設定、IICE(1) の時に設定
 			if(iica_.get_unit_no() == 0) {
-				PM6.B0 = 0;
-				PM6.B1 = 0;
-				P6.B0 = 0;
-				P6.B1 = 0;
+				PM6 &= 0b1111'1100;
+				P6  &= 0b1111'1100;
 			} else {
-				PM6.B2 = 0;
-				PM6.B3 = 0;
-				P6.B2 = 0;
-				P6.B3 = 0;
+				PM6 &= 0b1111'0011;
+				P6  &= 0b1111'0011;
 			}
 
-			return true;
+			// 「stop」コンディションを発行。
+			iica_.IICCTL0.SPT = 1;
+
+			// バスが開放されるまで待つ
+			return sync_open_(speed_ / 8);
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	最終エラーの取得
+			@return エラー・タイプ
+		 */
+		//-----------------------------------------------------------------//
+		uint8_t get_last_error() const { return error_; }
 
 
 		//-----------------------------------------------------------------//
@@ -150,11 +206,14 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool recv(uint8_t adr, uint8_t* dst, uint8_t len)
 		{
+			// error_ = error::none;
+
 			iica_.IICCTL0.STT = 1;  // スタート・コンディション（開始）
 
 			iica_.IICA = (adr << 1) | 0x01;  // アドレス転送と確認
 			if(!probe_ack_()) {
 				iica_.IICCTL0.SPT = 1;
+				// error_ = error::address;
 				return false;
 			}
 
@@ -163,6 +222,7 @@ namespace device {
 			for(uint8_t i = 0; i < len; ++i) {
 				if(!probe_ack_()) {
 					iica_.IICCTL0.SPT = 1;
+					// error_ = error::data;
 					return false;
 				}
 				
@@ -187,11 +247,26 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool send(uint8_t adr, const uint8_t* src, uint8_t len)
 		{
+			// error_ = error::none;
+			error_ = 0;
+
+			if(!sync_open_(speed_ / 8)) {
+				return false;
+			}
+
 			iica_.IICCTL0.STT = 1;  // スタート・コンディション（開始）
 
-			iica_.IICA = adr << 1;  // アドレス転送と確認
+			// スタート・コンディション検出を待つ
+			while(iica_.IICF.IICBSY() == 0) sleep_();
+
+			utils::delay::micro_second(5);
+
+			iica_.IICA = adr << 1;  // アドレス転送とアクノリッジの確認
 			if(!probe_ack_()) {
 				iica_.IICCTL0.SPT = 1;
+				// error_ = error::address;
+				error_= 99;
+				sci_puts("I2C error address\n");
 				return false;
 			}
 
@@ -201,11 +276,15 @@ namespace device {
 				++src;
 				if(!probe_ack_()) {
 					iica_.IICCTL0.SPT = 1;
+					error_ = 100;
+					sci_puts("I2C error data\n");
 					return false;
 				}
 			}
 			// ストップ・コンディション
 			iica_.IICCTL0.SPT = 1;
+
+			sci_puts("I2C send ok\n");
 
 			return true;
 		}
@@ -223,11 +302,14 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool send(uint8_t adr, uint8_t first, const uint8_t* src, uint8_t len)
 		{
+			// error_ = error::none;
+
 			iica_.IICCTL0.STT = 1;  // スタート・コンディション（開始）
 
 			iica_.IICA = adr << 1;  // アドレス転送と確認
 			if(!probe_ack_()) {
 				iica_.IICCTL0.SPT = 1;
+				// error_ = error::address;
 				return false;
 			}
 
@@ -235,6 +317,7 @@ namespace device {
 			iica_.IICA = first;
 			if(!probe_ack_()) {
 				iica_.IICCTL0.SPT = 1;
+				// error_ = error::data;
 				return false;
 			}
 
@@ -244,6 +327,7 @@ namespace device {
 				++src;
 				if(!probe_ack_()) {
 					iica_.IICCTL0.SPT = 1;
+					// error_ = error::data;
 					return false;
 				}
 			}

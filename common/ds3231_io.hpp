@@ -20,6 +20,7 @@ namespace device {
 	template <class I2C_IO>
 	class ds3231_io {
 
+		// R/W ビットを含まない７ビット値
 		static const uint8_t DS3231_ADR_ = 0x68;
 
 		I2C_IO& i2c_io_;
