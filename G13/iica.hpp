@@ -99,7 +99,7 @@ namespace device {
 			using T::operator &=;
 
 			bit_rw_t<T, 7> STCF;    ///< STTnクリア・フラグ
-			bit_rw_t<T, 6> IICBY;   ///< I2C バス状態フラグ
+			bit_rw_t<T, 6> IICBSY;  ///< I2C バス状態フラグ
 			bit_rw_t<T, 1> STCEN;   ///< 初期スタート許可トリガ
 			bit_rw_t<T, 0> IICRSV;  ///< 通信予約機能禁止ビット
 		};
