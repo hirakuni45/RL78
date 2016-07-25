@@ -9,7 +9,6 @@
 #include "G13/system.hpp"
 #include "G13/sau.hpp"
 #include "G13/intr.hpp"
-#include "common/fifo.hpp"
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
 #ifndef F_CLK
@@ -23,18 +22,18 @@ namespace device {
 		@brief  UART 制御クラス・テンプレート
 		@param[in]	SAUtx	シリアル・アレイ・ユニット送信・クラス（偶数チャネル）
 		@param[in]	SAUrx	シリアル・アレイ・ユニット受信・クラス（奇数チャネル）
-		@param[in]	send_size	送信バッファサイズ
-		@param[in]	recv_size	受信バッファサイズ
+		@param[in]	BUFtx	送信バッファサイズ
+		@param[in]	BUFrx	受信バッファサイズ
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
+	template <class SAUtx, class SAUrx, class BUFtx, class BUFrx>
 	class uart_io {
 
 		static SAUtx tx_;	///< 送信リソース
 		static SAUrx rx_;	///< 受信リソース
 
-		static utils::fifo<send_size> send_;
-		static utils::fifo<recv_size> recv_;
+		static BUFtx send_;
+		static BUFrx recv_;
 
 		static volatile bool	send_stall_;
 
@@ -217,11 +216,30 @@ namespace device {
 
 			send_stall_ = true;
 
-			tx_.SS = 1;	/// TxD enable
-			rx_.SS = 1;	/// RxD enable
+			tx_.SS = 1;	// TxD enable
+			rx_.SS = 1;	// RxD enable
 
 			// マスクをクリアして、割り込み許可
 			if(intr_level_ > 0) {
+				--level;
+				level ^= 0x03;
+				if(rx_.get_unit_no() == 0) {
+					if(rx_.get_chanel_no() == 1) {  // UART0
+						intr::PR00H.SRPR0 = (level) & 1;
+						intr::PR10H.SRPR0 = (level & 2) >> 1;
+					} else {  // UART1
+						intr::PR01L.SRPR1 = (level) & 1;
+						intr::PR11L.SRPR1 = (level & 2) >> 1;
+					}
+				} else {
+					if(rx_.get_chanel_no() == 1) {  // UART2
+						intr::PR00H.SRPR2 = (level) & 1;
+						intr::PR10H.SRPR2 = (level & 2) >> 1;
+					} else {  //UART3
+						intr::PR01H.SRPR3 = (level) & 1;
+						intr::PR11H.SRPR3 = (level & 2) >> 1;
+					}
+				}
 				recv_interrupt_mask_(0);
 			}
 
@@ -316,12 +334,12 @@ namespace device {
 	};
 
 	// send_、recv_, send_stall_ の実体を定義
-	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
-		utils::fifo<send_size> uart_io<SAUtx, SAUrx, send_size, recv_size>::send_;
+	template<class SAUtx, class SAUrx, class BUFtx, class BUFrx>
+		BUFtx uart_io<SAUtx, SAUrx, BUFtx, BUFrx>::send_;
 
-	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
-		utils::fifo<recv_size> uart_io<SAUtx, SAUrx, send_size, recv_size>::recv_;
+	template<class SAUtx, class SAUrx, class BUFtx, class BUFrx>
+		BUFrx uart_io<SAUtx, SAUrx, BUFtx, BUFrx>::recv_;
 
-	template<class SAUtx, class SAUrx, uint16_t send_size, uint16_t recv_size>
-		volatile bool uart_io<SAUtx, SAUrx, send_size, recv_size>::send_stall_ = true; 
+	template<class SAUtx, class SAUrx, class BUFtx, class BUFrx>
+		volatile bool uart_io<SAUtx, SAUrx, BUFtx, BUFrx>::send_stall_ = true; 
 }

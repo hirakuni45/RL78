@@ -13,10 +13,10 @@ namespace utils {
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /*!
         @brief  fifo クラス
-		@param[in]	size_	バッファサイズ
+		@param[in]	SIZE	バッファサイズ
     */
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint16_t size_ = 256>
+	template <uint16_t SIZE>
 	class fifo {
 
 		typedef char DT;
@@ -25,7 +25,7 @@ namespace utils {
 		volatile PTS	get_ = 0;
 		volatile PTS	put_ = 0;
 
-		DT	buff_[size_];
+		DT	buff_[SIZE];
 
 	public:
         //-----------------------------------------------------------------//
@@ -45,7 +45,7 @@ namespace utils {
 		void put(DT v) {
 			buff_[put_] = v;
 			++put_;
-			if(put_ >= size_) {
+			if(put_ >= SIZE) {
 				put_ = 0;
 			}
 		}
@@ -60,7 +60,7 @@ namespace utils {
 		DT get() {
 			DT data = buff_[get_];
 			++get_;
-			if(get_ >= size_) {
+			if(get_ >= SIZE) {
 				get_ = 0;
 			}
 			return data;
@@ -75,7 +75,7 @@ namespace utils {
         //-----------------------------------------------------------------//
 		PTS length() const {
 			if(put_ >= get_) return (put_ - get_);
-			else return (size_ + put_ - get_);
+			else return (SIZE + put_ - get_);
 		}
 
 
@@ -103,7 +103,7 @@ namespace utils {
 			@return	バッファのサイズ
         */
         //-----------------------------------------------------------------//
-		PTS size() const { return size_; }
+		PTS size() const { return SIZE; }
 	};
 
 }
