@@ -10,6 +10,7 @@
 #include "common/uart_io.hpp"
 #include "common/format.hpp"
 #include "common/iica_io.hpp"
+#include "common/fifo.hpp"
 
 namespace {
 	void wait_()
@@ -18,7 +19,9 @@ namespace {
 	}
 	typedef device::iica_io<device::IICA0> IICA;
 	IICA iica0_io_;
-	device::uart_io<device::SAU00, device::SAU01, 128, 128> uart0_io_;
+
+	typedef utils::fifo<128> buffer;
+	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_io_;
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {

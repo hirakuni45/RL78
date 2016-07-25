@@ -9,6 +9,7 @@
 #include "G13/system.hpp"
 #include "G13/port.hpp"
 #include "common/uart_io.hpp"
+#include "common/fifo.hpp"
 #include "common/format.hpp"
 #include "common/iica_io.hpp"
 #include "common/delay.hpp"
@@ -26,11 +27,13 @@ namespace {
 	typedef device::iica_io<device::IICA0> IICA;
 	IICA iica0_;
 
-	device::uart_io<device::SAU00, device::SAU01, 128, 128> uart0_;
+	device::ds3231_io<IICA> rtc_(iica0_);
+
+	typedef utils::fifo<128> buffer;
+
+	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_;
 
 	device::itimer<uint8_t> itm_;
-
-	device::ds3231_io<IICA> rtc_(iica0_);
 
 	utils::command<64> command_;
 }
@@ -231,24 +234,26 @@ int main(int argc, char* argv[])
 		itm_.start(60, intr_level);
 	}
 
-	// IICA(I2C) の開始
-	{
-		uint8_t intr_level = 0;
-		iica0_.start(IICA::speed::fast, intr_level);
-	}
-
 	// UART0 の開始
 	{
 		uint8_t intr_level = 1;
 		uart0_.start(115200, intr_level);
 	}
 
-	sci_puts("Start RL78/G13 DS3231 (I2C) test...\n");
+	// IICA(I2C) の開始
+	{
+		uint8_t intr_level = 0;
+		if(!iica0_.start(IICA::speed::fast, intr_level)) {
+			sci_puts("IICA start error\n");
+		}
+	}
+
+	sci_puts("Start RL78/G13 DS3231 (I2C)\n");
 
 	// DS3231(RTC) の開始
-	{
+	while(1) {
 		if(!rtc_.start()) {
-			sci_puts("Stall RTC start...\n");
+			utils::format("Stall RTC start (%d)\n") % static_cast<uint32_t>(iica0_.get_last_error());
 		}
 	}
 
