@@ -3,7 +3,7 @@
 #	RL78 Makefile 				        				#
 #														#
 #=======================================================#
-TARGET		=	adc_test
+TARGET		=	adc_sample
 
 DEVICE		=	R5F100LGAFB
 
