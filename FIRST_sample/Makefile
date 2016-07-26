@@ -3,7 +3,7 @@
 #	RL78 Makefile 				        				#
 #														#
 #=======================================================#
-TARGET		=	first_test
+TARGET		=	first_sample
 
 DEVICE		=	R5F100LGAFB
 
