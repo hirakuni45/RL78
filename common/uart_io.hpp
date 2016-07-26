@@ -22,8 +22,8 @@ namespace device {
 		@brief  UART 制御クラス・テンプレート
 		@param[in]	SAUtx	シリアル・アレイ・ユニット送信・クラス（偶数チャネル）
 		@param[in]	SAUrx	シリアル・アレイ・ユニット受信・クラス（奇数チャネル）
-		@param[in]	BUFtx	送信バッファサイズ
-		@param[in]	BUFrx	受信バッファサイズ
+		@param[in]	BUFtx	送信バッファサイズ（８バイト以上のサイズである事）
+		@param[in]	BUFrx	受信バッファサイズ（８バイト以上のサイズである事）
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class SAUtx, class SAUrx, class BUFtx, class BUFrx>
