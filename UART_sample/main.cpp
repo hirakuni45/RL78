@@ -1,6 +1,8 @@
 //=====================================================================//
 /*!	@file
-	@brief	UART の簡単なテスト
+	@brief	UART の簡単なサンプル @n
+			「RxD0 (P1_1)」から入力した値を「TxD0 (P1_2)」へ出力する。 @n
+			ボーレートは、「115200 b.p.s.」を設定
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
@@ -17,8 +19,9 @@ namespace {
 		asm("nop");
 	}
 
+	// 送信、受信バッファの定義
 	typedef utils::fifo<128> buffer;
-
+	// UART の定義（SAU0、SAU1）
 	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_io_;
 }
 
@@ -62,7 +65,7 @@ int main(int argc, char* argv[])
 	uint8_t intr_level = 1;
 	uart0_io_.start(115200, intr_level);
 
-	uart0_io_.puts("Start RL78/G13 UART0 test...\n");
+	uart0_io_.puts("Start RL78/G13 UART0 sample\n");
 
 	bool f = false;
 	uint32_t n = 0;
