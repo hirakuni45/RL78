@@ -3,7 +3,7 @@
 #	RL78 Makefile 				        				#
 #														#
 #=======================================================#
-TARGET		=	uart_test
+TARGET		=	adc_test
 
 DEVICE		=	R5F100LGAFB
 
