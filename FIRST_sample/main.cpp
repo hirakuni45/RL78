@@ -1,13 +1,16 @@
 //=====================================================================//
 /*!	@file
-	@brief	LED 点滅 @n
+	@brief	LED 点滅サンプル @n
 			LED は、P43(2) に接続 @n
 			ex: Vcc = LED(A), P43 = LED(K) 吸い込み @n
-			    ※必ず直列に適等な抵抗を入れて電流を 3mA 程度に調整する。
+			    ※必ず直列に適等な抵抗を入れて電流を調整する。@n
+				・3.3V: 赤色 LED(VF: 1.7V)、1mA、1.5K @n
+				・5.0V: 赤色 LED(VF: 1.7V)、1mA、3.3K @n
+				・5.0V: 赤色 LED(VF: 1.7V)、3mA、1.1K
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
-#include <stdint.h>
+#include <cstdint>
 #include "common/io_utils.hpp"
 
 namespace device {
@@ -23,7 +26,6 @@ namespace device {
 	};
 	static p4_t P4;
 
-
 	typedef rw8_t<0xfff24> pm4_rw;
 	struct pm4_t : public pm4_rw {
 		using pm4_rw::operator =;
@@ -37,14 +39,12 @@ namespace device {
 
 }
 
-
 namespace {
 	void wait_()
 	{
 		asm("nop");
 	}
 }
-
 
 int main(int argc, char* argv[])
 {
