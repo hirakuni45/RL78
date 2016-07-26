@@ -3,7 +3,7 @@
 #	RL78 Makefile 				        				#
 #														#
 #=======================================================#
-TARGET		=	itimer_test
+TARGET		=	itimer_sample
 
 DEVICE		=	R5F100LGAFB
 
