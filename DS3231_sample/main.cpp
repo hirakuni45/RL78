@@ -239,9 +239,9 @@ int main(int argc, char* argv[])
 	// IICA(I2C) の開始
 	{
 		uint8_t intr_level = 0;
-//		if(!iica0_.start(IICA::speed::fast, intr_level)) {
-		if(!iica0_.start(IICA::speed::standard, intr_level)) {
-			sci_puts("IICA start error\n");
+		if(!iica0_.start(IICA::speed::fast, intr_level)) {
+//		if(!iica0_.start(IICA::speed::standard, intr_level)) {
+			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica0_.get_last_error());
 		}
 	}
 
