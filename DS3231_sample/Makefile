@@ -15,7 +15,8 @@ ASOURCES	=	common/start.s
 
 CSOURCES	=	common/init.c \
 				common/vect.c \
-				common/option_bytes.c
+				common/option_bytes.c \
+				common/time.c
 
 PSOURCES	=	main.cpp
 
@@ -32,7 +33,9 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-OPTIMIZE	=	-O2
+# OPTIMIZE	=	-O2
+# optimize for size
+OPTIMIZE	=	-Os
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \

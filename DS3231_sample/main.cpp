@@ -19,10 +19,6 @@
 #include "common/ds3231_io.hpp"
 
 namespace {
-	void wait_()
-	{
-		asm("nop");
-	}
 
 	typedef device::iica_io<device::IICA0> IICA;
 	IICA iica0_;
@@ -110,7 +106,7 @@ namespace {
 	{
 		time_t t = 0;
 		if(!rtc_.get_time(t)) {
-			sci_puts("Stall RTC read...\n");
+			utils::format("Stall RTC read (%d)\n") % static_cast<uint32_t>(iica0_.get_last_error());
 		}
 		return t;
 	}
@@ -243,18 +239,17 @@ int main(int argc, char* argv[])
 	// IICA(I2C) の開始
 	{
 		uint8_t intr_level = 0;
-		if(!iica0_.start(IICA::speed::fast, intr_level)) {
+//		if(!iica0_.start(IICA::speed::fast, intr_level)) {
+		if(!iica0_.start(IICA::speed::standard, intr_level)) {
 			sci_puts("IICA start error\n");
 		}
 	}
 
-	sci_puts("Start RL78/G13 DS3231 (I2C)\n");
+	sci_puts("Start RL78/G13 DS3231(I2C-RTC) sample\n");
 
 	// DS3231(RTC) の開始
-	while(1) {
-		if(!rtc_.start()) {
-			utils::format("Stall RTC start (%d)\n") % static_cast<uint32_t>(iica0_.get_last_error());
-		}
+	if(!rtc_.start()) {
+		utils::format("Stall RTC start (%d)\n") % static_cast<uint32_t>(iica0_.get_last_error());
 	}
 
 	command_.set_prompt("# ");
