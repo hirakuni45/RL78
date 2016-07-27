@@ -3,7 +3,7 @@
 #	RL78 Makefile 				        				#
 #														#
 #=======================================================#
-TARGET		=	iica_test
+TARGET		=	iica_sample
 
 DEVICE		=	R5F100LGAFB
 
