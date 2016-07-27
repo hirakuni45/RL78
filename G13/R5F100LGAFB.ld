@@ -159,6 +159,7 @@ SECTIONS
        crtbegin.o; the linker won't look for a file to match a
        wildcard.  The wildcard also means that it doesn't matter which
        directory crtbegin.o is in.  */
+    PROVIDE (__ctor_start = .);
     KEEP (*crtbegin*.o(.ctors))
 
     /* We don't want to include the .ctor section from from the
@@ -168,11 +169,14 @@ SECTIONS
     KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
     KEEP (*(SORT(.ctors.*)))
     KEEP (*(.ctors))
+    PROVIDE (__ctor_end = .);
 
+    PROVIDE (__dtor_start = .);
     KEEP (*crtbegin*.o(.dtors))
     KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
+    PROVIDE (__dtor_end = .);
   } > ROM
 
   .text           :
