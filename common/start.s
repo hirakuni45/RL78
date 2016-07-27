@@ -84,12 +84,22 @@ _halt:
 
 	.size	_start, . - _start
 
+	.global	_rl78_run_ctor
+	.type	_rl78_run_ctor,@function
+_rl78_run_ctor:
+	movw	hl, #__ctor_start
+	movw	de, #__ctor_end
+	movw	bc, #2
+	br	$_rl78_run_inilist
+
+
 	.global	_rl78_run_preinit_array
 	.type	_rl78_run_preinit_array,@function
 _rl78_run_preinit_array:
 	movw	hl, #__preinit_array_start
 	movw	de, #__preinit_array_end
-	movw	bc, #-2
+;;	movw	bc, #-2
+	movw	bc, #2
 	br	$_rl78_run_inilist
 
 
@@ -109,7 +119,8 @@ _rl78_run_init_array:
 _rl78_run_fini_array:
 	movw	hl, #__fini_array_start
 	movw	de, #__fini_array_end
-	movw	bc, #-2
+;;	movw	bc, #-2
+	movw	bc, #2
 
 	;; HL = start of list
 	;; DE = end of list
