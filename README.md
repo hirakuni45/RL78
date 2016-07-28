@@ -38,6 +38,7 @@ E-Mail: hira@rvf-rc45.net
  - /UART_sample     --->   RL78/G13 デバイス向け、シリアル・コミュニケーションのサンプル（RxD0）
  - /INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
  - /SOFT_DELAY)sample ---> RL78/G13 ソフトウェアー・タイマーのサンプル
+ - /DS3231_sample   --->   DS3231 Real Time Clock の時間表示、設定サンプル
  - /KiCAD_Lib       --->   KiCAD 用部品ライブラリー
    
 ## RL78 開発環境
@@ -158,7 +159,8 @@ E-Mail: hira@rvf-rc45.net
 
 幾つかの方法がありますが、最も簡単で、コストがかからない方法は、シリアルインターフェースを使って
 書き込む方法です。   
-シリアルインターフェースからの３つ（５つ）の信号があれば書きこめますが、簡単な変換回路が必要です。   
+但し、Ｒ８Ｃのように直接接続する事は出来ません。
+シリアルインターフェースからの３つ（５つ）の信号を適切な変換回路でマイコンと接続する必要があります。   
 ※USB シリアル変換モジュールなどを使うと、電源も取れて簡単です。
 ※（秋月電子、シリアル変換モジュール）http://akizukidenshi.com/catalog/g/gK-06894/
 (1) RXD シリアル受信   
@@ -172,6 +174,10 @@ E-Mail: hira@rvf-rc45.net
    
  - 回路図は、rl78prog/KiCAD/ を参照して下さい、簡易書き込み回路があります。   
  - 正規の回路は、ルネサスエレクトロニクスのホームページからダウンロード出来ます。
+ - もちろん、ルネサスエレクトロニクス販売のＥ１、又は、Ｅ２、エミュレーターでも書き込む事が出来ます。
+ - RL78/G13（６４ピン製品） の「P40/TOOL0 (5)」、「/RESET (6)」に接続します。
+ - シリアル通信は、開発過程では良く利用するので、スイッチで切り替えられるようにしておくと便利です。   
+※切り替えの参考回路が、「rl78prog/KiCAD」にあります。   
    
 ## RL78 フラッシュプログラマーの構築
 
@@ -179,6 +185,7 @@ E-Mail: hira@rvf-rc45.net
  - ※ Renesas Flash Programmer の最新版を使って下さい。
  - rl78prog のビルドには「boost_1_60_0」が必要です。
  - boost はヘッダーのみ利用なので、ビルドの必要はありません、boost_1_60_0.zip を展開するだけです。
+ - 又は、mingw64 環境などに pacman を使い boost をインストールして、そのパスを設定しても良いでしょう。
 
 ``` 
     cd /usr/local
@@ -263,7 +270,7 @@ E-Mail: hira@rvf-rc45.net
  - common/command.hpp　行入力テンプレート
  - common/delay.hpp　ソフトウェアー・ディレイ（３２ＭＨｚ動作、マイクロ秒単位）
  - common/ds3231_io.hpp　ＤＳ３２３１、ＲＴＣ、入出力
- - common/eeprom_io.hpp　ＥＥＰＲＯＭ入出力
+ - common/eeprom_io.hpp　Ｉ２Ｃ－ＥＥＰＲＯＭ入出力
  - common/fifo.hpp　First-in first-out バッファ
  - common/format.hpp　文字列整形テンプレート
  - common/iica_io.hpp　ＩＩＣＡ入出力テンプレート
