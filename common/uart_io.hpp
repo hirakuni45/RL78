@@ -197,16 +197,16 @@ namespace device {
 					PM1.B2 = 0;	// P1-2 output (TxD0)
 					P1.B2  = 1;	// ポートレジスター TxD 切り替え
 				} else {  // UART1
-					PM1.B4 = 1;	// P1-1 input  (RxD0)
-					PM1.B3 = 0;	// P1-2 output (TxD0)
-					P1.B3  = 1;	// ポートレジスター TxD 切り替え
+					PM0.B3  = 1;  // P0-3 input  (RxD1)
+					PM0.B2  = 0;  // P0-2 output (TxD1)
+					PMC0.B2 = 0;  // ポートモードコントロール
+					P0.B2   = 1;  // ポートレジスター TxD 切り替え
 				}
 			} else {
 				if(tx_.get_chanel_no() == 0) {  // UART2
-					PM0.B3  = 1;  // P1-3 input  (RxD2)
-					PM0.B2  = 0;  // P1-2 output (TxD2)
-					PMC0.B2 = 0;  // ポートモードコントロール
-					P0.B2   = 1;  // ポートレジスター TxD 切り替え
+					PM1.B4 = 1;	// P1-1 input  (RxD2)
+					PM1.B3 = 0;	// P1-2 output (TxD2)
+					P1.B3  = 1;	// ポートレジスター TxD 切り替え
 				} else {  // UART3（128ピンデバイスでサポート）
 					PM14.B3 = 1;  // P14-3 input (RxD3)
 					PM14.B4 = 0;  // P14-4 output (TxD3)
