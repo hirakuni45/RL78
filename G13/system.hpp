@@ -214,4 +214,22 @@ namespace device {
 		bit_rw_t<T, 0>  HIOTRM0;
 	};
 	static hiotrm_t< rw8_t<0xF00A0> > HIOTRM;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	データ・フラッシュ・コントロール・レジスタ（DFLCTL）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct dflctl_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, 0>  DFLLEN;
+	};
+	static dflctl_t< rw8_t<0xF0090> > DFLCTL;
 }
