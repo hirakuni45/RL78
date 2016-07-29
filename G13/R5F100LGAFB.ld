@@ -140,6 +140,7 @@ SECTIONS
     *(.eh_frame_hdr)
     KEEP (*(.eh_frame))
     KEEP (*(.gcc_except_table)) *(.gcc_except_table.*)
+    . = ALIGN(2);
     PROVIDE (__preinit_array_start = .);
     KEEP (*(.preinit_array))
     PROVIDE (__preinit_array_end = .);
