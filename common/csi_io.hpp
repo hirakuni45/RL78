@@ -122,7 +122,7 @@ namespace device {
 			--div;
 			div &= 0xfe;
 #endif
-			uint8_t master = 4;
+			uint8_t master = 2;
 			div = 0;
 
 			// 対応するユニットを有効にする
@@ -258,7 +258,7 @@ namespace device {
 			@param[in]	ch	送信データ
 		*/
 		//-----------------------------------------------------------------//
-		void put(uint8_t ch)
+		void write(uint8_t ch)
 		{
 			if(intr_level_) {
 
