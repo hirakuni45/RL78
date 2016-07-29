@@ -232,7 +232,7 @@ namespace device {
 			@return 「０」又は「１」
         */
         //-----------------------------------------------------------------//
-		uint8_t get_unit_no() const { return UOFS / 0x40; }
+		static uint8_t get_unit_no() { return UOFS / 0x40; }
 
 
         //-----------------------------------------------------------------//
@@ -241,7 +241,7 @@ namespace device {
 			@return 「０～３」
         */
         //-----------------------------------------------------------------//
-		uint8_t get_chanel_no() const { return CHOFS / 0x02; }
+		static uint8_t get_chanel_no() { return CHOFS / 0x02; }
 	};
 	typedef sau_t<0x00, 0x00> SAU00;
 	typedef sau_t<0x00, 0x02> SAU01;
