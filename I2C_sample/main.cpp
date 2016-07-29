@@ -22,10 +22,12 @@ namespace {
 	device::itimer<uint8_t> itm_;
 
 	typedef utils::fifo<128> buffer;
-	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_io_;
+	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_;
 
 	typedef device::iica_io<device::IICA0> IICA;
-	IICA iica0_io_;
+	IICA iica0_;
+
+	utils::command<64> command_;
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
@@ -42,9 +44,9 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart0_io_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart0_io_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart0_io_.error_task),
+	/* 13 */  reinterpret_cast<void*>(uart0_.send_task),
+	/* 14 */  reinterpret_cast<void*>(uart0_.recv_task),
+	/* 15 */  reinterpret_cast<void*>(uart0_.error_task),
 	/* 16 */  nullptr,
 	/* 17 */  nullptr,
 	/* 18 */  nullptr,
@@ -61,50 +63,71 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 extern "C" {
 	void sci_putch(char ch)
 	{
-		uart0_io_.putch(ch);
+		uart0_.putch(ch);
 	}
 
 	void sci_puts(const char* str)
 	{
-		uart0_io_.puts(str);
+		uart0_.puts(str);
+	}
+
+	char sci_getch(void)
+	{
+		return uart0_.getch();
+	}
+
+	uint16_t sci_length()
+	{
+		return uart0_.recv_length();
 	}
 };
 
 
 int main(int argc, char* argv[])
 {
-	device::PM4.B3 = 0;  // output
+	using namespace device;
 
+	PM4.B3 = 0;  // output
+
+	// itimer の開始
 	{
 		uint8_t intr_level = 1;
-		uart0_io_.start(115200, intr_level);
+		itm_.start(60, intr_level);
 	}
 
+	// UART0 の開始
+	{
+		uint8_t intr_level = 1;
+		uart0_.start(115200, intr_level);
+	}
+
+	// IICA(I2C) の開始
 	{
 		uint8_t intr_level = 0;
-		iica0_io_.start(IICA::speed::fast, intr_level);
+		if(!iica0_.start(IICA::speed::fast, intr_level)) {
+//		if(!iica0_.start(IICA::speed::standard, intr_level)) {
+			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica0_.get_last_error());
+		}
 	}
 
-	uart0_io_.puts("Start RL78/G13 I2C sample\n");
+	uart0_.puts("Start RL78/G13 I2C sample\n");
 
+	command_.set_prompt("# ");
 
-
-
-	bool f = false;
-	uint32_t n = 0;
+	uint8_t cnt = 0;
 	while(1) {
-		for(uint32_t i = 0; i < 100000; ++i) {
-			if(uart0_io_.recv_length()) {
-				auto ch = uart0_io_.getch();
-				if(ch == '\r') {
-					utils::format("%d\n") % n;
-					++n;
-				} else {
-					uart0_io_.putch(ch);
-				}
-			}
+		itm_.sync();
+
+		if(cnt >= 20) {
+			cnt = 0;
 		}
-		device::P4.B3 = f;
-		f = !f;
+		if(cnt < 10) P4.B3 = 1;
+		else P4.B3 = 0;
+		++cnt;
+
+		// コマンド入力と、コマンド解析
+		if(command_.service()) {
+
+		}
 	}
 }
