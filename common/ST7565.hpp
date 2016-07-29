@@ -13,14 +13,14 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  ST7565 テンプレートクラス
-		@param[in]	SPI_IO	SPI インターフェース・クラス
+		@param[in]	CSI_IO	CSI(SPI) 制御クラス
 		@param[in]	CTRL	デバイス選択、レジスター選択、制御クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class SPI_IO, class CTRL>
-	class ST7565_io {
+	template <class CSI_IO, class CTRL>
+	class ST7565 {
 
-		SPI_IO&	spi_;
+		CSI_IO&	csi_;
 
 		CTRL	ctrl_;
 
@@ -30,7 +30,7 @@ namespace device {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		ST7565_io(SPI_IO& spi) : spi_(spi) { }
+		ST7565(CSI_IO& csi) : csi_(csi) { }
 
 
 		//-----------------------------------------------------------------//
@@ -39,6 +39,7 @@ namespace device {
 		*/
 		//-----------------------------------------------------------------//
 		void start() const {
+#if 0
 			// 100ms setup...
 			for(uint8_t i = 0; i < 10; ++i) {
 				utils::delay::micro_second(10000);
@@ -74,6 +75,7 @@ namespace device {
 			}
 
 			ctrl_.lcd_sel(1);	// device disable
+#endif
 		}
 
 
@@ -84,6 +86,7 @@ namespace device {
 		*/
 		//-----------------------------------------------------------------//
 		void copy(const uint8_t* p) const {
+#if 0
 			ctrl_.lcd_sel(0);
 			for(uint8_t page = 0; page < 4; ++page) {
 				ctrl_.a0_out(0);
@@ -97,6 +100,7 @@ namespace device {
 				}
 			}
 			ctrl_.lcd_sel(1);
+#endif
 		}
 
 	};
