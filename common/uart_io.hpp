@@ -162,12 +162,13 @@ namespace device {
 				PER0.SAU1EN = 1;
 			}
 
-			// チャネル０、１で共有の為、どちらか片方のみの設定
+			// 各ユニットで、チャネル０、１、２、３で共有の為、
+			// ０、１：PRS0、２、３：PRS1 を使う
 			bool cks = false;
 			if(tx_.get_chanel_no() == 0) {
-				tx_.SPS = SAUtx::SPS.PRS0.b(master);
+				tx_.SPS.PRS0 = master;
 			} else {
-				tx_.SPS = SAUtx::SPS.PRS1.b(master);
+				tx_.SPS.PRS1 = master;
 				cks = true;
 			}
 
@@ -223,6 +224,25 @@ namespace device {
 			if(intr_level_ > 0) {
 				--level;
 				level ^= 0x03;
+				// 送信側優先順位
+				if(tx_.get_unit_no() == 0) {
+					if(tx_.get_chanel_no() == 0) {  // UART0
+						intr::PR00H.STPR0 = (level) & 1;
+						intr::PR10H.STPR0 = (level & 2) >> 1;
+					} else { // UART1
+						intr::PR01L.STPR1 = (level) & 1;
+						intr::PR11L.STPR1 = (level & 2) >> 1;
+					}
+				} else {
+					if(tx_.get_chanel_no() == 0) {  // UART2
+						intr::PR00H.STPR2 = (level) & 1;
+						intr::PR10H.STPR2 = (level & 2) >> 1;
+					} else {  //UART3
+						intr::PR01H.STPR3 = (level) & 1;
+						intr::PR11H.STPR3 = (level & 2) >> 1;
+					}
+				}
+				// 受信側優先順位
 				if(rx_.get_unit_no() == 0) {
 					if(rx_.get_chanel_no() == 1) {  // UART0
 						intr::PR00H.SRPR0 = (level) & 1;
