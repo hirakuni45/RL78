@@ -15,9 +15,10 @@ namespace device {
 		@brief  シリアル・アレイ・ユニット・テンプレート
 		@param[in]	UOFS	ユニット・オフセット（0x00、0x40）
 		@param[in]	CHOFS	チャネル・オフセット（0x00, 0x02, 0x04, 0x06)
+		@param[in]	SDR_O	SDR レジスターオフセット（0x00, 0x30, 0x08, 0x04）
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint32_t UOFS, uint32_t CHOFS>
+	template <uint32_t UOFS, uint32_t CHOFS, uint32_t SDR_O>
 	struct sau_t {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -98,7 +99,7 @@ namespace device {
 					１６ビットアクセス
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw16_t<0xFFF10 + UOFS + CHOFS> SDR;
+		static rw16_t<0xFFF10 + UOFS + CHOFS + SDR_O> SDR;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -107,7 +108,7 @@ namespace device {
 					下位８ビットアクセス (B0 - B7)
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static  rw8_t<0xFFF10 + UOFS + CHOFS> SDR_L;
+		static  rw8_t<0xFFF10 + UOFS + CHOFS + SDR_O> SDR_L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -243,15 +244,15 @@ namespace device {
         //-----------------------------------------------------------------//
 		static uint8_t get_chanel_no() { return CHOFS / 0x02; }
 	};
-	typedef sau_t<0x00, 0x00> SAU00;
-	typedef sau_t<0x00, 0x02> SAU01;
-	typedef sau_t<0x00, 0x04> SAU02;
-	typedef sau_t<0x00, 0x06> SAU03;
+	typedef sau_t<0x00, 0x00, 0x00> SAU00;
+	typedef sau_t<0x00, 0x02, 0x00> SAU01;
+	typedef sau_t<0x00, 0x04, 0x30> SAU02;
+	typedef sau_t<0x00, 0x06, 0x30> SAU03;
 
-	typedef sau_t<0x40, 0x00> SAU10;
-	typedef sau_t<0x40, 0x02> SAU11;
-	typedef sau_t<0x40, 0x04> SAU12;
-	typedef sau_t<0x40, 0x06> SAU13;
+	typedef sau_t<0x40, 0x00, 0x08> SAU10;
+	typedef sau_t<0x40, 0x02, 0x08> SAU11;
+	typedef sau_t<0x40, 0x04, 0x04> SAU12;
+	typedef sau_t<0x40, 0x06, 0x04> SAU13;
 
 	namespace SAU {
 
