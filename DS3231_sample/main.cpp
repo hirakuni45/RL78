@@ -16,14 +16,14 @@
 #include "common/itimer.hpp"
 #include "common/command.hpp"
 #include "common/time.h"
-#include "common/ds3231_io.hpp"
+#include "chip/DS3231.hpp"
 
 namespace {
 
 	typedef device::iica_io<device::IICA0> IICA;
 	IICA iica0_;
 
-	device::ds3231_io<IICA> rtc_(iica0_);
+	chip::DS3231<IICA> rtc_(iica0_);
 
 	typedef utils::fifo<128> buffer;
 
