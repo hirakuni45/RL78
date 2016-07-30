@@ -1,7 +1,8 @@
 //=====================================================================//
 /*!	@file
 	@brief	UART の簡単なサンプル @n
-			「RxD0 (P1_1)」から入力した値を「TxD0 (P1_2)」へ出力する。 @n
+			「P11/RxD0 (45)」から入力した値を「P12/TxD0 (44)」@n
+			「P03/RxD1 (59)」から入力した値を「P02/TxD1 (60)」@n
 			ボーレートは、「115200 b.p.s.」を設定
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
@@ -13,6 +14,10 @@
 #include "common/format.hpp"
 #include "common/fifo.hpp"
 
+// どれか一つだけ有効にする。
+// #define UART0
+#define UART1
+
 namespace {
 	void wait_()
 	{
@@ -21,8 +26,14 @@ namespace {
 
 	// 送信、受信バッファの定義
 	typedef utils::fifo<128> buffer;
-	// UART の定義（SAU0、SAU1）
-	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_;
+#ifdef UART0
+	// UART0 の定義（SAU0、SAU1）
+	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart_;
+#endif
+#ifdef UART1
+	// UART1 の定義（SAU2、SAU3）
+	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
+#endif
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
@@ -39,21 +50,21 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart0_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart0_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart0_.error_task),
+	/* 13 */  reinterpret_cast<void*>(uart_.send_task),
+	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),
+	/* 15 */  reinterpret_cast<void*>(uart_.error_task),
 };
 
 
 extern "C" {
 	void sci_putch(char ch)
 	{
-		uart0_.putch(ch);
+		uart_.putch(ch);
 	}
 
 	void sci_puts(const char* str)
 	{
-		uart0_.puts(str);
+		uart_.puts(str);
 	}
 };
 
@@ -64,22 +75,22 @@ int main(int argc, char* argv[])
 
 	{
 		uint8_t intr_level = 0;
-		uart0_.start(115200, intr_level);
+		uart_.start(115200, intr_level);
 	}
 
-	uart0_.puts("Start RL78/G13 UART0 sample\n");
+	utils::format("Start RL78/G13 UART%d sample\n") % static_cast<uint32_t>(uart_.get_chanel_no());
 
 	bool f = false;
 	uint32_t n = 0;
 	while(1) {
 		for(uint32_t i = 0; i < 100000; ++i) {
-			if(uart0_.recv_length()) {
-				auto ch = uart0_.getch();
+			if(uart_.recv_length()) {
+				auto ch = uart_.getch();
 				if(ch == '\r') {
 					utils::format("%d\n") % n;
 					++n;
 				} else {
-					uart0_.putch(ch);
+					uart_.putch(ch);
 				}
 			}
 		}
