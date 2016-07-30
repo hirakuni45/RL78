@@ -8,7 +8,7 @@
 #include <cstdint>
 #include "common/csi_io.hpp"
 
-namespace device {
+namespace chip {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
@@ -109,20 +109,20 @@ namespace device {
 
 			utils::delay::milli_second(100);
 
-			P0.B1 = 1;  // /CS = 1
+			device::P0.B1 = 1;  // /CS = 1
 
-			P0.B1 = 0;
+			device::P0.B1 = 0;
 			for(uint8_t page = 0; page < 8; ++page) {
-				P0.B0 = 0;
+				device::P0.B0 = 0;
 				csi_.write(0xb0 + page);
 				csi_.write(0x10);  // column upper
 				csi_.write(0x04);  // column lower
-				P0.B0 = 1;
+				device::P0.B0 = 1;
 				for(uint8_t i = 0; i < 128; ++i) {
 					csi_.write(i);
 				}
 			}
-			P0.B1 = 1;
+			device::P0.B1 = 1;
 		}
 
 
@@ -139,11 +139,11 @@ namespace device {
 			// pinMode(a0, OUTPUT);
 			// pinMode(rst, OUTPUT);
 			// pinMode(cs, OUTPUT);
-			PM0.B0 = 0;  // (A0) output
-			PM0.B1 = 0;  // (/CS) output
+			device::PM0.B0 = 0;  // (A0) output
+			device::PM0.B1 = 0;  // (/CS) output
 
-			P0.B0 = 0;  // /CS = 0
-			P0.B1 = 0;  // A0 = 0;
+			device::P0.B0 = 0;  // /CS = 0
+			device::P0.B1 = 0;  // A0 = 0;
 
 			// toggle RST low to reset; CS low so it'll listen to us
 			// if (cs > 0)
