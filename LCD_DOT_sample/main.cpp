@@ -18,7 +18,7 @@
 #include "common/itimer.hpp"
 #include "common/format.hpp"
 #include "common/delay.hpp"
-#include "common/ST7565.hpp"
+#include "chip/ST7565.hpp"
 
 namespace {
 	void wait_()
@@ -36,7 +36,7 @@ namespace {
 	// CSI(SPI) の定義、CSI10 の通信では、「SAU02」を利用、０ユニット、チャネル２
 	typedef device::csi_io<device::SAU02> csi10;
 	csi10 csi10_;
-	device::ST7565<csi10> lcd_(csi10_);
+	chip::ST7565<csi10> lcd_(csi10_);
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
