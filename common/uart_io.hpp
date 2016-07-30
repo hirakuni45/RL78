@@ -73,36 +73,38 @@ namespace device {
 		// 送信完了割り込み設定
 		static inline void send_intrrupt_mask_(bool f)
 		{
-			if(tx_.get_unit_no() == 0) {
-				if(tx_.get_chanel_no() == 0) {  // UART0
-					intr::MK0H.STMK0 = f;
-				} else {  // UART1
-					intr::MK1L.STMK1 = f;
-				}
-			} else {
-				if(tx_.get_chanel_no() == 0) {  // UART2
-					intr::MK0H.STMK2 = f;
-				} else {  // UART3
-					intr::MK1H.STMK3 = f;
-				}
+			switch(get_chanel_no()) {
+			case 0:
+				intr::MK0H.STMK0 = f;
+				break;
+			case 1:
+				intr::MK1L.STMK1 = f;
+				break;
+			case 2:
+				intr::MK0H.STMK2 = f;
+				break;
+			case 3:
+				intr::MK1H.STMK3 = f;
+				break;
 			}
 		}
 
 		// 受信割り込みマスク設定
 		static inline void recv_interrupt_mask_(bool f)
 		{
-			if(rx_.get_unit_no() == 0) {
-				if(rx_.get_chanel_no() == 1) {  // UART0
-					intr::MK0H.SRMK0 = f;
-				} else {  // UART1
-					intr::MK1L.SRMK1 = f;
-				}
-			} else {
-				if(rx_.get_chanel_no() == 1) {  // UART2
-					intr::MK0H.SRMK2 = f;
-				} else {  //UART3
-					intr::MK1H.SRMK3 = f;
-				}
+			switch(get_chanel_no()) {
+			case 0:
+				intr::MK0H.SRMK0 = f;
+				break;
+			case 1:
+				intr::MK1L.SRMK1 = f;
+				break;
+			case 2:
+				intr::MK0H.SRMK2 = f;
+				break;
+			case 3:
+				intr::MK1H.SRMK3 = f;
+				break;
 			}
 		}
 
@@ -228,40 +230,31 @@ namespace device {
 				--level;
 				level ^= 0x03;
 				// 送信側優先順位
-				if(tx_.get_unit_no() == 0) {
-					if(tx_.get_chanel_no() == 0) {  // UART0
-						intr::PR00H.STPR0 = (level) & 1;
-						intr::PR10H.STPR0 = (level & 2) >> 1;
-					} else { // UART1
-						intr::PR01L.STPR1 = (level) & 1;
-						intr::PR11L.STPR1 = (level & 2) >> 1;
-					}
-				} else {
-					if(tx_.get_chanel_no() == 0) {  // UART2
-						intr::PR00H.STPR2 = (level) & 1;
-						intr::PR10H.STPR2 = (level & 2) >> 1;
-					} else {  //UART3
-						intr::PR01H.STPR3 = (level) & 1;
-						intr::PR11H.STPR3 = (level & 2) >> 1;
-					}
-				}
-				// 受信側優先順位
-				if(rx_.get_unit_no() == 0) {
-					if(rx_.get_chanel_no() == 1) {  // UART0
-						intr::PR00H.SRPR0 = (level) & 1;
-						intr::PR10H.SRPR0 = (level & 2) >> 1;
-					} else {  // UART1
-						intr::PR01L.SRPR1 = (level) & 1;
-						intr::PR11L.SRPR1 = (level & 2) >> 1;
-					}
-				} else {
-					if(rx_.get_chanel_no() == 1) {  // UART2
-						intr::PR00H.SRPR2 = (level) & 1;
-						intr::PR10H.SRPR2 = (level & 2) >> 1;
-					} else {  //UART3
-						intr::PR01H.SRPR3 = (level) & 1;
-						intr::PR11H.SRPR3 = (level & 2) >> 1;
-					}
+				switch(get_chanel_no()) {
+				case 0:
+					intr::PR00H.STPR0 = (level) & 1;
+					intr::PR10H.STPR0 = (level & 2) >> 1;
+					intr::PR00H.SRPR0 = (level) & 1;
+					intr::PR10H.SRPR0 = (level & 2) >> 1;
+					break;
+				case 1:
+					intr::PR01L.STPR1 = (level) & 1;
+					intr::PR11L.STPR1 = (level & 2) >> 1;
+					intr::PR01L.SRPR1 = (level) & 1;
+					intr::PR11L.SRPR1 = (level & 2) >> 1;
+					break;
+				case 2:
+					intr::PR00H.STPR2 = (level) & 1;
+					intr::PR10H.STPR2 = (level & 2) >> 1;
+					intr::PR00H.SRPR2 = (level) & 1;
+					intr::PR10H.SRPR2 = (level & 2) >> 1;
+					break;
+				case 3:
+					intr::PR01H.STPR3 = (level) & 1;
+					intr::PR11H.STPR3 = (level & 2) >> 1;
+					intr::PR01H.SRPR3 = (level) & 1;
+					intr::PR11H.SRPR3 = (level & 2) >> 1;
+					break;
 				}
 				recv_interrupt_mask_(0);
 			}
@@ -362,7 +355,7 @@ namespace device {
 			@return UART チャネル番号
 		 */
 		//-----------------------------------------------------------------//
-		uint8_t get_chanel_no() const {
+		static uint8_t get_chanel_no() {
 			return (SAUtx::get_unit_no() << 1) | ((SAUtx::get_chanel_no() >> 1) & 1);
 		}
 	};
