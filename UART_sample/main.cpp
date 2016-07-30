@@ -50,9 +50,12 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart_.error_task),
+	/* 13 */  reinterpret_cast<void*>(uart_.send_task),  // UART0-TX
+	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),  // UART0-RX
+	/* 15 */  reinterpret_cast<void*>(uart_.error_task), // UART0-ER
+	/* 16 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
+	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
+	/* 18 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
 };
 
 
@@ -74,6 +77,8 @@ int main(int argc, char* argv[])
 	device::PM4.B3 = 0;  // output
 
 	{
+		// 割り込みを使う場合、intr_level を設定
+		// ポーリングなら「０」
 		uint8_t intr_level = 0;
 		uart_.start(115200, intr_level);
 	}
