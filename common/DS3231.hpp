@@ -9,16 +9,16 @@
 #include "common/iica_io.hpp"
 #include "common/time.h"
 
-namespace device {
+namespace chip {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  DS3231 テンプレートクラス
+		@brief  DS3231 RTC テンプレートクラス
 		@param[in]	I2C_IO	i2c I/O クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class I2C_IO>
-	class ds3231_io {
+	class DS3231 {
 
 		// R/W ビットを含まない７ビット値
 		static const uint8_t DS3231_ADR_ = 0x68;
@@ -54,7 +54,7 @@ namespace device {
 			@param[in]	i2c	iica_io クラスを参照で渡す
 		 */
 		//-----------------------------------------------------------------//
-		ds3231_io(I2C_IO& i2c) : i2c_io_(i2c) { }
+		DS3231(I2C_IO& i2c) : i2c_io_(i2c) { }
 
 
 		//-----------------------------------------------------------------//
