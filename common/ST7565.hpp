@@ -107,7 +107,7 @@ namespace device {
 	  		write_(CMD::SET_ALLPTS_NORMAL);
 			set_brightness(contrast);
 
-			utils::delay::milli_second(10);
+			utils::delay::milli_second(100);
 
 			P0.B1 = 1;  // /CS = 1
 
