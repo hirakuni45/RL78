@@ -200,7 +200,10 @@ namespace device {
 				} else {  // UART1
 					PM0.B3  = 1;  // P0-3 input  (RxD1)
 					PM0.B2  = 0;  // P0-2 output (TxD1)
+					PIM0.B3 = 1;  // ポート入力モードレジスタ（RxD1:TTL）
+					PMC0.B3 = 0;  // ポートモードコントロール
 					PMC0.B2 = 0;  // ポートモードコントロール
+					P0.B3   = 1;  // ポートレジスター RxD 切り替え
 					P0.B2   = 1;  // ポートレジスター TxD 切り替え
 				}
 			} else {
@@ -350,6 +353,17 @@ namespace device {
 				putch(ch);
 				++s;
 			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	UART チャネルの取得
+			@return UART チャネル番号
+		 */
+		//-----------------------------------------------------------------//
+		uint8_t get_chanel_no() const {
+			return (SAUtx::get_unit_no() << 1) | ((SAUtx::get_chanel_no() >> 1) & 1);
 		}
 	};
 
