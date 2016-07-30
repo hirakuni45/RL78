@@ -18,6 +18,10 @@
 #include "common/time.h"
 #include "chip/DS3231.hpp"
 
+// どれか一つだけ有効にする。
+// #define UART0
+#define UART1
+
 namespace {
 
 	typedef device::iica_io<device::IICA0> IICA;
@@ -27,7 +31,14 @@ namespace {
 
 	typedef utils::fifo<128> buffer;
 
-	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_;
+#ifdef UART0
+	// UART0 の定義（SAU0、SAU1）
+	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart_;
+#endif
+#ifdef UART1
+	// UART1 の定義（SAU2、SAU3）
+	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
+#endif
 
 	device::itimer<uint8_t> itm_;
 
@@ -49,12 +60,12 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart0_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart0_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart0_.error_task),
-	/* 16 */  nullptr,
-	/* 17 */  nullptr,
-	/* 18 */  nullptr,
+	/* 13 */  reinterpret_cast<void*>(uart_.send_task),  // UART0-TX
+	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),  // UART0-RX
+	/* 15 */  reinterpret_cast<void*>(uart_.error_task), // UART0-ER
+	/* 16 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
+	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
+	/* 18 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
 	/* 19 */  nullptr,
 	/* 20 */  nullptr,
 	/* 21 */  nullptr,
@@ -69,22 +80,22 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 extern "C" {
 	void sci_putch(char ch)
 	{
-		uart0_.putch(ch);
+		uart_.putch(ch);
 	}
 
 	void sci_puts(const char* str)
 	{
-		uart0_.puts(str);
+		uart_.puts(str);
 	}
 
 	char sci_getch(void)
 	{
-		return uart0_.getch();
+		return uart_.getch();
 	}
 
 	uint16_t sci_length()
 	{
-		return uart0_.recv_length();
+		return uart_.recv_length();
 	}
 };
 
@@ -230,10 +241,10 @@ int main(int argc, char* argv[])
 		itm_.start(60, intr_level);
 	}
 
-	// UART0 の開始
+	// UART の開始
 	{
 		uint8_t intr_level = 1;
-		uart0_.start(115200, intr_level);
+		uart_.start(115200, intr_level);
 	}
 
 	// IICA(I2C) の開始
