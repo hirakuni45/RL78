@@ -99,17 +99,23 @@ namespace device {
 		{
 			intr_level_ = level;
 
+			SAU::SS = 0;	// disable
+
 			// ボーレートから分周比の算出
 			if(speed == 0) {
 				return false;
 			}
 			auto div = static_cast<uint32_t>(F_CLK) / speed;
+			uint8_t master = 2;
+			if(SAU::get_unit_no() == 0 && SAU::get_chanel_no() == 0) {  // Max 16MHz
+				div /= 2;
+			} else {  // Max 8MHz
+				master = 4;
+				div /= 2;
+			}
 			if(div == 0) {
 				return false;
 			}
-#if 0
-			uint8_t master = 2;
-			div /= 2;
 
 			while(div > 256) {
 				div /= 2;
@@ -121,9 +127,6 @@ namespace device {
 			}
 			--div;
 			div &= 0xfe;
-#endif
-			uint8_t master = 2;
-			div = 0;
 
 			// 対応するユニットを有効にする
 			if(SAU::get_unit_no() == 0) {
@@ -151,8 +154,8 @@ namespace device {
 			SAU::SDR = div << 8;
 
 			SAU::SOL = 0;	// 
-			SAU::CKO = 1;	// クロック出力設定
-			SAU::SO  = 1;	// シリアル出力設定
+			SAU::CKO = 0;	// クロック出力設定
+			SAU::SO  = 0;	// シリアル出力設定
 			SAU::SOE = 1;	// シリアル出力許可
 
 			// 対応するポートの設定
@@ -265,6 +268,58 @@ namespace device {
 			} else {
 				while(SAU::SSR.TSF() != 0) sleep_();
 				SAU::SDR_L = ch;
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  シリアル送信
+			@param[in]	src	送信ソース
+			@param[in]	cnt	送信サイズ
+		*/
+		//-----------------------------------------------------------------//
+		void write(const uint8_t* src, uint16_t size)
+		{
+			auto end = src + size;
+			while(src < end) {
+				write(*src);
+				++src;
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  シリアル受信
+			@return	受信データ
+		*/
+		//-----------------------------------------------------------------//
+		uint8_t read()
+		{
+			if(intr_level_) {
+				return 0;
+			} else {
+				SAU::SDR_L = 0xff;
+				while(SAU::SSR.BFF() == 0) sleep_();
+				return SAU::SDR_L();
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  シリアル受信
+			@param[out]	dst	受信先
+			@param[in]	cnt	受信サイズ
+		*/
+		//-----------------------------------------------------------------//
+		void read(uint8_t* dst, uint16_t size)
+		{
+			auto end = dst + size;
+			while(dst < end) {
+				*dst = read();
+				++dst;
 			}
 		}
 
