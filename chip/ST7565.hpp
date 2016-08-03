@@ -28,7 +28,7 @@ namespace chip {
 			DISPLAY_OFF = 0xAE,
 			DISPLAY_ON  = 0xAF,
 			SET_DISP_START_LINE = 0x40,
-			CMD_SET_PAGE = 0xB0,
+			SET_PAGE = 0xB0,
 
 			SET_COLUMN_UPPER = 0x10,
 			SET_COLUMN_LOWER = 0x00,
@@ -72,6 +72,14 @@ namespace chip {
 			csi_.write(static_cast<uint8_t>(cmd) | ord);
 		}
 
+		inline void chip_enable_(bool f = true) const {
+			device::P0.B1 = !f;
+		}
+
+		inline void reg_select_(bool f) const {
+			device::P0.B0 = f;
+		}
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -102,27 +110,18 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		void start(uint8_t contrast)
 		{
+			device::PM0.B0 = 0;  // (A0) output
+			device::PM0.B1 = 0;  // (/CS) output
+
+			reg_select_(0);
+			chip_enable_(false);
+
+			utils::delay::milli_second(100);
+
 			init();
 			write_(CMD::DISPLAY_ON);
 	  		write_(CMD::SET_ALLPTS_NORMAL);
 			set_brightness(contrast);
-
-			utils::delay::milli_second(100);
-
-			device::P0.B1 = 1;  // /CS = 1
-
-			device::P0.B1 = 0;
-			for(uint8_t page = 0; page < 8; ++page) {
-				device::P0.B0 = 0;
-				csi_.write(0xb0 + page);
-				csi_.write(0x10);  // column upper
-				csi_.write(0x04);  // column lower
-				device::P0.B0 = 1;
-				for(uint8_t i = 0; i < 128; ++i) {
-					csi_.write(i);
-				}
-			}
-			device::P0.B1 = 1;
 		}
 
 
@@ -133,17 +132,8 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		void init()
 		{
-			// set pin directions
-			// pinMode(sid, OUTPUT);
-			// pinMode(sclk, OUTPUT);
-			// pinMode(a0, OUTPUT);
-			// pinMode(rst, OUTPUT);
-			// pinMode(cs, OUTPUT);
-			device::PM0.B0 = 0;  // (A0) output
-			device::PM0.B1 = 0;  // (/CS) output
-
-			device::P0.B0 = 0;  // /CS = 0
-			device::P0.B1 = 0;  // A0 = 0;
+			reg_select_(0);
+			chip_enable_();
 
 			// toggle RST low to reset; CS low so it'll listen to us
 			// if (cs > 0)
@@ -152,6 +142,8 @@ namespace chip {
 			// digitalWrite(rst, LOW);
 			// _delay_ms(500);
 			// digitalWrite(rst, HIGH);
+
+			write_(CMD::DISPLAY_OFF);
 
 			// LCD bias select
 			write_(CMD::SET_BIAS_7);
@@ -190,22 +182,21 @@ namespace chip {
 			@param[in]	p	フレームバッファソース
 		*/
 		//-----------------------------------------------------------------//
-		void copy(const uint8_t* p) const {
-#if 0
-			ctrl_.lcd_sel(0);
-			for(uint8_t page = 0; page < 4; ++page) {
-				ctrl_.a0_out(0);
-				spi_.write(0xb0 + page);
-				spi_.write(0x10);  // column upper
-				spi_.write(0x04);  // column lower
-				ctrl_.a0_out(1);
+		void copy(const uint8_t* p) {
+			uint8_t ofs = 0x00;
+			for(uint8_t page = 0; page < 8; ++page) {
+				reg_select_(0);
+				write_(CMD::SET_PAGE, page);
+				write_(CMD::SET_COLUMN_LOWER, ofs & 0x0f);
+				write_(CMD::SET_COLUMN_UPPER, ofs >> 4);
+    			write_(CMD::RMW);
+				reg_select_(1);
 				for(uint8_t i = 0; i < 128; ++i) {
-					spi_.write(*p);
+					csi_.write(*p);
 					++p;
 				}
 			}
-			ctrl_.lcd_sel(1);
-#endif
+			reg_select_(0);
 		}
 
 	};
