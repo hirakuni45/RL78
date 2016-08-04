@@ -16,10 +16,11 @@ namespace fatfs {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  MMC テンプレートクラス
-		@param[in]	CSI	CSI I/O クラス
+		@param[in]	CSI		CSI I/O クラス
+		@param[in]	PORT	ポート・クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class CSI>
+	template <class CSI, class PORT>
 	class mmc_io {
 
 		CSI&	csi_;
@@ -52,10 +53,6 @@ namespace fatfs {
 			CMD58 = 58,			/* READ_OCR */
 		};
 
-		inline void card_select_(bool f) {
-			device::P0.B0 = f;
-		}
-
 		/* 1:OK, 0:Timeout */
 		int wait_ready_() {
 			BYTE d;
@@ -70,15 +67,15 @@ namespace fatfs {
 
 
 		void deselect_() {
+			PORT::P = 1;
 			BYTE d;
-			card_select_(1);
 			csi_.read(&d, 1);	/* Dummy clock (force DO hi-z for multiple slave SPI) */
 		}
 
 
 		/* 1:OK, 0:Timeout */
 		int select_() {
-			card_select_(0);
+			PORT::P = 0;
 			BYTE d;
 			csi_.read(&d, 1);	/* Dummy clock (force DO enabled) */
 			if (wait_ready_()) return 1;	/* Wait for card ready */
@@ -217,7 +214,9 @@ namespace fatfs {
 
 			utils::delay::milli_second(10);  // 10ms
 
-			card_select_(1);
+			PORT::PM = 0;  // output
+
+			PORT::P = 1;
 #if 0
 			CS_INIT(); CS_H();		/* Initialize port pin tied to CS */
 			CK_INIT(); CK_L();		/* Initialize port pin tied to SCLK */
