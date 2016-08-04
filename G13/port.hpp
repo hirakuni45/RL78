@@ -555,4 +555,67 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static rw8_t<0xF007D> GDIDIS;
 	static bit_rw_t<rw8_t<0xF007D>, 0> GDIDIS0;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  ポート番号
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	enum class port_no : uint8_t {
+		P0,		///< ポート０
+		P1,		///< ポート１
+		P2,		///< ポート２
+		P3,		///< ポート３
+		P4,		///< ポート４
+		P5,		///< ポート５
+		P6,		///< ポート６
+		P7,		///< ポート７
+		P8,		///< ポート８
+		P9,		///< ポート９
+		P10,	///< ポート１０
+		P11,	///< ポート１１
+		P12,	///< ポート１２
+		P13,	///< ポート１３
+		P14,	///< ポート１４
+		P15,	///< ポート１５
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  ビット位置
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	enum class bit_pos : uint8_t {
+		B0,		///< ビット０
+		B1,		///< ビット１
+		B2,		///< ビット２
+		B3,		///< ビット３
+		B4,		///< ビット４
+		B5,		///< ビット５
+		B6,		///< ビット６
+		B7,		///< ビット７
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  シングル・ポート定義テンプレート
+		@param[in]	port	ポート番号（０～１５）
+		@param[in]	bpos	ビット位置（０～７）	
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <port_no port, bit_pos bpos>
+	struct PORT {
+		static bit_rw_t<rw8_t<0xFFF00 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> P;		///< ポート・レジスタ
+		static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PM;		///< ポート・モード・レジスタ
+		static bit_rw_t<rw8_t<0xFFF30 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PU;		///< プルアップ抵抗オプション・レジスタ
+		static bit_rw_t<rw8_t<0xFFF40 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PIM;	///< ポート入力モード・レジスタ
+		static bit_rw_t<rw8_t<0xFFF50 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> POM;	///< ポート出力モード・レジスタ
+		static bit_rw_t<rw8_t<0xFFF60 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PMC;	///< ポート・モード・コントロール・レジスタ
+
+		void operator = (bool v) const { P = v; }
+		bool operator () () const { return P(); }
+	};
 }
