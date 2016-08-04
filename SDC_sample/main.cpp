@@ -15,6 +15,7 @@
 #include "common/csi_io.hpp"
 #include "ff12a/mmc_io.hpp"
 #include "ff12a/src/ff.h"
+#include "common/command.hpp"
 
 namespace {
 	void wait_()
@@ -27,16 +28,20 @@ namespace {
 	// UART の定義（SAU2、SAU3）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
+	// インターバル・タイマー
 	device::itimer<uint8_t> itm_;
 
 	// CSI(SPI) の定義、CSI00 の通信では、「SAU00」を利用、０ユニット、チャネル０
 	typedef device::csi_io<device::SAU00> csi;
 	csi csi_;
 
-	// FatFS の定義
+	// FatFS インターフェースの定義
 	fatfs::mmc_io<csi> mmc_(csi_);
 
-	FATFS	fatfs_;		///< FatFs work area needed for each volume
+	// FatFS コンテキスト
+	FATFS	fatfs_;
+
+	utils::command<64> command_;
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
@@ -53,9 +58,9 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart_.error_task),
+	/* 13 */  nullptr,
+	/* 14 */  nullptr,
+	/* 15 */  nullptr,
 	/* 16 */  reinterpret_cast<void*>(uart_.send_task),
 	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),
 	/* 18 */  reinterpret_cast<void*>(uart_.error_task),
@@ -79,6 +84,16 @@ extern "C" {
 	void sci_puts(const char* str)
 	{
 		uart_.puts(str);
+	}
+
+	char sci_getch(void)
+	{
+		return uart_.getch();
+	}
+
+	uint16_t sci_length()
+	{
+		return uart_.recv_length();
 	}
 
 	DSTATUS disk_initialize (BYTE drv) {
@@ -106,31 +121,32 @@ extern "C" {
 	}
 };
 
-
-void list_dir()
-{
-	DIR dir;
-	if(f_opendir(&dir, "") != FR_OK) {
-		sci_puts("Can't open dir\n");
-
-	} else {
-
-		for(;;) {
-			FILINFO fno;
-			// Read a directory item
-			if(f_readdir(&dir, &fno) != FR_OK) {
-				sci_puts("Can't read dir\n");
-				break;
-			}
-			if(!fno.fname[0]) break;
-				if(fno.fattrib & AM_DIR) {
-				utils::format("          /%s\n") % fno.fname;
-			} else {
-				utils::format("%8d  %s\n") % static_cast<uint32_t>(fno.fsize) % fno.fname;
+namespace {
+	void list_dir_()
+	{
+		DIR dir;
+		auto st = f_opendir(&dir, "");
+		if(st != FR_OK) {
+			utils::format("Can't open dir: %d\n") % static_cast<uint32_t>(st);
+		} else {
+			for(;;) {
+				FILINFO fno;
+				// Read a directory item
+				if(f_readdir(&dir, &fno) != FR_OK) {
+					sci_puts("Can't read dir\n");
+					break;
+				}
+				if(!fno.fname[0]) break;
+					if(fno.fattrib & AM_DIR) {
+					utils::format("          /%s\n") % fno.fname;
+				} else {
+					utils::format("%8d  %s\n") % static_cast<uint32_t>(fno.fsize) % fno.fname;
+				}
 			}
 		}
 	}
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -149,47 +165,53 @@ int main(int argc, char* argv[])
 	}
 
 	// CSI 開始
+	// ※SD カードのアクセスでは、「PHASE::TYPE4」を選択する。
 	{
 		uint8_t intr_level = 0;
-		if(!csi_.start(16000000, intr_level)) {
+		if(!csi_.start(16000000, csi::PHASE::TYPE4, intr_level)) {
 			uart_.puts("CSI Start fail ! (Clock spped over range)\n");
 		}
 	}
 
 	uart_.puts("Start RL78/G13 SD-CARD Access sample\n");
 
+	command_.set_prompt("# ");
+
 	PM4.B3 = 0;  // output
 
-	P0.B0 = 0;
-	P0.B1 = 1;
+	P0.B0 = 0;  // /CS (電源ＯＦＦ時、「０」にしておかないと電流が回り込む）
+	P0.B1 = 1;  // /POWER
 	PMC0.B0 = 0;
 	PMC0.B1 = 0;
 	PM0.B0 = 0;  // output
 	PM0.B1 = 0;  // output;
 
-#if 0
-	f_mount(&fatfs_, "", 0);
-	FIL fil;
-	if(f_open(&fil, "newfile.txt", FA_WRITE | FA_CREATE_ALWAYS) == FR_OK) {
-		UINT bw;
-		f_write(&fil, "It works!\r\n", 11, &bw);
-		f_close(&fil);
+	P0.B0 = 1;  // カード選択信号
+	P0.B1 = 0;  // SDC power ON!
+	utils::delay::milli_second(100);
+
+	{  // カードをマウント
+		auto st = f_mount(&fatfs_, "", 0);
+		if(st != FR_OK) {
+			utils::format("Mount fail: %d\n") % static_cast<uint32_t>(st);
+		} else {
+			list_dir_();
+		}
 	}
-#endif
-	list_dir();
 
 	uint8_t n = 0;
-	uint16_t nn = 0;
 	while(1) {
 		itm_.sync();
+
+		// コマンド入力と、コマンド解析
+		if(command_.service()) {
+			auto cmdn = command_.get_words();
+			if(cmdn >= 1) {
+			}
+		}
 
 		++n;
 		if(n >= 30) n = 0;
 		P4.B3 = n < 10 ? false : true; 	
-
-		++nn;
-		if(nn >= 120) {
-			P0.B1 = 0;
-		}
 	}
 }
