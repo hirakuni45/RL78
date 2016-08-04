@@ -19,6 +19,7 @@
 #include "common/format.hpp"
 #include "common/delay.hpp"
 #include "chip/ST7565.hpp"
+#include "common/monograph.hpp"
 
 namespace {
 	void wait_()
@@ -28,15 +29,31 @@ namespace {
 
 	// 送信、受信バッファの定義
 	typedef utils::fifo<128> buffer;
-	// UART の定義（SAU0、SAU1）
-	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_;
+	// UART の定義（SAU2、SAU3）
+	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
 	device::itimer<uint8_t> itm_;
 
-	// CSI(SPI) の定義、CSI10 の通信では、「SAU02」を利用、０ユニット、チャネル２
-	typedef device::csi_io<device::SAU02> csi10;
-	csi10 csi10_;
-	chip::ST7565<csi10> lcd_(csi10_);
+	// CSI(SPI) の定義、CSI10 の通信では、「SAU00」を利用、０ユニット、チャネル０
+	typedef device::csi_io<device::SAU00> csi;
+	csi csi_;
+	chip::ST7565<csi> lcd_(csi_);
+
+	graphics::monograph bitmap_;
+
+	uint8_t v_ = 91;
+	uint8_t m_ = 123;
+	uint8_t rand_()
+	{
+		v_ += v_ << 2;
+		++v_;
+		uint8_t n = 0;
+		if(m_ & 0x02) n = 1;
+		if(m_ & 0x40) n ^= 1;
+		m_ += m_;
+		if(n == 0) ++m_;
+		return v_ ^ m_;
+	}
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
@@ -53,12 +70,12 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart0_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart0_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart0_.error_task),
-	/* 16 */  nullptr,
-	/* 17 */  nullptr,
-	/* 18 */  nullptr,
+	/* 13 */  nullptr,
+	/* 14 */  nullptr,
+	/* 15 */  nullptr,
+	/* 16 */  reinterpret_cast<void*>(uart_.send_task),
+	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),
+	/* 18 */  reinterpret_cast<void*>(uart_.error_task),
 	/* 19 */  nullptr,
 	/* 20 */  nullptr,
 	/* 21 */  nullptr,
@@ -73,14 +90,15 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 extern "C" {
 	void sci_putch(char ch)
 	{
-		uart0_.putch(ch);
+		uart_.putch(ch);
 	}
 
 	void sci_puts(const char* str)
 	{
-		uart0_.puts(str);
+		uart_.puts(str);
 	}
 };
+
 
 
 int main(int argc, char* argv[])
@@ -96,37 +114,55 @@ int main(int argc, char* argv[])
 	// UART0 開始
 	{
 		uint8_t intr_level = 1;
-		uart0_.start(115200, intr_level);
+		uart_.start(115200, intr_level);
 	}
 
 	// CSI10 開始
 	{
 		uint8_t intr_level = 0;
-		if(!csi10_.start(8000000, intr_level)) {
-			uart0_.puts("CSI Start fail...\n");
+		if(!csi_.start(8000000, csi::PHASE::TYPE4, intr_level)) {
+			uart_.puts("CSI Start fail...\n");
 		}
 	}
 
-	uart0_.puts("Start RL78/G13 LCD-Dotmatix sample\n");
+	uart_.puts("Start RL78/G13 LCD-Dotmatix sample\n");
 
 	PM4.B3 = 0;  // output
 
-#if 0
-	while(1) {
-		csi10_.write(0x55);
-		utils::delay::micro_second(10);
-		P4.B3 = !P4.B3();
-	}
-#endif
-
 	{
 		lcd_.start(0x04);
+		bitmap_.start();
+		bitmap_.clear(0);
 	}
 
-	bool f = false;
+	uint16_t x = rand_() & 127;
+	uint16_t y = rand_() & 63;
+	uint16_t xx;
+	uint16_t yy;
+	uint8_t loop = 0;
+	uint8_t	nn = 0;
+
 	uint8_t n = 0;
 	while(1) {
 		itm_.sync();
+		if(nn >= 4) {
+			lcd_.copy(bitmap_.fb());
+			nn = 0;
+		}
+		++nn;
+
+		if(loop >= 20) {
+			loop = 0;
+//			bitmap_.clear(0);
+			bitmap_.frame(0, 0, 128, 64, 1);
+		}
+		xx = rand_() & 127;
+		yy = rand_() & 63;
+		bitmap_.line(x, y, xx, yy, 1);
+		x = xx;
+		y = yy;
+		++loop;
+
 		++n;
 		if(n >= 30) n = 0;
 		P4.B3 = n < 10 ? false : true; 	
