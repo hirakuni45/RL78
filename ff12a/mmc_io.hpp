@@ -6,6 +6,7 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include "G13/port.hpp"
 #include "common/csi_io.hpp"
 #include "common/delay.hpp"
 #include "ff12a/src/diskio.h"
@@ -51,6 +52,10 @@ namespace fatfs {
 			CMD58 = 58,			/* READ_OCR */
 		};
 
+		inline void card_select_(bool f) {
+			device::P0.B0 = f;
+		}
+
 		/* 1:OK, 0:Timeout */
 		int wait_ready_() {
 			BYTE d;
@@ -66,66 +71,21 @@ namespace fatfs {
 
 		void deselect_() {
 			BYTE d;
-///			CS_H();			/* Set CS# high */
+			card_select_(1);
 			csi_.read(&d, 1);	/* Dummy clock (force DO hi-z for multiple slave SPI) */
 		}
 
 
 		/* 1:OK, 0:Timeout */
 		int select_() {
+			card_select_(0);
 			BYTE d;
-
-///			CS_L();				/* Set CS# low */
 			csi_.read(&d, 1);	/* Dummy clock (force DO enabled) */
 			if (wait_ready_()) return 1;	/* Wait for card ready */
-
 			deselect_();
 			return 0;			/* Failed */
 		}
 
-
-		BYTE send_cmd_(command cmd, DWORD arg) {
-
-			auto c = static_cast<uint8_t>(cmd);
-			if (c & 0x80) {	/* ACMD<n> is the command sequense of CMD55-CMD<n> */
-				c &= 0x7F;
-				auto n = send_cmd_(command::CMD55, 0);
-				if (n > 1) return n;
-			}
-
-			/* Select the card and wait for ready except to stop multiple block read */
-			if (c != static_cast<uint8_t>(command::CMD12)) {
-				deselect_();
-				if (!select_()) return 0xFF;
-			}
-
-			/* Send a command packet */
-			BYTE buf[6];
-			buf[0] = 0x40 | c;						/* Start + Command index */
-			buf[1] = static_cast<BYTE>(arg >> 24);	/* Argument[31..24] */
-			buf[2] = static_cast<BYTE>(arg >> 16);	/* Argument[23..16] */
-			buf[3] = static_cast<BYTE>(arg >> 8);	/* Argument[15..8] */
-			buf[4] = static_cast<BYTE>(arg);		/* Argument[7..0] */
-			BYTE n = 0x01;								/* Dummy CRC + Stop */
-			if (c == static_cast<uint8_t>(command::CMD0)) n = 0x95;		/* (valid CRC for CMD0(0)) */
-			if (c == static_cast<uint8_t>(command::CMD8)) n = 0x87;		/* (valid CRC for CMD8(0x1AA)) */
-			buf[5] = n;
-			csi_.write(buf, 6);
-
-			/* Receive command response */
-			if (c == static_cast<uint8_t>(command::CMD12)) {  /* Skip a stuff byte when stop reading */
-				BYTE d;
-				csi_.read(&d, 1);
-			}
-
-			n = 10;		/* Wait for a valid response in timeout of 10 attempts */
-			BYTE d;
-			do {
-				csi_.read(&d, 1);
-			} while ((d & 0x80) && --n) ;
-
-			return d;			/* Return with the response value */
-		}
 
 		/* 1:OK, 0:Failed */
 		/* Data buffer to store received data */
@@ -169,6 +129,50 @@ namespace fatfs {
 			return 1;
 		}
 
+
+		BYTE send_cmd_(command cmd, DWORD arg) {
+
+			auto c = static_cast<uint8_t>(cmd);
+			if (c & 0x80) {	/* ACMD<n> is the command sequense of CMD55-CMD<n> */
+				c &= 0x7F;
+				auto n = send_cmd_(command::CMD55, 0);
+				if (n > 1) return n;
+			}
+
+			/* Select the card and wait for ready except to stop multiple block read */
+			if (c != static_cast<uint8_t>(command::CMD12)) {
+				deselect_();
+				if (!select_()) return 0xFF;
+			}
+
+			/* Send a command packet */
+			BYTE buf[6];
+			buf[0] = 0x40 | c;						/* Start + Command index */
+			buf[1] = static_cast<BYTE>(arg >> 24);	/* Argument[31..24] */
+			buf[2] = static_cast<BYTE>(arg >> 16);	/* Argument[23..16] */
+			buf[3] = static_cast<BYTE>(arg >> 8);	/* Argument[15..8] */
+			buf[4] = static_cast<BYTE>(arg);		/* Argument[7..0] */
+			BYTE n = 0x01;							/* Dummy CRC + Stop */
+			if (c == static_cast<uint8_t>(command::CMD0)) n = 0x95;		/* (valid CRC for CMD0(0)) */
+			if (c == static_cast<uint8_t>(command::CMD8)) n = 0x87;		/* (valid CRC for CMD8(0x1AA)) */
+			buf[5] = n;
+			csi_.write(buf, 6);
+
+			/* Receive command response */
+			if (c == static_cast<uint8_t>(command::CMD12)) {  /* Skip a stuff byte when stop reading */
+				BYTE d;
+				csi_.read(&d, 1);
+			}
+
+			n = 10;		/* Wait for a valid response in timeout of 10 attempts */
+			BYTE d;
+			do {
+				csi_.read(&d, 1);
+			} while ((d & 0x80) && --n) ;
+
+			return d;			/* Return with the response value */
+		}
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -177,6 +181,28 @@ namespace fatfs {
 		 */
 		//-----------------------------------------------------------------//
 		mmc_io(CSI& csi) : csi_(csi) { }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	カード・タイプの取得
+			@return カード・タイプ
+		 */
+		//-----------------------------------------------------------------//
+		BYTE card_type() const { return CardType_; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	ステータス
+			@param[in]	drv		Physical drive nmuber (0)
+		 */
+		//-----------------------------------------------------------------//
+		DSTATUS disk_status(BYTE drv) const
+		{
+			if (drv) return STA_NOINIT;
+			return Stat_;
+		}
 
 
 		//-----------------------------------------------------------------//
@@ -190,6 +216,8 @@ namespace fatfs {
 			if (drv) return RES_NOTRDY;
 
 			utils::delay::milli_second(10);  // 10ms
+
+			card_select_(1);
 #if 0
 			CS_INIT(); CS_H();		/* Initialize port pin tied to CS */
 			CK_INIT(); CK_L();		/* Initialize port pin tied to SCLK */
@@ -240,19 +268,6 @@ namespace fatfs {
 			deselect_();
 
 			return s;
-		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief	ステータス
-			@param[in]	drv		Physical drive nmuber (0)
-		 */
-		//-----------------------------------------------------------------//
-		DSTATUS disk_status(BYTE drv) const
-		{
-			if (drv) return STA_NOINIT;
-			return Stat_;
 		}
 
 
