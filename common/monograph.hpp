@@ -72,7 +72,8 @@ namespace graphics {
 			@brief	初期化
 		*/
 		//-----------------------------------------------------------------//
-		void init() {
+		void start()
+		{
 #ifdef KANJI_FONTS
 			for(uint8_t i = 0; i < KANJI_CASH_SIZE; ++i) {
 				kanji_cash_[i].sjis_lo = 0;
@@ -320,7 +321,7 @@ namespace graphics {
 			draw_image(x, y, img, w, h);
 		}
 
-
+#if 0
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	ascii フォントを描画する。
@@ -399,7 +400,7 @@ namespace graphics {
 			multi_byte_hi_ = 0;
 			return x;
 		}
-
+#endif
 
 		//-----------------------------------------------------------------//
 		/*!
