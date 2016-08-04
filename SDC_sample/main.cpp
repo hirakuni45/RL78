@@ -36,7 +36,9 @@ namespace {
 	csi csi_;
 
 	// FatFS インターフェースの定義
-	fatfs::mmc_io<csi> mmc_(csi_);
+	typedef device::PORT<device::port_no::P0, device::bit_pos::B0> card_select;		///< カード選択信号
+	typedef device::PORT<device::port_no::P0, device::bit_pos::B1> card_power;		///< カード電源制御
+	fatfs::mmc_io<csi, card_select> mmc_(csi_);
 
 	// FatFS コンテキスト
 	FATFS	fatfs_;
@@ -179,15 +181,15 @@ int main(int argc, char* argv[])
 
 	PM4.B3 = 0;  // output
 
-	P0.B0 = 0;  // /CS (電源ＯＦＦ時、「０」にしておかないと電流が回り込む）
-	P0.B1 = 1;  // /POWER
-	PMC0.B0 = 0;
-	PMC0.B1 = 0;
-	PM0.B0 = 0;  // output
-	PM0.B1 = 0;  // output;
+	card_select::PMC = 0;
+	card_select::P = 0;  // 電源ＯＦＦ時、「０」にしておかないと電流が回り込む
+	card_power::PMC = 0;
+	card_power::PM = 0;
+	card_power::P = 1;
 
-	P0.B0 = 1;  // カード選択信号
-	P0.B1 = 0;  // SDC power ON!
+
+
+	card_power::P = 0;  // power ON!
 	utils::delay::milli_second(100);
 
 	{  // カードをマウント
