@@ -60,12 +60,24 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart_.send_task),  // UART0-TX
-	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),  // UART0-RX
-	/* 15 */  reinterpret_cast<void*>(uart_.error_task), // UART0-ER
+#ifdef UART0
+	/* 13 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
+	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
+	/* 15 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
+#else
+	/* 13 */  nullptr,
+	/* 14 */  nullptr,
+	/* 15 */  nullptr,
+#endif
+#ifdef UART1
 	/* 16 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
 	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
 	/* 18 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
+#else
+	/* 16 */  nullptr,
+	/* 17 */  nullptr,
+	/* 18 */  nullptr,
+#endif
 	/* 19 */  nullptr,
 	/* 20 */  nullptr,
 	/* 21 */  nullptr,
