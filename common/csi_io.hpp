@@ -152,9 +152,7 @@ namespace device {
 		{
 			intr_level_ = level;
 
-			SAU::SS = 0;	// unit disable
-			SAU::SOE = 0;
-			interrupt_mask_(1);  // mask
+			destroy();
 
 			// ボーレートから分周比の算出
 			if(speed == 0) {
@@ -213,6 +211,9 @@ namespace device {
 			// 対応するポートの設定
 			if(SAU::get_unit_no() == 0) {
 				if(SAU::get_chanel_no() == 0) {  // Chanel 0
+					PU1.B2 = 0;
+					PU1.B1 = 0;
+					PU1.B0 = 0;
 					PM1.B2 = 0;	 // P1-2 output (SO00)
 					PM1.B1 = 1;	 // P1-1 input  (SI00)
 					PM1.B0 = 0;  // P1-0 output (SCK00)
@@ -221,6 +222,9 @@ namespace device {
 					P1.B1  = 1;  // ポートレジスター (SI00)  切り替え
 					P1.B0  = 1;  // ポートレジスター (SCK00) 切り替え
 				} else if(SAU::get_chanel_no() == 1) {  // Chanel 1
+					PU7.B3 = 0;
+					PU7.B4 = 0;
+					PU7.B5 = 0;
 					PM7.B3 = 0;  // P7-3 output (SO01)
 					PM7.B4 = 1;  // P7-4 input  (SI01)
 					PM7.B5 = 0;  // P7-5 output (SCK01)
@@ -228,6 +232,9 @@ namespace device {
 					P7.B4 = 1;   // ポートレジスター (SI01)  切り替え
 					P7.B5 = 1;   // ポートレジスター (SCK01) 切り替え
 				} else if(SAU::get_chanel_no() == 2) {  // Chanel 2
+					PU0.B2 = 0;
+					PU0.B3 = 0;
+					PU0.B4 = 0;
 					PM0.B2  = 0;  // P0-2 output (SO10)
 					PM0.B3  = 1;  // P0-3 input  (SI10)
 					PM0.B4  = 0;  // P0-4 output (SCK10)
@@ -238,6 +245,9 @@ namespace device {
 					P0.B3   = 1;  // ポートレジスター SI10  切り替え
 					P0.B4   = 1;  // ポートレジスター SCK10 切り替え
 				} else {  // chanel 3
+					PU5.B2 = 0;
+					PU5.B1 = 0;
+					PU3.B0 = 0;
 					PM5.B1 = 0;  // P5-1 output (SO11)
 					PM5.B0 = 1;  // P5-0 input  (SI11)
 					PM3.B0 = 0;  // P3-0 output (SCK11)
@@ -247,6 +257,9 @@ namespace device {
 				}
 			} else {
 				if(SAU::get_chanel_no() == 0) {  // Chanel 0
+					PU1.B3 = 0;
+					PU1.B4 = 0;
+					PU1.B5 = 0;
 					PM1.B3 = 0;	 // P1-3 output (SO20)
 					PM1.B4 = 1;	 // P1-4 input  (SI20)
 					PM1.B5 = 0;  // P1-5 output (SCK20)
@@ -254,6 +267,9 @@ namespace device {
 					P1.B4  = 1;  // ポートレジスター SI20  切り替え
 					P1.B5  = 1;  // ポートレジスター SCK20 切り替え
 				} else if(SAU::get_chanel_no() == 1) {  // Chanel 1
+					PU7.B2 = 0;
+					PU7.B1 = 0;
+					PU7.B0 = 0;
 					PM7.B2 = 0;  // P7-2 output (SO21)
 					PM7.B1 = 1;  // P7-1 input  (SI21)
 					PM7.B0 = 0;  // P7-0 output (SCK21)
@@ -389,6 +405,21 @@ namespace device {
 			}
 		}
 
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  CSI をストールさせて、無効にする。
+		*/
+		//-----------------------------------------------------------------//
+		void destroy()
+		{
+			interrupt_mask_(1);  // set mask
+			SAU::ST = 1;  // SAU stop
+			SAU::SS = 0;	// unit disable
+			SAU::SOE = 0;
+			SAU::CKO = 0;
+			SAU::SO = 0;
+		}
 	};
 
 
