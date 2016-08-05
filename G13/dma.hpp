@@ -57,11 +57,11 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>	    STG;    ///< DMA転送開始ソフトウエア・トリガ
-			bit_rw_t<T, 6>	    DRS;    ///< DMA転送方向の選択
-			bit_rw_t<T, 5>	    DS;     ///< DMA転送での転送データ・サイズの指定
-			bit_rw_t<T, 4>	    DWAIT;  ///< DMA転送の保留
-			bits_rw_t<T, 0, 4>	IFC;    ///< DMA起動要因の選択
+			bit_rw_t<T, bitpos::B7>	    STG;    ///< DMA転送開始ソフトウエア・トリガ
+			bit_rw_t<T, bitpos::B6>	    DRS;    ///< DMA転送方向の選択
+			bit_rw_t<T, bitpos::B5>	    DS;     ///< DMA転送での転送データ・サイズの指定
+			bit_rw_t<T, bitpos::B4>	    DWAIT;  ///< DMA転送の保留
+			bits_rw_t<T, bitpos::B0, 4>	IFC;    ///< DMA起動要因の選択
 		};
 		static dmc_t< rw8_t<BASE + 0xa + OFS> > DMC;
 
@@ -79,8 +79,8 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7>	DEN;  ///< DMA動作許可フラグ
-			bit_rw_t<T, 0>	DST;  ///< DMA転送モード・フラグ
+			bit_rw_t<T, bitpos::B7>	DEN;  ///< DMA動作許可フラグ
+			bit_rw_t<T, bitpos::B0>	DST;  ///< DMA転送モード・フラグ
 		};
 		static drc_t< rw8_t<BASE + 0xc + OFS> > DRC;
 	};
