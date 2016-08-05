@@ -22,7 +22,7 @@ namespace device {
 		using p4_rw::operator |=;
 		using p4_rw::operator &=;
 
-		bit_rw_t<p4_rw, 3> B3;
+		bit_rw_t<p4_rw, bitpos::B3> B3;
 	};
 	static p4_t P4;
 
@@ -33,7 +33,7 @@ namespace device {
 		using pm4_rw::operator |=;
 		using pm4_rw::operator &=;
 
-		bit_rw_t<pm4_rw, 3> B3;
+		bit_rw_t<pm4_rw, bitpos::B3> B3;
 	};
 	static pm4_t PM4;
 
