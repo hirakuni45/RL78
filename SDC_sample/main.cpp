@@ -5,6 +5,7 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include <cstring>
 #include "G13/system.hpp"
 #include "common/port_utils.hpp"
 #include "common/fifo.hpp"
@@ -148,6 +149,28 @@ namespace {
 			}
 		}
 	}
+
+	// CSI 開始
+	// ※SD カードのアクセスでは、「PHASE::TYPE4」を選択する。
+	void start_csi_()
+	{
+		uint8_t intr_level = 0;
+		if(!csi_.start(16000000, csi::PHASE::TYPE4, intr_level)) {
+			uart_.puts("CSI Start fail ! (Clock spped over range)\n");
+		}
+	}
+
+
+	bool check_key_word_(uint8_t idx, const char* key)
+	{
+		char buff[12];
+		if(command_.get_word(idx, sizeof(buff), buff)) {
+			if(std::strcmp(buff, key) == 0) {
+				return true;
+			}				
+		}
+		return false;
+	}
 }
 
 
@@ -156,31 +179,6 @@ int main(int argc, char* argv[])
 	using namespace device;
 
 	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
-
-	// インターバル・タイマー開始
-	{
-		uint8_t intr_level = 1;
-		itm_.start(60, intr_level);
-	}
-
-	// UART 開始
-	{
-		uint8_t intr_level = 1;
-		uart_.start(115200, intr_level);
-	}
-
-	// CSI 開始
-	// ※SD カードのアクセスでは、「PHASE::TYPE4」を選択する。
-	{
-		uint8_t intr_level = 0;
-		if(!csi_.start(16000000, csi::PHASE::TYPE4, intr_level)) {
-			uart_.puts("CSI Start fail ! (Clock spped over range)\n");
-		}
-	}
-
-	uart_.puts("Start RL78/G13 SD-CARD Access sample\n");
-
-	command_.set_prompt("# ");
 
 	PM4.B3 = 0;  // output
 
@@ -196,19 +194,27 @@ int main(int argc, char* argv[])
 	card_detect::POM = 0;
 	card_detect::PU = 1;  // pull-up
 
-#if 0
-	card_power::P = 0;  // power ON!
-	utils::delay::milli_second(100);
-
-	{  // カードをマウント
-		auto st = f_mount(&fatfs_, "", 0);
-		if(st != FR_OK) {
-			utils::format("Mount fail: %d\n") % static_cast<uint32_t>(st);
-		} else {
-			list_dir_();
-		}
+	// インターバル・タイマー開始
+	{
+		uint8_t intr_level = 1;
+		itm_.start(60, intr_level);
 	}
-#endif
+
+	// UART 開始
+	{
+		uint8_t intr_level = 1;
+		uart_.start(115200, intr_level);
+	}
+
+	// CSI を初期化後、廃棄する事で関係ポートを初期化する。
+	{
+		start_csi_();
+		csi_.destroy();
+	}
+
+	uart_.puts("Start RL78/G13 SD-CARD Access sample\n");
+
+	command_.set_prompt("# ");
 
 	uint8_t n = 0;
 	bool cd = false;
@@ -218,35 +224,40 @@ int main(int argc, char* argv[])
 
 		auto st = !card_detect::P();
 		if(!cd && st) {
-//			mount_delay = 10;
-//			card_power::P = 0;
-//			card_select::P = 1;
-			utils::format("Card ditect\n");
+			start_csi_();
+			mount_delay = 10;
+			card_power::P = 0;
+			card_select::P = 1;
+//			utils::format("Card ditect\n");
 		} else if(cd && !st) {
-//			card_power::P = 1;
-//			card_select::P = 0;
-//			f_mount(&fatfs_, "", 0);
-			utils::format("Card unditect\n");
+			f_mount(&fatfs_, "", 0);
+			csi_.destroy();
+			card_power::P = 1;
+			card_select::P = 0;
+//			utils::format("Card unditect\n");
 		}
 		cd = st;
-#if 0
+
 		if(mount_delay) {
 			--mount_delay;
 			if(mount_delay == 0) {
 				auto st = f_mount(&fatfs_, "", 1);
 				if(st != FR_OK) {
 					utils::format("Mount fail: %d\n") % static_cast<uint32_t>(st);
+					csi_.destroy();
 					card_power::P = 1;
 					card_select::P = 0;
 				}
 			}
 		}
-#endif
 
 		// コマンド入力と、コマンド解析
 		if(command_.service()) {
 			auto cmdn = command_.get_words();
 			if(cmdn >= 1) {
+				if(check_key_word_(0, "dir")) {
+					list_dir_();
+				}
 			}
 		}
 
