@@ -528,10 +528,10 @@ namespace device {
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static rw8_t<0xF0076> ADPC;
-	static bit_rw_t<rw8_t<0xF0076>, 3> ADPC3;
-	static bit_rw_t<rw8_t<0xF0076>, 2> ADPC2;
-	static bit_rw_t<rw8_t<0xF0076>, 1> ADPC1;
-	static bit_rw_t<rw8_t<0xF0076>, 0> ADPC0;
+	static bit_rw_t<rw8_t<0xF0076>, bitpos::B3> ADPC3;
+	static bit_rw_t<rw8_t<0xF0076>, bitpos::B2> ADPC2;
+	static bit_rw_t<rw8_t<0xF0076>, bitpos::B1> ADPC1;
+	static bit_rw_t<rw8_t<0xF0076>, bitpos::B0> ADPC0;
 
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -540,12 +540,12 @@ namespace device {
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static rw8_t<0xF0077> PIOR;
-	static bit_rw_t<rw8_t<0xF0077>, 5> PIOR5;
-	static bit_rw_t<rw8_t<0xF0077>, 4> PIOR4;
-	static bit_rw_t<rw8_t<0xF0077>, 3> PIOR3;
-	static bit_rw_t<rw8_t<0xF0077>, 2> PIOR2;
-	static bit_rw_t<rw8_t<0xF0077>, 1> PIOR1;
-	static bit_rw_t<rw8_t<0xF0077>, 0> PIOR0;
+	static bit_rw_t<rw8_t<0xF0077>, bitpos::B5> PIOR5;
+	static bit_rw_t<rw8_t<0xF0077>, bitpos::B4> PIOR4;
+	static bit_rw_t<rw8_t<0xF0077>, bitpos::B3> PIOR3;
+	static bit_rw_t<rw8_t<0xF0077>, bitpos::B2> PIOR2;
+	static bit_rw_t<rw8_t<0xF0077>, bitpos::B1> PIOR1;
+	static bit_rw_t<rw8_t<0xF0077>, bitpos::B0> PIOR0;
 
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -554,7 +554,7 @@ namespace device {
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static rw8_t<0xF007D> GDIDIS;
-	static bit_rw_t<rw8_t<0xF007D>, 0> GDIDIS0;
+	static bit_rw_t<rw8_t<0xF007D>, bitpos::B0> GDIDIS0;
 
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -584,47 +584,30 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  ビット位置
-	*/
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	enum class bit_pos : uint8_t {
-		B0,		///< ビット０
-		B1,		///< ビット１
-		B2,		///< ビット２
-		B3,		///< ビット３
-		B4,		///< ビット４
-		B5,		///< ビット５
-		B6,		///< ビット６
-		B7,		///< ビット７
-	};
-
-
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	/*!
 		@brief  シングル・ポート定義テンプレート
 		@param[in]	port	ポート番号（０～１５）
 		@param[in]	bpos	ビット位置（０～７）	
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <port_no port, bit_pos bpos>
+	template <port_no port, bitpos bpos>
 	struct PORT {
 		/// ポート・レジスタ
-		static bit_rw_t<rw8_t<0xFFF00 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> P;
+		static bit_rw_t<rw8_t<0xFFF00 + static_cast<uint8_t>(port)>, bpos> P;
 
 		/// ポート・モード・レジスタ
-		static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PM;
+		static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, bpos> PM;
 
 		/// プルアップ抵抗オプション・レジスタ
-		static bit_rw_t<rw8_t<0xF0030 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PU;
+		static bit_rw_t<rw8_t<0xF0030 + static_cast<uint8_t>(port)>, bpos> PU;
 
 		/// ポート入力モード・レジスタ
-		static bit_rw_t<rw8_t<0xF0040 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PIM;
+		static bit_rw_t<rw8_t<0xF0040 + static_cast<uint8_t>(port)>, bpos> PIM;
 
 		/// ポート出力モード・レジスタ
-		static bit_rw_t<rw8_t<0xF0050 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> POM;
+		static bit_rw_t<rw8_t<0xF0050 + static_cast<uint8_t>(port)>, bpos> POM;
 
 		/// ポート・モード・コントロール・レジスタ
-		static bit_rw_t<rw8_t<0xF0060 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PMC;
+		static bit_rw_t<rw8_t<0xF0060 + static_cast<uint8_t>(port)>, bpos> PMC;
 
 		void operator = (bool v) const { P = v; }
 		bool operator () () const { return P(); }

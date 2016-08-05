@@ -23,8 +23,8 @@ namespace device {
 		using T::operator |=;
 		using T::operator &=;
 
-		bit_rw_t<T, 15>	    RINTE;  ///< 12ビット・インターバル・タイマの動作制御
-		bits_rw_t<T, 0, 12> ITCMP;  ///< 12ビット・インターバル・タイマのコンペア値設定
+		bit_rw_t<T, bitpos::B15>	 RINTE;  ///< 12ビット・インターバル・タイマの動作制御
+		bits_rw_t<T, bitpos::B0, 12> ITCMP;  ///< 12ビット・インターバル・タイマのコンペア値設定
 	};
 	static itmc_t< rw16_t<0xFFF90> > ITMC;
 }

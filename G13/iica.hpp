@@ -48,14 +48,14 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7> IICE;  ///< I2C の動作許可
-			bit_rw_t<T, 6> LREL;  ///< 通信退避
-			bit_rw_t<T, 5> WREL;  ///< ウエイト解除
-			bit_rw_t<T, 4> SPIE;  ///< ストップ・コンディション検出による割り込み要求発生の許可／禁止
-			bit_rw_t<T, 3> WTIM;  ///< ウエイトおよび割り込み要求発生の制御
-			bit_rw_t<T, 2> ACKE;  ///< アクノリッジ制御
-			bit_rw_t<T, 1> STT;   ///< スタート・コンディション・トリガ
-			bit_rw_t<T, 0> SPT;   ///< ストップ・コンディション・トリガ
+			bit_rw_t<T, bitpos::B7> IICE;  ///< I2C の動作許可
+			bit_rw_t<T, bitpos::B6> LREL;  ///< 通信退避
+			bit_rw_t<T, bitpos::B5> WREL;  ///< ウエイト解除
+			bit_rw_t<T, bitpos::B4> SPIE;  ///< ストップ・コンディション検出による割り込み要求発生の許可／禁止
+			bit_rw_t<T, bitpos::B3> WTIM;  ///< ウエイトおよび割り込み要求発生の制御
+			bit_rw_t<T, bitpos::B2> ACKE;  ///< アクノリッジ制御
+			bit_rw_t<T, bitpos::B1> STT;   ///< スタート・コンディション・トリガ
+			bit_rw_t<T, bitpos::B0> SPT;   ///< ストップ・コンディション・トリガ
 		};
 		static iicctl0_t< rw8_t<0xF0230 + UOFS> > IICCTL0;
 
@@ -73,14 +73,14 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7> MSTS;  ///< マスタ状態確認フラグ
-			bit_rw_t<T, 6> ALD;   ///< アービトレーション負け検出
-			bit_rw_t<T, 5> EXC;   ///< 拡張コード受信検出
-			bit_rw_t<T, 4> COI;   ///< アドレス一致検出
-			bit_rw_t<T, 3> TRC;   ///< 送信／受信状態検出
-			bit_rw_t<T, 2> ACKD;  ///< アクノリッジ（ACK）検出
-			bit_rw_t<T, 1> STD;   ///< スタート・コンディション検出
-			bit_rw_t<T, 0> SPD;   ///< ストップ・コンディション検出
+			bit_rw_t<T, bitpos::B7> MSTS;  ///< マスタ状態確認フラグ
+			bit_rw_t<T, bitpos::B6> ALD;   ///< アービトレーション負け検出
+			bit_rw_t<T, bitpos::B5> EXC;   ///< 拡張コード受信検出
+			bit_rw_t<T, bitpos::B4> COI;   ///< アドレス一致検出
+			bit_rw_t<T, bitpos::B3> TRC;   ///< 送信／受信状態検出
+			bit_rw_t<T, bitpos::B2> ACKD;  ///< アクノリッジ（ACK）検出
+			bit_rw_t<T, bitpos::B1> STD;   ///< スタート・コンディション検出
+			bit_rw_t<T, bitpos::B0> SPD;   ///< ストップ・コンディション検出
 		};
 		static iics_t< rw8_t<0xFFF51 + (UOFS / 2)> > IICS;
 
@@ -98,10 +98,10 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7> STCF;    ///< STTnクリア・フラグ
-			bit_rw_t<T, 6> IICBSY;  ///< I2C バス状態フラグ
-			bit_rw_t<T, 1> STCEN;   ///< 初期スタート許可トリガ
-			bit_rw_t<T, 0> IICRSV;  ///< 通信予約機能禁止ビット
+			bit_rw_t<T, bitpos::B7> STCF;    ///< STTnクリア・フラグ
+			bit_rw_t<T, bitpos::B6> IICBSY;  ///< I2C バス状態フラグ
+			bit_rw_t<T, bitpos::B1> STCEN;   ///< 初期スタート許可トリガ
+			bit_rw_t<T, bitpos::B0> IICRSV;  ///< 通信予約機能禁止ビット
 		};
 		static iicf_t< rw8_t<0xFFF52 + (UOFS / 2)> > IICF;
 
@@ -119,12 +119,12 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 7> WUP;  ///< アドレス一致ウエイク・アップの制御
-			bit_rw_t<T, 5> CLD;  ///< SCLAn端子のレベル検出（IICEn = 1のときのみ有効）
-			bit_rw_t<T, 4> DAD;  ///< SDAAn端子のレベル検出（IICEn = 1のときのみ有効）
-			bit_rw_t<T, 3> SMC;  ///< 動作モードの切り替え
-			bit_rw_t<T, 2> DFC;  ///< デジタル・フィルタの動作の制御
-			bit_rw_t<T, 0> PRS;  ///< IICA動作クロック（f MCK ）の制御
+			bit_rw_t<T, bitpos::B7> WUP;  ///< アドレス一致ウエイク・アップの制御
+			bit_rw_t<T, bitpos::B5> CLD;  ///< SCLAn端子のレベル検出（IICEn = 1のときのみ有効）
+			bit_rw_t<T, bitpos::B4> DAD;  ///< SDAAn端子のレベル検出（IICEn = 1のときのみ有効）
+			bit_rw_t<T, bitpos::B3> SMC;  ///< 動作モードの切り替え
+			bit_rw_t<T, bitpos::B2> DFC;  ///< デジタル・フィルタの動作の制御
+			bit_rw_t<T, bitpos::B0> PRS;  ///< IICA動作クロック（f MCK ）の制御
 		};
 		static iicctl1_t< rw8_t<0xF0231 + UOFS> > IICCTL1;
 

@@ -35,8 +35,8 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bits_rw_t<T, 0, 4>	PRS0;
-			bits_rw_t<T, 4, 4>	PRS1;
+			bits_rw_t<T, bitpos::B0, 4>	PRS0;
+			bits_rw_t<T, bitpos::B4, 4>	PRS1;
 		};
 		static sps_t< rw8_t<0xF0126 + UOFS> > SPS;
 
@@ -54,12 +54,12 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 15>		CKS;	///< チャネルnの動作クロック（f MCK ）の選択
-			bit_rw_t<T, 14>		CCS;	///< チャネルnの転送クロック（f TCLK ）の選択
-			bit_rw_t<T,  8>		STS;	///< スタート・トリガ要因の選択
-			bit_rw_t<T,  6>		SIS;	///< UARTモードでのチャネルnの受信データのレベル反転の制御
-			bits_rw_t<T,  1, 2>	MD;		///< チャネルnの動作モードの設定
-			bit_rw_t<T,  0>		MD0;	///< チャネルnの割り込み要因の選択
+			bit_rw_t<T, bitpos::B15>	CKS;	///< チャネルnの動作クロック（f MCK ）の選択
+			bit_rw_t<T, bitpos::B14>	CCS;	///< チャネルnの転送クロック（f TCLK ）の選択
+			bit_rw_t<T, bitpos::B8 >	STS;	///< スタート・トリガ要因の選択
+			bit_rw_t<T, bitpos::B6 >	SIS;	///< UARTモードでのチャネルnの受信データのレベル反転の制御
+			bits_rw_t<T, bitpos::B1, 2>	MD;		///< チャネルnの動作モードの設定
+			bit_rw_t<T, bitpos::B0>		MD0;	///< チャネルnの割り込み要因の選択
 		};
 		static smr_t< rw16_t<0xF0110 + UOFS + CHOFS> > SMR;
 
@@ -77,18 +77,18 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 15>		TXE;	///< 送信モードの設定
-			bit_rw_t<T, 14>		RXE;	///< 受信モードの設定
-			bit_rw_t<T, 13>		DAP;	///< CSIモードでのデータとクロックの位相選択
-			bit_rw_t<T, 12>		CKP;	///< CSIモードでのデータとクロックの位相選択
+			bit_rw_t<T, bitpos::B15>		TXE;	///< 送信モードの設定
+			bit_rw_t<T, bitpos::B14>		RXE;	///< 受信モードの設定
+			bit_rw_t<T, bitpos::B13>		DAP;	///< CSIモードでのデータとクロックの位相選択
+			bit_rw_t<T, bitpos::B12>		CKP;	///< CSIモードでのデータとクロックの位相選択
 
-			bit_rw_t<T, 10>		EOC;	///< エラー割り込み信号（INTSREx（x = 0-3））のマスク制御
-			bits_rw_t<T,  8, 2>	PTC;	///< UARTモードでのパリティ・ビットの設定
-			bit_rw_t<T,  7>		DIR;	///< CSI, UARTモードでのデータ転送順序の選択
+			bit_rw_t<T, bitpos::B10>		EOC;	///< エラー割り込み信号（INTSREx（x = 0-3））のマスク制御
+			bits_rw_t<T, bitpos::B8, 2>	PTC;	///< UARTモードでのパリティ・ビットの設定
+			bit_rw_t<T, bitpos::B7>		DIR;	///< CSI, UARTモードでのデータ転送順序の選択
 
-			bits_rw_t<T,  4, 2>	SLC;	///< UARTモードでのストップ・ビットの設定
+			bits_rw_t<T, bitpos::B4, 2>	SLC;	///< UARTモードでのストップ・ビットの設定
 
-			bits_rw_t<T,  0, 2>	DLS;	///< CSI, UARTモードでのデータ長の設定
+			bits_rw_t<T, bitpos::B0, 2>	DLS;	///< CSI, UARTモードでのデータ長の設定
 		};
 		static scr_t< rw16_t<0xF0118 + UOFS + CHOFS> > SCR;
 
@@ -124,9 +124,9 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 2>	FEC;	///< チャネルnのフレーミング・エラー・フラグのクリア・トリガ
-			bit_rw_t<T, 1>	PEC;	///< チャネルnのパリティ・エラー・フラグのクリア・トリガ
-			bit_rw_t<T, 0>	OVC;	///< チャネルnのオーバラン・エラー・フラグのクリア・トリガ
+			bit_rw_t<T, bitpos::B2>	FEC;	///< チャネルnのフレーミング・エラー・フラグのクリア・トリガ
+			bit_rw_t<T, bitpos::B1>	PEC;	///< チャネルnのパリティ・エラー・フラグのクリア・トリガ
+			bit_rw_t<T, bitpos::B0>	OVC;	///< チャネルnのオーバラン・エラー・フラグのクリア・トリガ
 		};
 		static sir_t< rw8_t<0xF0108 + UOFS + CHOFS> > SIR;
 
@@ -141,12 +141,12 @@ namespace device {
 		struct ssr_t : public T {
 			using T::operator ();
 
-			bit_ro_t<T, 6>	TSF;	///< チャネルnの通信状態表示フラグ
-			bit_ro_t<T, 5>	BFF;	///< チャネルnのバッファ・レジスタ状態表示フラグ
+			bit_ro_t<T, bitpos::B6>	TSF;	///< チャネルnの通信状態表示フラグ
+			bit_ro_t<T, bitpos::B5>	BFF;	///< チャネルnのバッファ・レジスタ状態表示フラグ
 
-			bit_ro_t<T, 2>	FEF;	///< チャネルnのフレーミング・エラー検出フラグ
-			bit_ro_t<T, 1>	PEF;	///< チャネルnのパリティ／ACKエラー検出フラグ
-			bit_ro_t<T, 0>	OVF;	///< チャネルnのオーバラン・エラー検出フラグ
+			bit_ro_t<T, bitpos::B2>	FEF;	///< チャネルnのフレーミング・エラー検出フラグ
+			bit_ro_t<T, bitpos::B1>	PEF;	///< チャネルnのパリティ／ACKエラー検出フラグ
+			bit_ro_t<T, bitpos::B0>	OVF;	///< チャネルnのオーバラン・エラー検出フラグ
 		};
 		static ssr_t< ro8_t<0xF0100 + UOFS + CHOFS> > SSR;
 
@@ -156,7 +156,7 @@ namespace device {
 			@brief  シリアル・チャネル開始レジスタ m（SS）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF0122 + UOFS>, CHOFS / 2> SS;
+		static bit_rw_t<rw8_t<0xF0122 + UOFS>, static_cast<bitpos>(CHOFS / 2)> SS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -164,7 +164,7 @@ namespace device {
 			@brief  シリアル・チャネル停止レジスタ m（ST）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF0124 + UOFS>, CHOFS / 2> ST;
+		static bit_rw_t<rw8_t<0xF0124 + UOFS>, static_cast<bitpos>(CHOFS / 2)> ST;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -172,7 +172,7 @@ namespace device {
 			@brief  シリアル・チャネル許可ステータス・レジスタ m（SE）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_ro_t<ro8_t<0xF0120 + UOFS>, CHOFS / 2> SE;
+		static bit_ro_t<ro8_t<0xF0120 + UOFS>, static_cast<bitpos>(CHOFS / 2)> SE;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -180,7 +180,7 @@ namespace device {
 			@brief  シリアル出力許可レジスタ m（SOE）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF012A + UOFS>, CHOFS / 2> SOE;
+		static bit_rw_t<rw8_t<0xF012A + UOFS>, static_cast<bitpos>(CHOFS / 2)> SOE;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -188,7 +188,7 @@ namespace device {
 			@brief  シリアル出力レジスタ m（SO）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF0128 + UOFS>, CHOFS / 2> SO;
+		static bit_rw_t<rw16_t<0xF0128 + UOFS>, static_cast<bitpos>(CHOFS / 2)> SO;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -196,7 +196,7 @@ namespace device {
 			@brief  シリアル・クロック・レジスタ m（CKO）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF0128 + UOFS>, 8 + (CHOFS / 2)> CKO;
+		static bit_rw_t<rw16_t<0xF0128 + UOFS>, static_cast<bitpos>(8 + (CHOFS / 2))> CKO;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -204,7 +204,7 @@ namespace device {
 			@brief  シリアル出力レベル・レジスタ m（SOL）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF0134 + UOFS>, CHOFS / 2> SOL;
+		static bit_rw_t<rw8_t<0xF0134 + UOFS>, static_cast<bitpos>(CHOFS / 2)> SOL;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -221,8 +221,8 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 1>	SSEC;
-			bit_rw_t<T, 0>	SWC;
+			bit_rw_t<T, bitpos::B1>	SSEC;
+			bit_rw_t<T, bitpos::B0>	SWC;
 		};
 		static ssc_t<rw8_t<0xF0138 + UOFS> > SSC;
 
@@ -269,8 +269,8 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, 1>	ISC1;	///< タイマ・アレイ・ユニットのチャネル7の入力切り替え
-			bit_rw_t<T, 0>	ISC0;	///< 外部割り込み（INTP0）の入力切り替え
+			bit_rw_t<T, bitpos::B1>	ISC1;	///< タイマ・アレイ・ユニットのチャネル7の入力切り替え
+			bit_rw_t<T, bitpos::B0>	ISC0;	///< 外部割り込み（INTP0）の入力切り替え
 		};
 		static isc_t<rw8_t<0xF0073> > ISC;
 
@@ -289,7 +289,7 @@ namespace device {
 					RxD3端子のノイズ・フィルタ使用可否
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF0070>, 6> SNFEN30;
+		static bit_rw_t<rw8_t<0xF0070>, bitpos::B6> SNFEN30;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -298,7 +298,7 @@ namespace device {
 					RxD2端子のノイズ・フィルタ使用可否
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF0070>, 4> SNFEN20;
+		static bit_rw_t<rw8_t<0xF0070>, bitpos::B4> SNFEN20;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -307,7 +307,7 @@ namespace device {
 					RxD1端子のノイズ・フィルタ使用可否
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF0070>, 2> SNFEN10;
+		static bit_rw_t<rw8_t<0xF0070>, bitpos::B2> SNFEN10;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -316,6 +316,6 @@ namespace device {
 					RxD0端子のノイズ・フィルタ使用可否
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF0070>, 0> SNFEN00;
+		static bit_rw_t<rw8_t<0xF0070>, bitpos::B0> SNFEN00;
 	}
 }
