@@ -23,16 +23,16 @@ namespace device {
 		using T::operator |=;
 		using T::operator &=;
 
-		bit_rw_t<T, 7> ADCS;  ///< A/D変換動作の制御
-		bit_rw_t<T, 6> ADMD;  ///< A/D変換チャネル選択モードを設定
-		bit_rw_t<T, 5> FR2;
-		bit_rw_t<T, 4> FR1;
-		bit_rw_t<T, 3> FR0;
-		bits_rw_t<T, 3, 3> FR;
-		bit_rw_t<T, 2> LV1;
-		bit_rw_t<T, 1> LV0;
-		bits_rw_t<T, 1, 2> LV;
-		bit_rw_t<T, 0> ADCE;  ///< A/D電圧コンパレータの動作制御
+		bit_rw_t<T, bitpos::B7> ADCS;  ///< A/D変換動作の制御
+		bit_rw_t<T, bitpos::B6> ADMD;  ///< A/D変換チャネル選択モードを設定
+		bit_rw_t<T, bitpos::B5> FR2;
+		bit_rw_t<T, bitpos::B4> FR1;
+		bit_rw_t<T, bitpos::B3> FR0;
+		bits_rw_t<T, bitpos::B3, 3> FR;
+		bit_rw_t<T, bitpos::B2> LV1;
+		bit_rw_t<T, bitpos::B1> LV0;
+		bits_rw_t<T, bitpos::B1, 2> LV;
+		bit_rw_t<T, bitpos::B0> ADCE;  ///< A/D電圧コンパレータの動作制御
 	};
 	static adm0_t< rw8_t<0xFFF30> > ADM0;
 
@@ -50,15 +50,15 @@ namespace device {
 		using T::operator |=;
 		using T::operator &=;
 
-		bit_rw_t<T, 7> ADTMD1;
-		bit_rw_t<T, 6> ADTMD0;
-		bits_rw_t<T, 6, 2> ADTMD;   ///< A/D変換トリガ・モードの選択
+		bit_rw_t<T, bitpos::B7> ADTMD1;
+		bit_rw_t<T, bitpos::B6> ADTMD0;
+		bits_rw_t<T, bitpos::B6, 2> ADTMD;   ///< A/D変換トリガ・モードの選択
 
-		bit_rw_t<T, 5> ADSCM;       ///< A/D変換動作モードの設定
+		bit_rw_t<T, bitpos::B5> ADSCM;       ///< A/D変換動作モードの設定
 
-		bit_rw_t<T, 1> ADTRS1; 
-		bit_rw_t<T, 0> ADTRS0;
-		bits_rw_t<T, 0, 2> ADTRS;   ///< ハードウエア・トリガ信号の選択
+		bit_rw_t<T, bitpos::B1> ADTRS1; 
+		bit_rw_t<T, bitpos::B0> ADTRS0;
+		bits_rw_t<T, bitpos::B0, 2> ADTRS;   ///< ハードウエア・トリガ信号の選択
 	};
 	static adm1_t< rw8_t<0xFFF32> > ADM1;
 
@@ -76,14 +76,14 @@ namespace device {
 		using T::operator |=;
 		using T::operator &=;
 
-		bit_rw_t<T, 7> ADREFP1;
-		bit_rw_t<T, 6> ADREFP0;
-		bits_rw_t<T, 6, 2> ADREFP;  ///< A/Dコンバータの＋側の基準電圧の選択
+		bit_rw_t<T, bitpos::B7> ADREFP1;
+		bit_rw_t<T, bitpos::B6> ADREFP0;
+		bits_rw_t<T, bitpos::B6, 2> ADREFP;  ///< A/Dコンバータの＋側の基準電圧の選択
 
-		bit_rw_t<T, 5> ADREFM;      ///< A/Dコンバータの－側の基準電圧の選択
-		bit_rw_t<T, 3> ADRCK;       ///< 変換結果上限／下限値チェック
-		bit_rw_t<T, 2> AWC;         ///< SNOOZEモードの設定
-		bit_rw_t<T, 0> ADTYP;       ///< A/D変換分解能の選択
+		bit_rw_t<T, bitpos::B5> ADREFM;      ///< A/Dコンバータの－側の基準電圧の選択
+		bit_rw_t<T, bitpos::B3> ADRCK;       ///< 変換結果上限／下限値チェック
+		bit_rw_t<T, bitpos::B2> AWC;         ///< SNOOZEモードの設定
+		bit_rw_t<T, bitpos::B0> ADTYP;       ///< A/D変換分解能の選択
 	};
 	static adm2_t< rw8_t<0xF0010> > ADM2;
 
@@ -117,14 +117,14 @@ namespace device {
 		using T::operator |=;
 		using T::operator &=;
 
-		bit_rw_t<T, 7> ADISS;
+		bit_rw_t<T, bitpos::B7> ADISS;
 
-		bit_rw_t<T, 4> ADS4;
-		bit_rw_t<T, 3> ADS3;
-		bit_rw_t<T, 2> ADS2;
-		bit_rw_t<T, 1> ADS1;
-		bit_rw_t<T, 0> ADS0;
-		bits_rw_t<T, 0, 5> ADS;
+		bit_rw_t<T, bitpos::B4> ADS4;
+		bit_rw_t<T, bitpos::B3> ADS3;
+		bit_rw_t<T, bitpos::B2> ADS2;
+		bit_rw_t<T, bitpos::B1> ADS1;
+		bit_rw_t<T, bitpos::B0> ADS0;
+		bits_rw_t<T, bitpos::B0, 5> ADS;
 	};
 	static ads_t< rw8_t<0xFFF31> > ADS;
 
@@ -158,9 +158,9 @@ namespace device {
 		using T::operator |=;
 		using T::operator &=;
 
-		bit_rw_t<T, 1> ADTES1;
-		bit_rw_t<T, 0> ADTES0;
-		bits_rw_t<T, 0, 2> ADTES;  ///< A/D変換対象
+		bit_rw_t<T, bitpos::B1> ADTES1;
+		bit_rw_t<T, bitpos::B0> ADTES0;
+		bits_rw_t<T, bitpos::B0, 2> ADTES;  ///< A/D変換対象
 	};
 	static adtes_t< rw8_t<0xF0013> > ADTES;
 }
