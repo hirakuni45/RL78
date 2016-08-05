@@ -6,7 +6,7 @@
 */
 //=====================================================================//
 #include <cstdint>
-#include "G13/port.hpp"
+#include "common/port_utils.hpp"
 #include "common/delay.hpp"
 
 namespace {
@@ -16,6 +16,8 @@ namespace {
 int main(int argc, char* argv[])
 {
 	using namespace device;
+
+	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
 
 	PM4.B3 = 0;  // output
 

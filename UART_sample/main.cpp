@@ -9,7 +9,7 @@
 //=====================================================================//
 #include <cstdint>
 #include "G13/system.hpp"
-#include "G13/port.hpp"
+#include "common/port_utils.hpp"
 #include "common/uart_io.hpp"
 #include "common/format.hpp"
 #include "common/fifo.hpp"
@@ -74,6 +74,8 @@ extern "C" {
 
 int main(int argc, char* argv[])
 {
+	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
+
 	device::PM4.B3 = 0;  // output
 
 	{

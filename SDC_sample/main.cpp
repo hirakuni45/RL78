@@ -6,7 +6,7 @@
 //=====================================================================//
 #include <cstdint>
 #include "G13/system.hpp"
-#include "G13/port.hpp"
+#include "common/port_utils.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
 #include "common/itimer.hpp"
@@ -36,8 +36,9 @@ namespace {
 	csi csi_;
 
 	// FatFS インターフェースの定義
-	typedef device::PORT<device::port_no::P0, device::bit_pos::B0> card_select;		///< カード選択信号
-	typedef device::PORT<device::port_no::P0, device::bit_pos::B1> card_power;		///< カード電源制御
+	typedef device::PORT<device::port_no::P0,  device::bitpos::B0> card_select;	///< カード選択信号
+	typedef device::PORT<device::port_no::P0,  device::bitpos::B1> card_power;	///< カード電源制御
+	typedef device::PORT<device::port_no::P14, device::bitpos::B6> card_detect;	///< カード検出
 	fatfs::mmc_io<csi, card_select> mmc_(csi_);
 
 	// FatFS コンテキスト
@@ -154,6 +155,8 @@ int main(int argc, char* argv[])
 {
 	using namespace device;
 
+	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
+
 	// インターバル・タイマー開始
 	{
 		uint8_t intr_level = 1;
@@ -182,13 +185,18 @@ int main(int argc, char* argv[])
 	PM4.B3 = 0;  // output
 
 	card_select::PMC = 0;
+	card_select::PM = 0;
 	card_select::P = 0;  // 電源ＯＦＦ時、「０」にしておかないと電流が回り込む
+
 	card_power::PMC = 0;
 	card_power::PM = 0;
-	card_power::P = 1;
+	card_power::P = 1; 
 
+	card_detect::PM = 1;  // input
+	card_detect::POM = 0;
+	card_detect::PU = 1;  // pull-up
 
-
+#if 0
 	card_power::P = 0;  // power ON!
 	utils::delay::milli_second(100);
 
@@ -200,10 +208,40 @@ int main(int argc, char* argv[])
 			list_dir_();
 		}
 	}
+#endif
 
 	uint8_t n = 0;
+	bool cd = false;
+	uint8_t mount_delay = 0;
 	while(1) {
 		itm_.sync();
+
+		auto st = !card_detect::P();
+		if(!cd && st) {
+//			mount_delay = 10;
+//			card_power::P = 0;
+//			card_select::P = 1;
+			utils::format("Card ditect\n");
+		} else if(cd && !st) {
+//			card_power::P = 1;
+//			card_select::P = 0;
+//			f_mount(&fatfs_, "", 0);
+			utils::format("Card unditect\n");
+		}
+		cd = st;
+#if 0
+		if(mount_delay) {
+			--mount_delay;
+			if(mount_delay == 0) {
+				auto st = f_mount(&fatfs_, "", 1);
+				if(st != FR_OK) {
+					utils::format("Mount fail: %d\n") % static_cast<uint32_t>(st);
+					card_power::P = 1;
+					card_select::P = 0;
+				}
+			}
+		}
+#endif
 
 		// コマンド入力と、コマンド解析
 		if(command_.service()) {

@@ -12,7 +12,7 @@
 //=====================================================================//
 #include <cstdint>
 #include "G13/system.hpp"
-#include "G13/port.hpp"
+#include "common/port_utils.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
 #include "common/itimer.hpp"
@@ -104,6 +104,8 @@ extern "C" {
 int main(int argc, char* argv[])
 {
 	using namespace device;
+
+	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
 
 	// インターバル・タイマー開始
 	{

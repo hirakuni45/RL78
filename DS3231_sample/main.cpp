@@ -7,7 +7,7 @@
 #include <cstdint>
 #include<cstring>
 #include "G13/system.hpp"
-#include "G13/port.hpp"
+#include "common/port_utils.hpp"
 #include "common/uart_io.hpp"
 #include "common/fifo.hpp"
 #include "common/format.hpp"
@@ -244,6 +244,8 @@ namespace {
 int main(int argc, char* argv[])
 {
 	using namespace device;
+
+	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
 
 	PM4.B3 = 0;  // output
 

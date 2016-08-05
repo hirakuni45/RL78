@@ -11,33 +11,7 @@
 */
 //=====================================================================//
 #include <cstdint>
-#include "common/io_utils.hpp"
-
-namespace device {
-
-	typedef rw8_t<0xfff04> p4_rw;
-	struct p4_t : public p4_rw {
-		using p4_rw::operator =;
-		using p4_rw::operator ();
-		using p4_rw::operator |=;
-		using p4_rw::operator &=;
-
-		bit_rw_t<p4_rw, bitpos::B3> B3;
-	};
-	static p4_t P4;
-
-	typedef rw8_t<0xfff24> pm4_rw;
-	struct pm4_t : public pm4_rw {
-		using pm4_rw::operator =;
-		using pm4_rw::operator ();
-		using pm4_rw::operator |=;
-		using pm4_rw::operator &=;
-
-		bit_rw_t<pm4_rw, bitpos::B3> B3;
-	};
-	static pm4_t PM4;
-
-}
+#include "common/port_utils.hpp"
 
 namespace {
 	void wait_()
@@ -48,6 +22,8 @@ namespace {
 
 int main(int argc, char* argv[])
 {
+	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
+
 	device::PM4.B3 = 0;  // output
 
 	bool f = false;
