@@ -608,12 +608,23 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <port_no port, bit_pos bpos>
 	struct PORT {
-		static bit_rw_t<rw8_t<0xFFF00 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> P;		///< ポート・レジスタ
-		static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PM;		///< ポート・モード・レジスタ
-		static bit_rw_t<rw8_t<0xFFF30 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PU;		///< プルアップ抵抗オプション・レジスタ
-		static bit_rw_t<rw8_t<0xFFF40 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PIM;	///< ポート入力モード・レジスタ
-		static bit_rw_t<rw8_t<0xFFF50 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> POM;	///< ポート出力モード・レジスタ
-		static bit_rw_t<rw8_t<0xFFF60 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PMC;	///< ポート・モード・コントロール・レジスタ
+		/// ポート・レジスタ
+		static bit_rw_t<rw8_t<0xFFF00 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> P;
+
+		/// ポート・モード・レジスタ
+		static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PM;
+
+		/// プルアップ抵抗オプション・レジスタ
+		static bit_rw_t<rw8_t<0xF0030 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PU;
+
+		/// ポート入力モード・レジスタ
+		static bit_rw_t<rw8_t<0xF0040 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PIM;
+
+		/// ポート出力モード・レジスタ
+		static bit_rw_t<rw8_t<0xF0050 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> POM;
+
+		/// ポート・モード・コントロール・レジスタ
+		static bit_rw_t<rw8_t<0xF0060 + static_cast<uint8_t>(port)>, static_cast<uint8_t>(bpos)> PMC;
 
 		void operator = (bool v) const { P = v; }
 		bool operator () () const { return P(); }
