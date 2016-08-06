@@ -197,10 +197,12 @@ namespace device {
 			if(tx_.get_unit_no() == 0) {
 				if(tx_.get_chanel_no() == 0) {  // UART0
 					PM1.B1 = 1;	// P1-1 input  (RxD0)
+					PU1.B1 = 0; // P1-1 pullup offline
 					PM1.B2 = 0;	// P1-2 output (TxD0)
 					P1.B2  = 1;	// ポートレジスター TxD 切り替え
 				} else {  // UART1
 					PM0.B3  = 1;  // P0-3 input  (RxD1)
+					PU0.B3  = 0;  // P0-3 pullup offline
 					PM0.B2  = 0;  // P0-2 output (TxD1)
 					PIM0.B3 = 1;  // ポート入力モードレジスタ（RxD1:TTL）
 					PMC0.B3 = 0;  // ポートモードコントロール
@@ -210,11 +212,13 @@ namespace device {
 				}
 			} else {
 				if(tx_.get_chanel_no() == 0) {  // UART2
-					PM1.B4 = 1;	// P1-1 input  (RxD2)
-					PM1.B3 = 0;	// P1-2 output (TxD2)
+					PM1.B4 = 1;	// P1-4 input  (RxD2)
+					PU1.B4 = 0; // P1-4 pullup offline
+					PM1.B3 = 0;	// P1-3 output (TxD2)
 					P1.B3  = 1;	// ポートレジスター TxD 切り替え
 				} else {  // UART3（128ピンデバイスでサポート）
 					PM14.B3 = 1;  // P14-3 input (RxD3)
+					PU14.B3 = 0;  // P14-3 pullup offline
 					PM14.B4 = 0;  // P14-4 output (TxD3)
 					P14.B4  = 1;  // ポートレジスター TxD 切り替え
 				}
