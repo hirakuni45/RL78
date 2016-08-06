@@ -12,7 +12,7 @@
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
 #ifndef F_CLK
-#  error "uart_io.hpp requires F_CLK to be defined"
+#  error "iica_io.hpp requires F_CLK to be defined"
 #endif
 
 namespace device {
