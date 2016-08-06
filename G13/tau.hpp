@@ -88,7 +88,8 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bits_rw_t<T, bitpos::B0, 4>	 MD;
+			bit_rw_t<T, bitpos::B0>	 	 MD0;
+			bits_rw_t<T, bitpos::B1, 3>	 MD;
 			bits_rw_t<T, bitpos::B6, 2>	 CIS;
 			bits_rw_t<T, bitpos::B8, 3>	 STS;
 #if (CHOFS == 4 || CHOFS == 8 || CHOFS == 12)
@@ -125,7 +126,7 @@ namespace device {
 			@brief  タイマ・チャネル許可ステータス・レジスタ（TE）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01B0 + UOFS>, static_cast<bitpos>(CHOFS)> TE;
+		static bit_ro_t<rw8_t<0xF01B0 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TE;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -133,7 +134,7 @@ namespace device {
 			@brief  タイマ・チャネル許可ステータス・レジスタ１（TEH1）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF01B0 + UOFS>, bitpos::B9> TEH1;
+		static bit_ro_t<rw16_t<0xF01B0 + UOFS>, bitpos::B9> TEH1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -141,7 +142,7 @@ namespace device {
 			@brief  タイマ・チャネル許可ステータス・レジスタ３（TEH3）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF01B0 + UOFS>, bitpos::B11> TEH3;
+		static bit_ro_t<rw16_t<0xF01B0 + UOFS>, bitpos::B11> TEH3;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -149,7 +150,7 @@ namespace device {
 			@brief  タイマ・チャネル開始レジスタ（TS）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01B2 + UOFS>, static_cast<bitpos>(CHOFS)> TS;
+		static bit_rw_t<rw8_t<0xF01B2 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -173,7 +174,7 @@ namespace device {
 			@brief  タイマ・チャネル停止レジスタ（TT）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01B4 + UOFS>, static_cast<bitpos>(CHOFS)> TT;
+		static bit_rw_t<rw8_t<0xF01B4 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TT;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -207,7 +208,7 @@ namespace device {
 			@brief  タイマ出力許可レジスタ（TOE）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01BA + UOFS>, static_cast<bitpos>(CHOFS)> TOE;
+		static bit_rw_t<rw8_t<0xF01BA + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOE;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -215,24 +216,24 @@ namespace device {
 			@brief  タイマ出力レジスタ（TO）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01B8 + UOFS>, static_cast<bitpos>(CHOFS)> TO;
-
-
-		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		/*!
-			@brief  タイマ出力レベル・レジスタ（TOL）
-		*/
-		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01BC + UOFS>, static_cast<bitpos>(CHOFS)> TOL;
+		static bit_rw_t<rw8_t<0xF01B8 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TO;
 
 
 #if (CHOFS != 0)
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
+			@brief  タイマ出力レベル・レジスタ（TOL）
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		static bit_rw_t<rw8_t<0xF01BC + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOL;
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
 			@brief  タイマ出力モード・レジスタ（TOM）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01BE + UOFS>, static_cast<bitpos>(CHOFS)> TOM;
+		static bit_rw_t<rw8_t<0xF01BE + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOM;
 #endif
 
 
@@ -255,7 +256,6 @@ namespace device {
 		};
 		static isc_t< rw8_t<0xF0073> > ISC;
 #endif
-
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
