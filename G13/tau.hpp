@@ -15,10 +15,43 @@ namespace device {
 		@brief  タイマ・アレイ・ユニット・テンプレート
 		@param[in]	UOFS	ユニット・オフセット（0x00、0x40）
 		@param[in]	CHOFS	チャネル・オフセット（0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E)
+		@param[in]	DRADR	データレジスタ・アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint32_t UOFS, uint32_t CHOFS>
+	template <uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
 	struct tau_t {
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  タイマ・カウンタ・レジスタ（TCR）
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		static ro16_t<0xF0180 + UOFS + CHOFS> TCR;
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  タイマ・データ・レジスタ（TDR）
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		static rw16_t<DRADR> TDR;
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  タイマ・データ・レジスタ・下位バイト（TDRL）
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		static rw8_t<DRADR> TDRL;
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  タイマ・データ・レジスタ・上位バイト（TDRH）
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		static rw8_t<DRADR + 1> TDRH;
+
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -260,26 +293,21 @@ namespace device {
         //-----------------------------------------------------------------//
 		static uint8_t get_chanel_no() { return CHOFS / 0x02; }
 	};
-	typedef tau_t<0x00, 0x00> TAU00;
-	typedef tau_t<0x00, 0x02> TAU01;
-	typedef tau_t<0x00, 0x04> TAU02;
-	typedef tau_t<0x00, 0x06> TAU03;
-	typedef tau_t<0x00, 0x08> TAU04;
-	typedef tau_t<0x00, 0x0A> TAU05;
-	typedef tau_t<0x00, 0x0C> TAU06;
-	typedef tau_t<0x00, 0x0E> TAU07;
+	typedef tau_t<0x00, 0x00, 0xFFF18> TAU00;
+	typedef tau_t<0x00, 0x02, 0xFFF1A> TAU01;
+	typedef tau_t<0x00, 0x04, 0xFFF64> TAU02;
+	typedef tau_t<0x00, 0x06, 0xFFF66> TAU03;
+	typedef tau_t<0x00, 0x08, 0xFFF68> TAU04;
+	typedef tau_t<0x00, 0x0A, 0xFFF6A> TAU05;
+	typedef tau_t<0x00, 0x0C, 0xFFF6C> TAU06;
+	typedef tau_t<0x00, 0x0E, 0xFFF6E> TAU07;
 
-	typedef tau_t<0x40, 0x00> TAU10;
-	typedef tau_t<0x40, 0x02> TAU11;
-	typedef tau_t<0x40, 0x04> TAU12;
-	typedef tau_t<0x40, 0x06> TAU13;
-	typedef tau_t<0x40, 0x08> TAU14;
-	typedef tau_t<0x40, 0x0A> TAU15;
-	typedef tau_t<0x40, 0x0C> TAU16;
-	typedef tau_t<0x40, 0x0E> TAU17;
-
-
-
-
-
+	typedef tau_t<0x40, 0x00, 0xFFF70> TAU10;
+	typedef tau_t<0x40, 0x02, 0xFFF72> TAU11;
+	typedef tau_t<0x40, 0x04, 0xFFF74> TAU12;
+	typedef tau_t<0x40, 0x06, 0xFFF76> TAU13;
+	typedef tau_t<0x40, 0x08, 0xFFF78> TAU14;
+	typedef tau_t<0x40, 0x0A, 0xFFF7A> TAU15;
+	typedef tau_t<0x40, 0x0C, 0xFFF7C> TAU16;
+	typedef tau_t<0x40, 0x0E, 0xFFF7E> TAU17;
 }
