@@ -1,7 +1,8 @@
 //=====================================================================//
 /*!	@file
 	@brief	ＰＷＭ出力サンプル @n
-			TO01(P1-6) から、１００ＫＨｚ、２５％ディーティーの波形出力
+			TO01(P1-6) から、１００ＫＨｚ、２５％ディーティーの波形出力 @n
+			TO02(P1-7) から、１００ＫＨｚ、７５％ディーティーの波形出力
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
@@ -17,7 +18,8 @@ namespace {
 
 	typedef device::tau_io<device::TAU00> master;
 	master master_;
-	device::tau_io<device::TAU01> pwm_;
+	device::tau_io<device::TAU01> pwm1_;
+	device::tau_io<device::TAU02> pwm2_;
 
 	bool init_pwm_()
 	{
@@ -25,7 +27,10 @@ namespace {
 		if(!master_.start_interval(100000, intr_level)) {
 			return false;
 		}
-		if(!pwm_.start_pwm<master::tau_type>(0, intr_level)) {
+		if(!pwm1_.start_pwm<master::tau_type>(0, intr_level)) {
+			return false;
+		}
+		if(!pwm2_.start_pwm<master::tau_type>(0, intr_level)) {
 			return false;
 		}
 		return true;
@@ -46,7 +51,8 @@ int main(int argc, char* argv[])
 	}
 
 	auto val = master_.get_value();  // マスターチャネルのカウント最大値
-	pwm_.set_value(val / 4);  // PWM Duty 25%
+	pwm1_.set_value(val / 4);  // PWM Duty 25%
+	pwm2_.set_value(val * 3 / 4);  // PWM Duty 75%
 
 	bool f = false;
 	while(1) {
