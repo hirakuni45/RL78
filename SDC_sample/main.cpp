@@ -122,19 +122,6 @@ extern "C" {
 	}
 };
 
-namespace {
-	bool check_key_word_(uint8_t idx, const char* key)
-	{
-		char buff[12];
-		if(command_.get_word(idx, sizeof(buff), buff)) {
-			if(std::strcmp(buff, key) == 0) {
-				return true;
-			}				
-		}
-		return false;
-	}
-}
-
 
 int main(int argc, char* argv[])
 {
@@ -172,7 +159,7 @@ int main(int argc, char* argv[])
 		if(command_.service()) {
 			auto cmdn = command_.get_words();
 			if(cmdn >= 1) {
-				if(check_key_word_(0, "dir")) {
+				if(command_.cmp_word(0, "dir")) {
 					sdc_.dir("");
 				}
 			}
