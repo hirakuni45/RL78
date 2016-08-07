@@ -9,6 +9,7 @@
 #include "G13/timer.hpp"
 #include "G13/system.hpp"
 #include "G13/intr.hpp"
+#include "common/task.hpp"
 
 namespace device {
 
@@ -21,10 +22,11 @@ namespace device {
 		@param[in]	T	内部カウンターの
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <typename T>
+	template <typename T, class TASK = utils::null_task>
 	class itimer {
 
 		static volatile T counter_;
+		static TASK task_;
 
 		uint8_t	intr_level_ = 0;
 
@@ -39,6 +41,7 @@ namespace device {
 		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
 		{
 			++counter_;
+			task_();
 		}
 
 
@@ -106,7 +109,9 @@ namespace device {
 		}
 	};
 
-	template<typename T>
-		volatile T itimer<T>::counter_ = 0;
+	template<typename T, class TASK>
+		volatile T itimer<T, TASK>::counter_ = 0;
 
+	template<typename T, class TASK>
+		TASK itimer<T, TASK>::task_;
 }
