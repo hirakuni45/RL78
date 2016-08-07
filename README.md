@@ -45,7 +45,8 @@ E-Mail: hira@rvf-rc45.net
  - /SOFT_DELAY_sample ---> RL78/G13 ソフトウェアー・タイマーのサンプル
  - /DS3231_sample   --->   RL78/G13 DS3231 Real Time Clock の時間表示、設定サンプル
  - /SDC_sample      --->   RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
- - /INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル 
+ - /INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
+ - / PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
  - /KiCAD_Lib       --->   KiCAD 用部品ライブラリー
    
 ## RL78 開発環境
