@@ -10,6 +10,7 @@
 #include "common/csi_io.hpp"
 #include "common/delay.hpp"
 #include "ff12a/src/diskio.h"
+#include "ff12a/src/ff.h"
 
 namespace fatfs {
 
