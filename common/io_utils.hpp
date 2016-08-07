@@ -179,7 +179,7 @@ namespace device {
 			@param[in]	data	書き込み値
 		*/
 		//-----------------------------------------------------------------//
-		static void write(uint16_t data) { wr16_(adr, data); }
+		static void write(value_type data) { wr16_(adr, data); }
 
 
 		//-----------------------------------------------------------------//
@@ -188,7 +188,7 @@ namespace device {
 			@return 読み出し値
 		*/
 		//-----------------------------------------------------------------//
-		static uint16_t read() { return rd16_(adr); }
+		static value_type read() { return rd16_(adr); }
 
 		void operator = (value_type data) const { write(data); }
 		value_type operator () () const { return read(); }
@@ -306,7 +306,7 @@ namespace device {
 	template <class T, bitpos pos, uint8_t len>
 	struct bits_rw_t {
 		static typename T::value_type get() {
-			return (typename T::read() >> static_cast<uint8_t>(pos)) & ((1 << len) - 1);
+			return (T::read() >> static_cast<uint8_t>(pos)) & ((1 << len) - 1);
 		}
 		static void set(typename T::value_type v) {
 			auto m = static_cast<typename T::value_type>(((1 << len) - 1) << static_cast<uint8_t>(pos));
