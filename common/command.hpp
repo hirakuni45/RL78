@@ -5,7 +5,7 @@
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
-#include <cstdint>
+#include <cstring>
 
 extern "C" {
 	void sci_putch(char ch);
@@ -185,6 +185,37 @@ namespace utils {
 						}
 						word[i] = 0;
 						return true;
+					}
+					--argc;
+				}
+				if(ch == 0) break;
+				bc = ch;
+				++p;
+			}
+			return false;
+		}
+
+
+        //-----------------------------------------------------------------//
+        /*!
+            @brief  ワードを比較
+			@param[in]	argc	ワード位置
+			@param[in]	key		比較文字列
+			@return 
+        */
+        //-----------------------------------------------------------------//
+		bool cmp_word(uint8_t argc, const char* key) const {
+			const char* p = buff_;
+			char bc = ' ';
+			const char* top;
+			while(1) {
+				char ch = *p;
+				if(bc == ' ' && ch != ' ') {
+					top = p;
+				}
+				if(bc != ' ' && (ch == ' ' || ch == 0)) {
+					if(argc == 0) {
+						return std::strncmp(key, top, p - top) == 0;
 					}
 					--argc;
 				}
