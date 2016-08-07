@@ -92,11 +92,11 @@ namespace device {
 			bits_rw_t<T, bitpos::B1, 3>	 MD;
 			bits_rw_t<T, bitpos::B6, 2>	 CIS;
 			bits_rw_t<T, bitpos::B8, 3>	 STS;
-#if (CHOFS == 4 || CHOFS == 8 || CHOFS == 12)
-			bit_rw_t<T, bitpos::B11>	 MAS;
-#elif (CHOFS == 2 || CHOFS == 6)
-			bit_rw_t<T, bitpos::B11>	 SPLIT;
-#endif
+
+			bit_rw_t<T, bitpos::B11>	 MAS;  ///< Master chanel: 2, 4, 6
+
+			bit_rw_t<T, bitpos::B11>	 SPLIT;  ///< Split: 1, 3
+
 			bit_rw_t<T, bitpos::B12>	 CCS;
 			bits_rw_t<T, bitpos::B14, 3> CKS;
 		};
@@ -193,14 +193,12 @@ namespace device {
 		static bit_rw_t<rw16_t<0xF01B4 + UOFS>, bitpos::B11> TT3;
 
 
-#if (CHOFS == 0)
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
 			@brief  タイマ入力選択レジスタ（TIS）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		static bits_rw_t<rw8_t<0xF0074>, bitpos::B0, 3> TIS;
-#endif
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -219,7 +217,6 @@ namespace device {
 		static bit_rw_t<rw8_t<0xF01B8 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TO;
 
 
-#if (CHOFS != 0)
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
 			@brief  タイマ出力レベル・レジスタ（TOL）
@@ -234,10 +231,8 @@ namespace device {
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		static bit_rw_t<rw8_t<0xF01BE + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOM;
-#endif
 
 
-#if (CHOFS != 14)
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
 			@brief  入力切り替え制御レジスタ（ISC）テンプレート
@@ -255,7 +250,6 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>	 ISC1;
 		};
 		static isc_t< rw8_t<0xF0073> > ISC;
-#endif
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
