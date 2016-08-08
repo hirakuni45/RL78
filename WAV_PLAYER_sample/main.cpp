@@ -35,6 +35,7 @@ namespace pwm {
 		interval_master() : inc_(0), rate_(0), skip_(0), l_ofs_(0), r_ofs_(0), wofs_(0), pos_(0) { }
 
 		void init() {
+			wofs_ = 0x00;
 			for(uint16_t i = 0; i < 1024; ++i) {
 				buff_[i] = 0x80;
 			}
