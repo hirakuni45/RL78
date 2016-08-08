@@ -37,8 +37,8 @@ namespace device {
 
 		static volatile bool	send_stall_;
 
-		uint8_t	intr_level_ = 0;
-		bool	crlf_ = true;
+		uint8_t	intr_level_;
+		bool	crlf_;
 
 		// ※必要なら、実装する
 		inline void sleep_() { asm("nop"); }
@@ -70,6 +70,9 @@ namespace device {
 		}
 
 	public:
+
+		uart_io() : intr_level_(0), crlf_(true) { }
+
 		// 送信完了割り込み設定
 		static inline void send_intrrupt_mask_(bool f)
 		{

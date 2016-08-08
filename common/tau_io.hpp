@@ -247,6 +247,15 @@ namespace device {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	割り込みタスクへの参照
+			@return 割り込みタスク（参照）
+		 */
+		//-----------------------------------------------------------------//
+		TASK& at_task() { return task_; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	値の設定
 			@param[in]	val	設定値
 		 */
@@ -325,7 +334,55 @@ namespace device {
 				return false;
 			}
 
-			set_port_dir_(outena);
+			if(outena) {
+				set_port_dir_(true);
+			}
+
+			TAU::TOM = 0;  // タイマ出力モード（マスター）
+			TAU::TO = 0;  // 出力初期値
+			TAU::TOE = outena;
+
+			TAU::TS = 1;  // タイマースタート
+
+			set_interrupt_();
+
+			return true;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	インターバル・タイマー機能（レジスター直接指定）
+			@param[in]	master	マスター分周期（０～１５）
+		   	@param[in]	value	ダウンカウンター（１６ビット）
+			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
+			@param[in]	outena	出力ポートに信号を出す（周波数の半分）
+			@return エラーなら「false」（設定周期範囲外）
+		 */
+		//-----------------------------------------------------------------//
+		bool start_interval(uint8_t master, uint16_t value, uint8_t level, bool outena = false)
+		{
+			intr_level_ = level;
+
+			enable_per_();
+
+			mode_ = mode::INTERVAL;
+
+			// プリスケーラーは、０～３：PRS0、４～７：PRS1
+			uint8_t cks = 0;
+			if(TAU::get_chanel_no() < 4) {
+				TAU::TPS.PRS0 = master;
+			} else {
+				TAU::TPS.PRS1 = master;
+				cks = 2;
+			}
+
+			TAU::TMR = TAU::TMR.CKS.b(cks) | TAU::TMR.MD.b(static_cast<uint8_t>(mode_)) | TAU::TMR.MD0.b(1);
+			TAU::TDR = value;
+
+			if(outena) {
+				set_port_dir_(true);
+			}
 
 			TAU::TOM = 0;  // タイマ出力モード（マスター）
 			TAU::TO = 0;  // 出力初期値

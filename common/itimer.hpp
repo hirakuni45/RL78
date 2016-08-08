@@ -41,7 +41,7 @@ namespace device {
 		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
 		{
 			++counter_;
-			task_();
+//			task_();
 		}
 
 

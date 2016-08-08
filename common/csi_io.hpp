@@ -343,7 +343,7 @@ namespace device {
 			@param[in]	ch	送信データ
 		*/
 		//-----------------------------------------------------------------//
-		void write(uint8_t ch)
+		inline void write(uint8_t ch)
 		{
 			if(intr_level_) {
 
@@ -377,7 +377,7 @@ namespace device {
 			@return	受信データ
 		*/
 		//-----------------------------------------------------------------//
-		uint8_t read()
+		inline uint8_t read()
 		{
 			if(intr_level_) {
 				return 0;
