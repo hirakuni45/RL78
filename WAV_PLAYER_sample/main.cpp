@@ -32,12 +32,11 @@ namespace pwm {
 		volatile uint16_t pos_;
 
 	public:
-		interval_master() : inc_(0), rate_(0), skip_(0), l_ofs_(0), r_ofs_(0), wofs_(0), pos_(0) { }
+		interval_master() : inc_(0), rate_(0), skip_(0), l_ofs_(0), r_ofs_(0), wofs_(0x80), pos_(0) { }
 
 		void init() {
-			wofs_ = 0x00;
 			for(uint16_t i = 0; i < 1024; ++i) {
-				buff_[i] = 0x80;
+				buff_[i] = 0x00;
 			}
 		}
 
@@ -262,8 +261,19 @@ namespace {
 			fpos += 512;
 			wpos = pos;
 		}
+		for(uint8_t i = 0; i < 2; ++i) {
+			while(((wpos ^ pos) & 512) == 0) {
+				pos = master_.at_task().get_pos();
+			}
+			uint8_t* buff = master_.at_task().get_buff();
+			UINT br;
+			for(uint16_t j = 0; j < 512; ++j) {
+				buff[(wpos & 512) + j] = wofs ^ 0x80;
+			}
+			fpos += 512;
+			wpos = pos;
+		}
 		f_close(&fil);
-		master_.at_task().init();
 	}
 }
 
@@ -298,10 +308,6 @@ int main(int argc, char* argv[])
 	uart_.puts("Start RL78/G13 WAV file player sample\n");
 
 	command_.set_prompt("# ");
-
-//	auto val = master_.get_value();  // マスターチャネルのカウント最大値
-//	pwm1_.set_value(val / 4);  // PWM Duty 25%
-//	pwm2_.set_value(val * 3 / 4);  // PWM Duty 75%
 
 	uint8_t n = 0;
 	FIL fil;
