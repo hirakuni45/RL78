@@ -241,7 +241,7 @@ namespace {
 			wofs = 0x80;
 		} else {
 			f_close(&fil);
-			utils::format("Fail bits\n");
+			utils::format("Fail bits: '%s'\n") % fname;
 			return;
 		}
 		master_.at_task().set_param(skip, l_ofs, r_ofs, wofs);
@@ -249,6 +249,7 @@ namespace {
 		uint32_t fpos = 0;
 		uint16_t wpos = master_.at_task().get_pos();
 		uint16_t pos = wpos;
+		uint8_t n = 0;
 		while(fpos < fsize) {
 			while(((wpos ^ pos) & 512) == 0) {
 				pos = master_.at_task().get_pos();
@@ -256,10 +257,17 @@ namespace {
 			uint8_t* buff = master_.at_task().get_buff();
 			UINT br;
 			if(f_read(&fil, &buff[wpos & 512], 512, &br) != FR_OK) {
+				utils::format("Abort: '%s'\n") % fname;
 				break;
 			}
 			fpos += 512;
 			wpos = pos;
+
+			++n;
+			if(n >= 20) {
+				n = 0;
+				device::P4.B3 = !device::P4.B3();  // LED モニターの点滅
+			}
 		}
 		for(uint8_t i = 0; i < 2; ++i) {
 			while(((wpos ^ pos) & 512) == 0) {
