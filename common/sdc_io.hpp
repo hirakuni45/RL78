@@ -48,7 +48,20 @@ namespace utils {
 			}
 		}
 
+		
+		static void dir_list_func_(const char* name, uint32_t size, bool dir) {
+			if(dir) {
+				format("          /%s\n") % name;
+			} else {
+				format("%8d  %s\n") % size % name;
+			}
+		}
+
 	public:
+///		typedef std::function<void (const char* name, uint32_t size, bool dir)> dir_loop_func;
+		typedef void (*dir_loop_func)(const char* name, uint32_t size, bool dir);
+
+
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	コンストラクター
@@ -86,12 +99,13 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	SD カードのディレクトリーをリストする
+			@brief	SD カードのディレクトリーを取り、タスクを実行する
 			@param[in]	root	ルート・パス
+			@param[in]	func	実行関数
 			@return ファイル数
 		 */
 		//-----------------------------------------------------------------//
-		uint16_t dir(const char* root)
+		uint16_t dir_loop(const char* root, dir_loop_func func)
 		{
 			uint16_t num = 0;
 			DIR dir;
@@ -108,14 +122,27 @@ namespace utils {
 					}
 					if(!fno.fname[0]) break;
 						if(fno.fattrib & AM_DIR) {
-						format("          /%s\n") % fno.fname;
+						func(fno.fname, static_cast<uint32_t>(fno.fsize), true);
 					} else {
-						format("%8d  %s\n") % static_cast<uint32_t>(fno.fsize) % fno.fname;
+						func(fno.fname, static_cast<uint32_t>(fno.fsize), false);
 					}
 					++num;
 				}
 			}
 			return num;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	SD カードのディレクトリーをリストする
+			@param[in]	root	ルート・パス
+			@return ファイル数
+		 */
+		//-----------------------------------------------------------------//
+		uint16_t dir(const char* root)
+		{
+			return dir_loop(root, dir_list_func_);
 		}
 
 
