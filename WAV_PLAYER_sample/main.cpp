@@ -199,13 +199,13 @@ namespace {
 	{
 		FIL fil;
 		if(f_open(&fil, fname, FA_READ) != FR_OK) {
-			utils::format("Can't open input file: %s\n") % fname;
+			utils::format("Can't open input file: '%s'\n") % fname;
 			return;
 		}
 
 		if(!wav_.load_header(&fil)) {
 			f_close(&fil);
-			utils::format("WAV file header load fail: %s\n") % fname;
+			utils::format("WAV file load fail: '%s'\n") % fname;
 			return;
 		}
 
@@ -283,6 +283,21 @@ namespace {
 		}
 		f_close(&fil);
 	}
+
+	void play_loop_(const char*);
+	void play_loop_func_(const char* name, uint32_t size, bool dir)
+	{
+		if(dir) {
+			play_loop_(name);
+		} else {
+			play_(name);
+		}
+	}
+
+	void play_loop_(const char* root)
+	{
+		sdc_.dir_loop(root, play_loop_func_);
+	}
 }
 
 
@@ -333,7 +348,11 @@ int main(int argc, char* argv[])
 				} else if(cmdn >= 2 && command_.cmp_word(0, "play")) {
 					char fname[16];
 					command_.get_word(1, sizeof(fname), fname);
-					play_(fname);
+					if(std::strcmp(fname, "*") == 0) {
+						play_loop_("");
+					} else {
+						play_(fname);
+					}
 				} else {
 //					utils::format("\nCommand error: '%s'\n") % 
 				}
