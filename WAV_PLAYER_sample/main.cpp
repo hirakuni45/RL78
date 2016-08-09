@@ -210,6 +210,7 @@ namespace {
 		}
 
 		auto fsize = wav_.get_size();
+		utils::format("File:   %s\n") % fname;
 		utils::format("Size:   %d\n") % fsize;
 		utils::format("Rate:   %d\n") % wav_.get_rate();
 		utils::format("Chanel: %d\n") % static_cast<uint32_t>(wav_.get_chanel());
@@ -345,16 +346,22 @@ int main(int argc, char* argv[])
 			if(cmdn >= 1) {
 				if(command_.cmp_word(0, "dir")) {
 					sdc_.dir("");
-				} else if(cmdn >= 2 && command_.cmp_word(0, "play")) {
-					char fname[16];
-					command_.get_word(1, sizeof(fname), fname);
-					if(std::strcmp(fname, "*") == 0) {
-						play_loop_("");
+				} else if(command_.cmp_word(0, "play")) {
+					if(cmdn >= 2) {
+						char fname[16];
+						command_.get_word(1, sizeof(fname), fname);
+						if(std::strcmp(fname, "*") == 0) {
+							play_loop_("");
+						} else {
+							play_(fname);
+						}
 					} else {
-						play_(fname);
+						play_loop_("");
 					}
 				} else {
-//					utils::format("\nCommand error: '%s'\n") % 
+					utils::format("dir ---> directory file\n");
+					utils::format("play file-name ---> play file\n");
+					utils::format("play * ---> play file all\n");
 				}
 			}
 		}
