@@ -32,11 +32,12 @@ namespace pwm {
 		volatile uint16_t pos_;
 
 	public:
-		interval_master() : inc_(0), rate_(0), skip_(0), l_ofs_(0), r_ofs_(0), wofs_(0x80), pos_(0) { }
+		interval_master() : inc_(0), rate_(2205), skip_(2), l_ofs_(0), r_ofs_(1), wofs_(0x80), pos_(0) { }
 
 		void init() {
+			uint8_t v = 0x00;
 			for(uint16_t i = 0; i < 1024; ++i) {
-				buff_[i] = 0x00;
+				buff_[i] = v;
 			}
 		}
 
@@ -190,6 +191,7 @@ namespace {
 		if(!pwm2_.start_pwm<master::tau_type>(0, intr_level)) {
 			return false;
 		}
+
 		return true;
 	}
 
@@ -269,6 +271,11 @@ namespace {
 				n = 0;
 				device::P4.B3 = !device::P4.B3();  // LED モニターの点滅
 			}
+
+			if(sci_length() > 0) {
+				auto ch = sci_getch();
+				if(ch == '>') break;
+			}			
 		}
 		for(uint8_t i = 0; i < 2; ++i) {
 			while(((wpos ^ pos) & 512) == 0) {
