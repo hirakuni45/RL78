@@ -274,7 +274,12 @@ namespace {
 
 			if(sci_length() > 0) {
 				auto ch = sci_getch();
-				if(ch == '>') break;
+				if(ch == '>') {
+					break;
+				} else if(ch == '<') {
+					fpos = 0;
+					f_lseek(&fil, wav_.get_top());
+				}
 			}			
 		}
 		for(uint8_t i = 0; i < 2; ++i) {

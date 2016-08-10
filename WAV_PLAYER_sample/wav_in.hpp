@@ -40,6 +40,7 @@ namespace audio {
 			uint32_t	guidSubFormat;
 		};
 
+		uint32_t	data_top_;
 		uint32_t	data_size_;
 
 		uint32_t	rate_;
@@ -52,7 +53,7 @@ namespace audio {
 			@brief	コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		wav_in() : data_size_(0), rate_(0), chanel_(0), bits_(0) { }
+		wav_in() : data_top_(0), data_size_(0), rate_(0), chanel_(0), bits_(0) { }
 
 
 		//-----------------------------------------------------------------//
@@ -101,8 +102,18 @@ namespace audio {
 				ofs += rc.ulChunkSize;
 				f_lseek(fil, ofs);
 			}
+			data_top_ = f_tell(fil);
+
 			return true;
 		}
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	データ先頭のファイル位置を返す
+			@return ファイル位置
+		*/
+		//-----------------------------------------------------------------//
+		uint32_t get_top() const { return data_top_; }
 
 
 		//-----------------------------------------------------------------//
