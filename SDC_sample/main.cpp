@@ -29,7 +29,7 @@ namespace {
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
 	// インターバル・タイマー
-	device::itimer<uint8_t> itm_;
+	device::itimer<uint16_t> itm_;
 
 	// CSI(SPI) の定義、CSI00 の通信では、「SAU00」を利用、０ユニット、チャネル０
 	typedef device::csi_io<device::SAU00> csi;
@@ -122,6 +122,96 @@ extern "C" {
 	}
 };
 
+namespace {
+
+	uint8_t v_ = 91;
+	uint8_t m_ = 123;
+	uint8_t rand_()
+	{
+		v_ += v_ << 2;
+		++v_;
+		uint8_t n = 0;
+		if(m_ & 0x02) n = 1;
+		if(m_ & 0x40) n ^= 1;
+		m_ += m_;
+		if(n == 0) ++m_;
+		return v_ ^ m_;
+	}
+
+	bool create_test_file_(const char* fname, uint32_t size)
+	{
+		utils::format("SD Write test...\n");
+
+		uint8_t buff[512];
+		for(uint16_t i = 0; i < sizeof(buff); ++i) {
+			buff[i] = rand_();
+		}
+
+		auto st = itm_.get_counter();
+		FIL fp;
+		if(f_open(&fp, fname, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) {
+			utils::format("Can't create file: '%s'\n") % fname;
+			return false;
+		}
+		auto rs = size;
+		while(rs > 0) {
+			UINT sz = sizeof(buff);
+			if(sz > rs) sz = rs;
+			UINT bw;
+			f_write(&fp, buff, sz, &bw);
+			rs -= bw;
+		}
+		f_close(&fp);
+
+		auto ed = itm_.get_counter();
+		uint32_t len;
+		if(ed > st) len = ed - st;
+		else len = 65536 + ed - st;
+		utils::format("Write frame: %d\n") % len;
+		auto pbyte = size * 60 / len;
+		utils::format("Write: %d Bytes/Sec\n") % pbyte;
+		utils::format("Write: %d KBytes/Sec\n") % (pbyte / 1024);
+
+		return true;
+	}
+
+	void test_all_()
+	{
+		const char* test_file = { "TEST.BIN" };
+		uint32_t size = 1024L * 1024L;
+		if(!create_test_file_(test_file, size)) {
+			return;
+		}
+		utils::format("SD Speed test start...\n");
+
+		auto st = itm_.get_counter();
+
+		utils::format("SD Read test...\n");
+		FIL fp;
+		if(f_open(&fp, test_file, FA_READ) != FR_OK) {
+			utils::format("Can't read file: '%s'\n") % test_file;
+		}
+		auto rs = size;
+		while(rs > 0) {
+			uint8_t buff[512];
+			UINT rb;
+			UINT sz = sizeof(buff);
+			if(sz > rs) sz = rs;
+			f_read(&fp, buff, sz, &rb);
+			rs -= rb;
+		}
+		f_close(&fp);
+
+		auto ed = itm_.get_counter();
+		uint32_t len;
+		if(ed > st) len = ed - st;
+		else len = 65536 + ed - st;
+		utils::format("Read frame: %d\n") % len;
+		auto pbyte = size * 60 / len;
+		utils::format("Read: %d Bytes/Sec\n") % pbyte;
+		utils::format("Read: %d KBytes/Sec\n") % (pbyte / 1024);
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -159,8 +249,18 @@ int main(int argc, char* argv[])
 		if(command_.service()) {
 			auto cmdn = command_.get_words();
 			if(cmdn >= 1) {
+				bool f = false;
 				if(command_.cmp_word(0, "dir")) {
 					sdc_.dir("");
+					f = true;
+				} else if(command_.cmp_word(0, "speed")) {
+					test_all_();
+					f = true;
+				}
+				if(!f) {
+					char tmp[16];
+					command_.get_word(0, sizeof(tmp), tmp);
+					utils::format("Command error: '%s'\n") % tmp;
 				}
 			}
 		}
