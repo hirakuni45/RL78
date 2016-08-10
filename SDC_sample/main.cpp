@@ -177,12 +177,13 @@ namespace {
 
 	void test_all_()
 	{
+		utils::format("SD Speed test start...\n");
+
 		const char* test_file = { "TEST.BIN" };
 		uint32_t size = 1024L * 1024L;
 		if(!create_test_file_(test_file, size)) {
 			return;
 		}
-		utils::format("SD Speed test start...\n");
 
 		auto st = itm_.get_counter();
 
