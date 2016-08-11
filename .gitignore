@@ -9,5 +9,4 @@
 *.dcm
 *.bck
 *.lib
-*.kicad_pcb
 release/
