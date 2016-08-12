@@ -34,9 +34,9 @@ namespace utils {
 
 		FATFS	fatfs_;  ///< FatFS コンテキスト
 
-		uint8_t	mount_delay_ = 0;
-		bool	cd_ = false;
-		bool	mount_ = false;
+		uint8_t	mount_delay_;
+		bool	cd_;
+		bool	mount_;
 
 		// CSI 開始
 		// ※SD カードのアクセスでは、「PHASE::TYPE4」を選択する。
@@ -67,7 +67,8 @@ namespace utils {
 			@brief	コンストラクター
 		 */
 		//-----------------------------------------------------------------//
-		sdc_io(CSI& csi) : csi_(csi), mmc_(csi_) { }
+		sdc_io(CSI& csi) : csi_(csi), mmc_(csi_),
+			mount_delay_(0), cd_(false), mount_(false) { }
 
 
 		//-----------------------------------------------------------------//
@@ -107,6 +108,8 @@ namespace utils {
 		//-----------------------------------------------------------------//
 		uint16_t dir_loop(const char* root, dir_loop_func func)
 		{
+			if(!mount_) return 0;
+ 
 			uint16_t num = 0;
 			DIR dir;
 			auto st = f_opendir(&dir, root);
@@ -166,6 +169,7 @@ namespace utils {
 				csi_.destroy();
 				POWER::P = 1;
 				SELECT::P = 0;
+				mount_ = false;
 //				format("Card unditect\n");
 			}
 			cd_ = st;
@@ -187,6 +191,15 @@ namespace utils {
 			}
 			return mount_;
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	カードのマウント状態を取得
+			@return 「true」ならマウント状態
+		 */
+		//-----------------------------------------------------------------//
+		bool get_mount() const { return mount_; }
 
 
 		//-----------------------------------------------------------------//
