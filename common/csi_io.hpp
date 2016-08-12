@@ -339,17 +339,19 @@ namespace device {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  シリアル送信
+			@brief  送受信
 			@param[in]	ch	送信データ
+			@return	受信データ
 		*/
 		//-----------------------------------------------------------------//
-		inline void write(uint8_t ch)
+		inline uint8_t xchg(uint8_t ch = 0xff)
 		{
 			if(intr_level_) {
-
+				return 0;
 			} else {
 				SAU::SDR_L = ch;
 				sync_();
+				return SAU::SDR_L();
 			}
 		}
 
@@ -365,26 +367,8 @@ namespace device {
 		{
 			auto end = src + size;
 			while(src < end) {
-				write(*src);
+				xchg(*src);
 				++src;
-			}
-		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  シリアル受信
-			@return	受信データ
-		*/
-		//-----------------------------------------------------------------//
-		inline uint8_t read()
-		{
-			if(intr_level_) {
-				return 0;
-			} else {
-				SAU::SDR_L = 0xff;
-				sync_();
-				return SAU::SDR_L();
 			}
 		}
 
@@ -400,7 +384,7 @@ namespace device {
 		{
 			auto end = dst + size;
 			while(dst < end) {
-				*dst = read();
+				*dst = xchg();
 				++dst;
 			}
 		}
