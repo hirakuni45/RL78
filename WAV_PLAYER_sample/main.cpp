@@ -199,6 +199,11 @@ namespace {
 
 	void play_(const char* fname)
 	{
+		if(!sdc_.get_mount()) {
+			utils::format("SD Card unmount.\n");
+			return;
+		}
+
 		FIL fil;
 		if(f_open(&fil, fname, FA_READ) != FR_OK) {
 			utils::format("Can't open input file: '%s'\n") % fname;
@@ -357,7 +362,11 @@ int main(int argc, char* argv[])
 			auto cmdn = command_.get_words();
 			if(cmdn >= 1) {
 				if(command_.cmp_word(0, "dir")) {
-					sdc_.dir("");
+					if(!sdc_.get_mount()) {
+						utils::format("SD Card unmount.\n");
+					} else {
+						sdc_.dir("");
+					}
 				} else if(command_.cmp_word(0, "play")) {
 					if(cmdn >= 2) {
 						char fname[16];
