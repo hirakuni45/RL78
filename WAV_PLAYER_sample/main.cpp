@@ -23,21 +23,21 @@ namespace pwm {
 
 	class interval_master {
 		uint8_t buff_[1024];
-		uint16_t inc_;
-		uint16_t rate_;
-		uint8_t skip_;
-		uint8_t	l_ofs_;
-		uint8_t	r_ofs_;
-		uint8_t wofs_;
-		volatile uint16_t pos_;
+		volatile uint16_t	inc_;
+		volatile uint16_t	rate_;
+		volatile uint8_t	skip_;
+		volatile uint8_t	l_ofs_;
+		volatile uint8_t	r_ofs_;
+		volatile uint8_t	wofs_;
+		volatile uint16_t	pos_;
 
 	public:
-		interval_master() : inc_(0), rate_(2205), skip_(2), l_ofs_(0), r_ofs_(1), wofs_(0x80), pos_(0) { }
+		interval_master() : inc_(0), rate_(4410), skip_(4), l_ofs_(0), r_ofs_(2), wofs_(0x80), pos_(0) { }
 
-		void init() {
-			uint8_t v = 0x00;
-			for(uint16_t i = 0; i < 1024; ++i) {
-				buff_[i] = v;
+		void init()
+		{
+			for(uint16_t i = 0; i < sizeof(buff_); ++i) {
+				buff_[i] = 0x00;
 			}
 		}
 
@@ -47,11 +47,41 @@ namespace pwm {
 
 		void set_rate(uint16_t rate) { rate_ = rate / 10; }
 
+		void sync() {
+			if(skip_ == 0) return;
+			volatile auto n = pos_;
+			while(n == pos_) ;
+		}
+
+		void pause(uint8_t skip) {
+			if(skip == 0) {
+				sync();
+				skip_ = skip;
+				buff_[pos_ + l_ofs_] = wofs_ ^ 0x80;
+				buff_[pos_ + r_ofs_] = wofs_ ^ 0x80;
+			} else {
+				sync();
+				skip_ = skip;
+			}
+		}
+
 		void set_param(uint8_t skip, uint8_t l_ofs, uint8_t r_ofs, uint8_t wofs) {
-			skip_ = skip;
+			sync();
+			inc_ = 0;
+			skip_ = 0;
+			pos_ = 0;
+			l_ofs_ = 0;
+			r_ofs_ = 0;
+			buff_[0] = wofs_ ^ 0x80;
+			for(uint16_t i = 1; i < sizeof(buff_); ++i) {
+				buff_[i] = wofs ^ 0x80;
+			}
+			wofs_ = wofs;
+			buff_[0] = wofs_ ^ 0x80;
 			l_ofs_ = l_ofs;
 			r_ofs_ = r_ofs;
-			wofs_ = wofs;
+			inc_ = 0;
+			skip_ = skip;
 		} 
 
 		void operator() () {
@@ -200,17 +230,20 @@ namespace {
 	void play_(const char* fname)
 	{
 		if(!sdc_.get_mount()) {
+			master_.at_task().set_param(4, 0, 2, 0x80);
 			utils::format("SD Card unmount.\n");
 			return;
 		}
 
 		FIL fil;
 		if(f_open(&fil, fname, FA_READ) != FR_OK) {
+			master_.at_task().set_param(4, 0, 2, 0x80);
 			utils::format("Can't open input file: '%s'\n") % fname;
 			return;
 		}
 
 		if(!wav_.load_header(&fil)) {
+			master_.at_task().set_param(4, 0, 2, 0x80);
 			f_close(&fil);
 			utils::format("WAV file load fail: '%s'\n") % fname;
 			return;
@@ -258,18 +291,21 @@ namespace {
 		uint16_t wpos = master_.at_task().get_pos();
 		uint16_t pos = wpos;
 		uint8_t n = 0;
+		bool pause = false;
 		while(fpos < fsize) {
-			while(((wpos ^ pos) & 512) == 0) {
-				pos = master_.at_task().get_pos();
+			if(!pause) {
+				while(((wpos ^ pos) & 512) == 0) {
+					pos = master_.at_task().get_pos();
+				}
+				uint8_t* buff = master_.at_task().get_buff();
+				UINT br;
+				if(f_read(&fil, &buff[wpos & 512], 512, &br) != FR_OK) {
+					utils::format("Abort: '%s'\n") % fname;
+					break;
+				}
+				fpos += 512;
+				wpos = pos;
 			}
-			uint8_t* buff = master_.at_task().get_buff();
-			UINT br;
-			if(f_read(&fil, &buff[wpos & 512], 512, &br) != FR_OK) {
-				utils::format("Abort: '%s'\n") % fname;
-				break;
-			}
-			fpos += 512;
-			wpos = pos;
 
 			++n;
 			if(n >= 20) {
@@ -284,21 +320,19 @@ namespace {
 				} else if(ch == '<') {
 					fpos = 0;
 					f_lseek(&fil, wav_.get_top());
+				} else if(ch == ' ') {
+					if(pause) {
+						master_.at_task().pause(skip);
+					} else {
+						master_.at_task().pause(0);
+					}
+					pause = !pause;
 				}
 			}			
 		}
-		for(uint8_t i = 0; i < 2; ++i) {
-			while(((wpos ^ pos) & 512) == 0) {
-				pos = master_.at_task().get_pos();
-			}
-			uint8_t* buff = master_.at_task().get_buff();
-			UINT br;
-			for(uint16_t j = 0; j < 512; ++j) {
-				buff[(wpos & 512) + j] = wofs ^ 0x80;
-			}
-			fpos += 512;
-			wpos = pos;
-		}
+
+		master_.at_task().set_param(skip, l_ofs, r_ofs, wofs);
+
 		f_close(&fil);
 	}
 
