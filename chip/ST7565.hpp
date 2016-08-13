@@ -65,11 +65,11 @@ namespace chip {
 		};
 
 		inline void write_(CMD cmd) {
-			csi_.write(static_cast<uint8_t>(cmd));
+			csi_.xchg(static_cast<uint8_t>(cmd));
 		}
 
 		inline void write_(CMD cmd, uint8_t ord) {
-			csi_.write(static_cast<uint8_t>(cmd) | ord);
+			csi_.xchg(static_cast<uint8_t>(cmd) | ord);
 		}
 
 		inline void chip_enable_(bool f = true) const {
@@ -192,7 +192,7 @@ namespace chip {
     			write_(CMD::RMW);
 				reg_select_(1);
 				for(uint8_t i = 0; i < 128; ++i) {
-					csi_.write(*p);
+					csi_.xchg(*p);
 					++p;
 				}
 			}
