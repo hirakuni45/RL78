@@ -4,8 +4,9 @@
 			・P73/SO01 (26) ---> VS1053:SI     (29) @n
 			・P74/SI01 (25) ---> VS1053:SO     (30) @n
 			・P75/SCK01(24) ---> VS1053:SCLK   (28) @n
-			・P62      (19) ---> VS1053:/xCS   (23) @n
-			・P63      (20) ---> VS1053:/xDCS  (13) @n 
+			・P52      (35) ---> VS1053:/xCS   (23) @n
+			・P53      (36) ---> VS1053:/xDCS  (13) @n 
+			・P54      (37) ---> VS1053:/DREQ  ( 8) @n 
 			・/RESET   ( 6) ---> VS1053:/xRESET( 3)
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
@@ -41,7 +42,6 @@ namespace {
 	typedef device::PORT<device::port_no::P0,  device::bitpos::B0> card_select;	///< カード選択信号
 	typedef device::PORT<device::port_no::P0,  device::bitpos::B1> card_power;	///< カード電源制御
 	typedef device::PORT<device::port_no::P14, device::bitpos::B6> card_detect;	///< カード検出
-
 	utils::sdc_io<csi0, card_select, card_power, card_detect> sdc_(csi0_);
 
 	utils::command<64> command_;
@@ -49,7 +49,10 @@ namespace {
 	// VS1053 SPI の定義 CSI01「SAU01」
 	typedef device::csi_io<device::SAU01> csi1;
 	csi1 csi1_;
-	typedef device::PORT<device::port_no::P6,  device::bitpos::B2> vs1053_select;	///< VS1053 選択信号
+	typedef device::PORT<device::port_no::P5,  device::bitpos::B2> vs1063_sel;	///< VS1063 /CS
+	typedef device::PORT<device::port_no::P5,  device::bitpos::B3> vs1063_dcs;	///< VS1063 /DCS
+	typedef device::PORT<device::port_no::P5,  device::bitpos::B4> vs1063_req;	///< VS1063 DREQ
+	chip::VS1063<csi1, vs1063_sel, vs1063_dcs, vs1063_req> vs1063_(csi1_);
 }
 
 
@@ -135,104 +138,7 @@ namespace {
 
 	void play_(const char* fname)
 	{
-		FIL fil;
-		if(f_open(&fil, fname, FA_READ) != FR_OK) {
-			utils::format("Can't open input file: '%s'\n") % fname;
-			return;
-		}
-
-#if 0
-		if(!wav_.load_header(&fil)) {
-			f_close(&fil);
-			utils::format("WAV file load fail: '%s'\n") % fname;
-			return;
-		}
-
-		auto fsize = wav_.get_size();
-		utils::format("File:   %s\n") % fname;
-		utils::format("Size:   %d\n") % fsize;
-		utils::format("Rate:   %d\n") % wav_.get_rate();
-		utils::format("Chanel: %d\n") % static_cast<uint32_t>(wav_.get_chanel());
-		utils::format("Bits:   %d\n") % static_cast<uint32_t>(wav_.get_bits());
-
-		master_.at_task().set_rate(wav_.get_rate());
-		uint8_t skip = 0;
-		uint8_t l_ofs = 0;
-		uint8_t r_ofs = 0;
-		uint8_t wofs = 0;
-		if(wav_.get_bits() == 8) {
-			skip = wav_.get_chanel();
-			if(wav_.get_chanel() == 1) {
-				l_ofs = 0;
-				r_ofs = 0;
-			} else {
-				l_ofs = 0;
-				r_ofs = 1;
-			}
-		} else if(wav_.get_bits() == 16) {
-			skip = wav_.get_chanel() * 2;
-			if(wav_.get_chanel() == 1) {
-				l_ofs = 1;
-				r_ofs = 1;
-			} else {
-				l_ofs = 1;
-				r_ofs = 3;
-			}
-			wofs = 0x80;
-		} else {
-			f_close(&fil);
-			utils::format("Fail bits: '%s'\n") % fname;
-			return;
-		}
-		master_.at_task().set_param(skip, l_ofs, r_ofs, wofs);
-
-		uint32_t fpos = 0;
-		uint16_t wpos = master_.at_task().get_pos();
-		uint16_t pos = wpos;
-		uint8_t n = 0;
-		while(fpos < fsize) {
-			while(((wpos ^ pos) & 512) == 0) {
-				pos = master_.at_task().get_pos();
-			}
-			uint8_t* buff = master_.at_task().get_buff();
-			UINT br;
-			if(f_read(&fil, &buff[wpos & 512], 512, &br) != FR_OK) {
-				utils::format("Abort: '%s'\n") % fname;
-				break;
-			}
-			fpos += 512;
-			wpos = pos;
-
-			++n;
-			if(n >= 20) {
-				n = 0;
-				device::P4.B3 = !device::P4.B3();  // LED モニターの点滅
-			}
-
-			if(sci_length() > 0) {
-				auto ch = sci_getch();
-				if(ch == '>') {
-					break;
-				} else if(ch == '<') {
-					fpos = 0;
-					f_lseek(&fil, wav_.get_top());
-				}
-			}			
-		}
-		for(uint8_t i = 0; i < 2; ++i) {
-			while(((wpos ^ pos) & 512) == 0) {
-				pos = master_.at_task().get_pos();
-			}
-			uint8_t* buff = master_.at_task().get_buff();
-			UINT br;
-			for(uint16_t j = 0; j < 512; ++j) {
-				buff[(wpos & 512) + j] = wofs ^ 0x80;
-			}
-			fpos += 512;
-			wpos = pos;
-		}
-#endif
-		f_close(&fil);
+		vs1063_.play(fname);
 	}
 
 	void play_loop_(const char*);
@@ -272,6 +178,11 @@ int main(int argc, char* argv[])
 
 	// SD カード・サービス開始
 	sdc_.initialize();
+
+	// VS1063 初期化
+	{
+		vs1063_.start();
+	}	
 
 	uart_.puts("Start RL78/G13 VS1053 player sample\n");
 

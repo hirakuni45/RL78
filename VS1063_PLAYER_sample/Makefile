@@ -3,7 +3,7 @@
 #	RL78 Makefile 				        				#
 #														#
 #=======================================================#
-TARGET		=	vs1063_play_sample
+TARGET		=	vs1063_player_sample
 
 DEVICE		=	R5F100LGAFB
 
