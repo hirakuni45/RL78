@@ -280,9 +280,9 @@ namespace device {
 		}
 		static void set(bool v) {
 			if(v) {
-				T::write(T::read() | (static_cast<typename T::value_type>(v) << static_cast<uint8_t>(pos)));
+				T::write(T::read() | (1 << static_cast<uint8_t>(pos)));
 			} else {
-				T::write(T::read() & ~(static_cast<typename T::value_type>(1) << static_cast<uint8_t>(pos)));
+				T::write(T::read() & ~(1 << static_cast<uint8_t>(pos)));
 			}
 		}
 
@@ -290,8 +290,8 @@ namespace device {
 			return v << static_cast<uint8_t>(pos);
 		}
 
-		void operator = (bool v) const { set(v); }
-		bool operator () () const { return get(); }
+		void operator = (bool v) { set(v); }
+		bool operator () () { return get(); }
 	};
 
 
