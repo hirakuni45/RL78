@@ -138,7 +138,15 @@ namespace {
 
 	void play_(const char* fname)
 	{
-		vs1063_.play(fname);
+		if(!sdc_.get_mount()) {
+			utils::format("SD Card unmount.\n");
+			return;
+		}
+
+		char full[128];
+		sdc_.make_full_path(fname, full);
+
+		vs1063_.play(full);
 	}
 
 	void play_loop_(const char*);
@@ -200,8 +208,28 @@ int main(int argc, char* argv[])
 			auto cmdn = command_.get_words();
 			if(cmdn >= 1) {
 				if(command_.cmp_word(0, "dir")) {
-					sdc_.dir("");
-				} else if(command_.cmp_word(0, "play")) {
+					if(!sdc_.get_mount()) {
+						utils::format("SD Card unmount.\n");
+					} else {
+						if(cmdn >= 2) {
+							char tmp[16];
+							command_.get_word(1, sizeof(tmp), tmp);
+							sdc_.dir(tmp);
+						} else {
+							sdc_.dir("");
+						}
+					}
+				} else if(command_.cmp_word(0, "cd")) {  // cd [xxx]
+					if(cmdn >= 2) {
+						char tmp[16];
+						command_.get_word(1, sizeof(tmp), tmp);
+						sdc_.cd(tmp);						
+					} else {
+						sdc_.cd("/");
+					}
+				} else if(command_.cmp_word(0, "pwd")) { // pwd
+					utils::format("%s\n") % sdc_.get_current();
+				} else if(command_.cmp_word(0, "play")) {  // play [xxx]
 					if(cmdn >= 2) {
 						char fname[16];
 						command_.get_word(1, sizeof(fname), fname);
