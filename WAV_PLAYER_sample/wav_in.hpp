@@ -6,6 +6,7 @@
 //=====================================================================//
 #include <cstring>
 #include "ff12a/src/ff.h"
+#include "common/format.hpp"
 
 namespace audio {
 
@@ -46,6 +47,21 @@ namespace audio {
 		uint32_t	rate_;
 		uint8_t		chanel_;
 		uint8_t		bits_;
+
+		bool list_tag_(FIL* fp, uint16_t size) {
+			while(size > 0) {
+				char ch = 0;
+				UINT br;
+				if(f_read(fp, &ch, 1, &br) != FR_OK) {
+					return false;
+				}
+				--size;
+				if(ch != 0) {
+					utils::format("%c") % ch;
+				}
+			}
+			return true;
+		}
 
 	public:
 		//-----------------------------------------------------------------//
@@ -98,6 +114,32 @@ namespace audio {
 				} else if(std::strncmp(rc.szChunkName, "data", 4) == 0) {
 					data_size_ = rc.ulChunkSize;
 					break;
+				} else if(std::strncmp(rc.szChunkName, "LIST", 4) == 0) {
+					uint16_t sz = rc.ulChunkSize;
+					char key[4];
+					if(f_read(fil, &key, sizeof(key), &br) != FR_OK) {
+						return false;
+					}
+					if(std::strncmp(key, "INFO", 4) == 0) {
+						sz -= 4;
+						while(sz > 0) {
+							RIFFCHUNK tag;
+							UINT br;
+							if(f_read(fil, &tag, sizeof(tag), &br) != FR_OK) {
+								return false;
+							}
+							sz -= sizeof(tag);
+							utils::format("%c%c%c%c: ") % tag.szChunkName[0] % tag.szChunkName[1]
+								% tag.szChunkName[2] % tag.szChunkName[3];
+							uint16_t n = tag.ulChunkSize;
+							if(n & 1) ++n;
+							if(!list_tag_(fil, n)) {
+								return false;
+							}
+							utils::format("\n");
+							sz -= n;
+						}
+					}
 				}
 				ofs += rc.ulChunkSize;
 				f_lseek(fil, ofs);
