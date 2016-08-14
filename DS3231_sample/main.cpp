@@ -148,18 +148,6 @@ namespace {
 	}
 
 
-	bool check_key_word_(uint8_t idx, const char* key)
-	{
-		char buff[12];
-		if(command_.get_word(idx, sizeof(buff), buff)) {
-			if(std::strcmp(buff, key) == 0) {
-				return true;
-			}				
-		}
-		return false;
-	}
-
-
 	const char* get_dec_(const char* p, char tmch, int& value) {
 		int v = 0;
 		char ch;
@@ -294,7 +282,7 @@ int main(int argc, char* argv[])
 		if(command_.service()) {
 			uint8_t cmdn = command_.get_words();
 			if(cmdn >= 1) {
-				if(check_key_word_(0, "date")) {
+				if(command_.cmp_word(0, "date")) {
 					if(cmdn == 1) {
 						time_t t = get_time_();
 						if(t != 0) {
@@ -303,11 +291,11 @@ int main(int argc, char* argv[])
 					} else {
 						set_time_date_();
 					}
-				} else if(check_key_word_(0, "help")) {
+				} else if(command_.cmp_word(0, "help")) {
 					sci_puts("date\n");
 					sci_puts("date yyyy/mm/dd hh:mm[:ss]\n");
 				} else {
-					char buff[12];
+					char buff[16];
 					if(command_.get_word(0, sizeof(buff), buff)) {
 						sci_puts("Command error: ");
 						sci_puts(buff);
