@@ -37,6 +37,8 @@ namespace chip {
 		uint8_t	frame_;
 		bool	open_;
 
+		uint8_t buff_[256];
+
 		/// VS1063a コマンド表
 		enum class CMD {
 			MODE,			///< モード制御
@@ -99,6 +101,34 @@ namespace chip {
 			return data;
 		}
 
+		bool probe_mp3_()
+		{
+			UINT len;
+			if(f_read(&fp_, buff_, 10, &len) != FR_OK) {
+				return false;
+			}
+			if(len != 10) {
+				f_close(&fp_);
+				return false;
+			}
+
+			if(buff_[0] == 'I' && buff_[1] == 'D' && buff_[2] == '3') ;
+			else {
+				return false;
+			}
+
+			// skip TAG
+			uint32_t ofs = static_cast<uint32_t>(buff_[6]) << 21;
+			ofs |= static_cast<uint32_t>(buff_[7]) << 14;
+			ofs |= static_cast<uint32_t>(buff_[8]) << 7;
+			ofs |= static_cast<uint32_t>(buff_[9]);
+			f_lseek(&fp_, ofs);
+
+			utils::format("Find ID3 tag skip: %d\n") % ofs;
+
+			return true;
+		}
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -135,6 +165,7 @@ namespace chip {
 				return;
 			}
 
+///	   		write_(CMD::MODE, 0x4840);
 	   		write_(CMD::MODE, 0x4800);
 			write_(CMD::VOL,  0x4040);  // volume
 
@@ -148,6 +179,8 @@ namespace chip {
 				return;
 			}
 			utils::delay::milli_second(10);
+
+			set_volume(255);
 		}
 
 
@@ -158,33 +191,32 @@ namespace chip {
 		//----------------------------------------------------------------//
 		bool service()
 		{
-			while(get_status_() != 0) {
-				uint8_t buff[32];
-				UINT len;
-				if(f_read(&fp_, buff, sizeof(buff), &len) != FR_OK) {
-					return false;
-				}
-				if(len > 0) {
-					csi_.write(buff, len);
-				}
-				if(len < 32) {
-					f_close(&fp_);
-					open_ = false;
-					return false;
-				}
-				++frame_;
-				if(frame_ >= 40) {
-					device::P4.B3 = !device::P4.B3();
-					frame_ = 0;
-				}
+			UINT len;
+			if(f_read(&fp_, buff_, sizeof(buff_), &len) != FR_OK) {
+				return false;
+			}
+			if(len == 0) return false;
 
-				if(sci_length()) {
-					auto ch = sci_getch();
-					if(ch == '>') {
-						f_close(&fp_);
-						open_ = false;
-						return false;
-					}
+			const uint8_t* p = buff_;
+			while(len > 0) {
+				while(get_status_() == 0) ;
+				uint16_t l = 32;
+				if(l > len) l = len; 
+				csi_.write(p, l);
+				p += l;
+				len -= l;
+			}
+
+			++frame_;
+			if(frame_ >= 40) {
+				device::P4.B3 = !device::P4.B3();
+				frame_ = 0;
+			}
+
+			if(sci_length()) {
+				auto ch = sci_getch();
+				if(ch == '>') {
+					return false;
 				}
 			}
 			return true;
@@ -200,20 +232,29 @@ namespace chip {
 		//----------------------------------------------------------------//
 		bool play(const char* fname)
 		{
-			set_volume(255);
+			utils::format("Play: '%s'\n") % fname;
 
 			if(f_open(&fp_, fname, FA_READ) != FR_OK) {
 				utils::format("Can't open input file: '%s'\n") % fname;
 				return false;
 			}
-			open_ = true;
 
-			frame_ = 0;
-			DCS::P = 0;
-			while(service()) {
-				sleep_();
+			// ファイル・フォーマットを確認
+			probe_mp3_();
+
+			{
+				open_ = true;
+
+				frame_ = 0;
+				DCS::P = 0;
+				while(service()) {
+					sleep_();
+				}
+				DCS::P = 1;
 			}
-			DCS::P = 1;
+
+			f_close(&fp_);
+			open_ = false;
 
 			return true;
 		}
