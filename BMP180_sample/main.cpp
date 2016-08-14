@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 			utils::format("Temperature: %d.%d C\n") % (t / 10) % (t % 10);
 
 			auto p = bmp180_.get_pressure();
-			utils::format("Pressure: %d.%d hPa\n") % (p / 100) % (p % 100);
+			utils::format("Pressure: %d.%02d hPa\n") % (p / 100) % (p % 100);
 		}
 
 		// コマンド入力と、コマンド解析
