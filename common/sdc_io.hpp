@@ -6,6 +6,7 @@
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
+#include <cstring>
 #include "common/port_utils.hpp"
 #include "ff12a/mmc_io.hpp"
 #include "common/format.hpp"
@@ -157,10 +158,11 @@ namespace utils {
 			@brief	SD カードのディレクトリーを取り、タスクを実行する
 			@param[in]	root	ルート・パス
 			@param[in]	func	実行関数
+			@param[in]	recursive  「true」にすると再帰的にループを回す（スタックの容量に注意）
 			@return ファイル数
 		 */
 		//-----------------------------------------------------------------//
-		uint16_t dir_loop(const char* root, dir_loop_func func)
+		uint16_t dir_loop(const char* root, dir_loop_func func, bool recursive = false)
 		{
 			if(!mount_) return 0;
 
@@ -185,7 +187,9 @@ namespace utils {
 					if(!fno.fname[0]) break;
 					std::strcpy(p, fno.fname);
 					if(fno.fattrib & AM_DIR) {
-						func(p, static_cast<uint32_t>(fno.fsize), true);
+						if(recursive) {
+							func(p, static_cast<uint32_t>(fno.fsize), true);
+						}
 					} else {
 						func(p, static_cast<uint32_t>(fno.fsize), false);
 					}
@@ -206,7 +210,7 @@ namespace utils {
 		//-----------------------------------------------------------------//
 		uint16_t dir(const char* root)
 		{
-			return dir_loop(root, dir_list_func_);
+			return dir_loop(root, dir_list_func_, true);
 		}
 
 
