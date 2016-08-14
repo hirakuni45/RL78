@@ -251,10 +251,28 @@ int main(int argc, char* argv[])
 			auto cmdn = command_.get_words();
 			if(cmdn >= 1) {
 				bool f = false;
-				if(command_.cmp_word(0, "dir")) {
-					sdc_.dir("");
+				if(command_.cmp_word(0, "dir")) {  // dir [xxx]
+					if(cmdn >= 2) {
+						char tmp[16];
+						command_.get_word(1, sizeof(tmp), tmp);
+						sdc_.dir(tmp);
+					} else {
+						sdc_.dir("");
+					}
 					f = true;
-				} else if(command_.cmp_word(0, "speed")) {
+				} else if(command_.cmp_word(0, "cd")) {  // cd [xxx]
+					if(cmdn >= 2) {
+						char tmp[16];
+						command_.get_word(1, sizeof(tmp), tmp);
+						sdc_.cd(tmp);						
+					} else {
+						sdc_.cd("/");
+					}
+					f = true;
+				} else if(command_.cmp_word(0, "pwd")) { // pwd
+					utils::format("%s\n") % sdc_.get_current();
+					f = true;
+				} else if(command_.cmp_word(0, "speed")) { // speed
 					test_all_();
 					f = true;
 				}
