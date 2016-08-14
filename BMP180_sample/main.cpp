@@ -149,10 +149,10 @@ int main(int argc, char* argv[])
 		if(n >= 60) {
 			n = 0;
 			auto t = bmp180_.get_temperature();
-			utils::format("Temperature: %d.%d\n") % (t / 10) % (t % 10);
+			utils::format("Temperature: %d.%d C\n") % (t / 10) % (t % 10);
 
 			auto p = bmp180_.get_pressure();
-			utils::format("Pressure: %d\n") % p;
+			utils::format("Pressure: %d.%d hPa\n") % (p / 100) % (p % 100);
 		}
 
 		// コマンド入力と、コマンド解析
