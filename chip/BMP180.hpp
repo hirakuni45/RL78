@@ -6,6 +6,7 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include <cmath>
 #include "common/iica_io.hpp"
 #include "common/delay.hpp"
 
@@ -137,6 +138,12 @@ namespace chip {
 		}
 
 
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	センサ温度値を返す
+			@return センサ温度値
+		 */
+		//-----------------------------------------------------------------//
 		uint16_t get_raw_temperature()
 		{
   			write8_(REG::CONTROL, REG::READTEMPCMD);
@@ -145,6 +152,12 @@ namespace chip {
 		}
 
 
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	センサ圧力値を返す
+			@return センサ圧力値
+		 */
+		//-----------------------------------------------------------------//
 		uint32_t get_raw_pressure()
 		{
 			write8_(REG::CONTROL, static_cast<REG>(
@@ -181,6 +194,12 @@ namespace chip {
 		}
 
 
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	圧力を返す（*100 hPa）
+			@return 圧力
+		 */
+		//-----------------------------------------------------------------//
 		int32_t get_pressure()
 		{
   			int32_t UT = get_raw_temperature();
@@ -232,45 +251,56 @@ namespace chip {
 		}
 
 
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	温度を返す（* 10 ℃）
+			@return 温度
+		 */
+		//-----------------------------------------------------------------//
 		int32_t get_temperature()
 		{
-//  			int32_t UT, B5;     // following ds convention
-//  			float temp;
-
 			int32_t UT = get_raw_temperature();
 
-#if BMP085_DEBUG == 1
-  // use datasheet numbers!
-  UT = 27898;
-  ac6 = 23153;
-  ac5 = 32757;
-  mc = -8711;
-  md = 2868;
+#if 0
+			// use datasheet numbers!
+			UT = 27898;
+			ac6_ = 23153;
+			ac5_ = 32757;
+			mc_ = -8711;
+			md_ = 2868;
 #endif
 
 			int32_t B5 = computeB5_(UT);
 			int32_t temp = (B5 + 8) >> 4;
   			// temp /= 10;
-
 			return temp;
 		}
 
-#if 0
-int32_t Adafruit_BMP085::readSealevelPressure(float altitude_meters) {
-  float pressure = readPressure();
-  return (int32_t)(pressure / pow(1.0-altitude_meters/44330, 5.255));
-}
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	気圧を返す（海面１０１３ミリバール）
+			@return 気圧
+		 */
+		//-----------------------------------------------------------------//
+		int32_t get_sea_level_pressure(float altitude_meters)
+		{
+  			float pressure = get_pressure();
+  			return static_cast<int32_t>(pressure / std::pow(1.0f - altitude_meters / 44330.0f, 5.255f));
+		}
 
 
-float Adafruit_BMP085::readAltitude(float sealevelPressure) {
-  float altitude;
-
-  float pressure = readPressure();
-
-  altitude = 44330 * (1.0 - pow(pressure /sealevelPressure,0.1903));
-
-  return altitude;
-}
-#endif
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	高度を返す
+			@return 高度
+		 */
+		//-----------------------------------------------------------------//
+		float get_altitude(float sealevelPressure)
+		{
+			float pressure = get_pressure();
+			float altitude = 44330.0f * (1.0f - std::pow(pressure / sealevelPressure, 0.1903f));
+			return altitude;
+		}
 	};
 }
