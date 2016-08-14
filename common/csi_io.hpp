@@ -186,7 +186,7 @@ namespace device {
 			// 各ユニットで、チャネル０、１、２、３で共有の為、
 			// ０、１：PRS0、２、３：PRS1 を使う
 			bool cks = 0;
-			if(SAU::get_chanel_no() == 0 || SAU::get_chanel_no() == 1) {
+			if(SAU::get_chanel_no() < 2) {
 				SAU::SPS.PRS0 = master;
 			} else {
 				SAU::SPS.PRS1 = master;
