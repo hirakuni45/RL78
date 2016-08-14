@@ -28,6 +28,8 @@ namespace utils {
 		typedef fatfs::mmc_io<CSI, SELECT> mmc_type;
 
 	private:
+		static const int path_buff_size_ = 256;
+
 		CSI&	csi_;
 
 		fatfs::mmc_io<CSI, SELECT> mmc_;
@@ -37,6 +39,8 @@ namespace utils {
 		uint8_t	mount_delay_;
 		bool	cd_;
 		bool	mount_;
+
+		char	current_[path_buff_size_];
 
 		// CSI 開始
 		// ※SD カードのアクセスでは、「PHASE::TYPE4」を選択する。
@@ -54,6 +58,26 @@ namespace utils {
 				format("          /%s\n") % name;
 			} else {
 				format("%8d  %s\n") % size % name;
+			}
+		}
+
+
+		void create_full_path_(char* full, const char* path) {
+			std::strcpy(full, current_);
+			if(path == nullptr || path[0] == 0) {
+				if(full[0] == 0) {
+					std::strcpy(full, "/");
+				}
+			} else if(std::strcmp(path, "..") == 0) {
+				char* p = std::strrchr(full, '/');
+				if(p != nullptr) {
+					*p = 0;
+				}
+			} else if(path[0] == '/') {
+				std::strcpy(full, path);
+			} else {
+				std::strcat(full, "/");
+				std::strcat(full, path);
 			}
 		}
 
@@ -95,6 +119,36 @@ namespace utils {
 			csi_.destroy();
 
 			mount_ = false;
+
+			current_[0] = 0;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	カレント・パスの移動
+			@param[in]	path	相対パス、又は、絶対パス
+			@return 移動成功なら「true」
+		 */
+		//-----------------------------------------------------------------//
+		bool cd(const char* path)
+		{
+			if(!mount_) return false;
+
+			if(path == nullptr) return false;
+
+			char full[path_buff_size_];
+			create_full_path_(full, path);
+
+			DIR dir;
+			auto st = f_opendir(&dir, full);
+			if(st != FR_OK) {
+				return false;
+			}
+			std::strcpy(current_, full);
+
+			f_closedir(&dir);
+			return true;
 		}
 
 
@@ -109,13 +163,18 @@ namespace utils {
 		uint16_t dir_loop(const char* root, dir_loop_func func)
 		{
 			if(!mount_) return 0;
- 
+
+			char full[path_buff_size_];
+			create_full_path_(full, root);			
+
 			uint16_t num = 0;
 			DIR dir;
-			auto st = f_opendir(&dir, root);
+			auto st = f_opendir(&dir, full);
 			if(st != FR_OK) {
 				format("Can't open dir(%d): '%s'\n") % static_cast<uint32_t>(st) % root;
 			} else {
+				std::strcat(full, "/");
+				char* p = &full[std::strlen(full)];
 				for(;;) {
 					FILINFO fno;
 					// Read a directory item
@@ -124,13 +183,15 @@ namespace utils {
 						break;
 					}
 					if(!fno.fname[0]) break;
-						if(fno.fattrib & AM_DIR) {
-						func(fno.fname, static_cast<uint32_t>(fno.fsize), true);
+					std::strcpy(p, fno.fname);
+					if(fno.fattrib & AM_DIR) {
+						func(p, static_cast<uint32_t>(fno.fsize), true);
 					} else {
-						func(fno.fname, static_cast<uint32_t>(fno.fsize), false);
+						func(p, static_cast<uint32_t>(fno.fsize), false);
 					}
 					++num;
 				}
+				f_closedir(&dir);
 			}
 			return num;
 		}
@@ -185,12 +246,22 @@ namespace utils {
 						SELECT::P = 0;
 						mount_ = false;
 					} else {
+						current_[0] = 0;
 						mount_ = true;
 					}
 				}
 			}
 			return mount_;
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	カレント・パスを取得
+			@return カレント。パス
+		 */
+		//-----------------------------------------------------------------//
+		const char* get_current() const { return current_; }
 
 
 		//-----------------------------------------------------------------//
