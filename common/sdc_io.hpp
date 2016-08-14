@@ -261,6 +261,23 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	フル・パスを生成
+			@param[in]	name	ファイル名
+			@param[out]	dst		生成先（オーバーランに注意）
+		 */
+		//-----------------------------------------------------------------//
+		void make_full_path(const char* name, char* dst) const {
+			if(name == nullptr || dst == nullptr) return;
+			std::strcpy(dst, current_);
+			if(dst[std::strlen(dst)] != '/') {
+				std::strcat(dst, "/");
+			}
+			std::strcat(dst, name);
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	カレント・パスを取得
 			@return カレント。パス
 		 */

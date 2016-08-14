@@ -258,9 +258,7 @@ namespace {
 		}
 
 		char full[128];
-		std::strcpy(full, sdc_.get_current());
-		std::strcat(full, "/");
-		std::strcat(full, fname);
+		sdc_.make_full_path(fname, full);
 
 		FIL fil;
 		if(f_open(&fil, full, FA_READ) != FR_OK) {
