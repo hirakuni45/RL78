@@ -1,8 +1,8 @@
 //=====================================================================//
 /*!	@file
 	@brief	SD カードの WAV 形式のファイルを再生するサンプル @n
-			TO01(P1-6) から、左チャネル @n
-			TO02(P1-7) から、右チャネル
+			P16/TO01(40) から、左チャネル @n
+			P17/TO02(39) から、右チャネル
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
@@ -21,6 +21,8 @@
 
 namespace pwm {
 
+	// インターバル・タイマー割り込み制御クラス
+	// ※PWMコンペアレジスターに、直接書き込んでいるので、PWMチャネルを変更する場合は注意
 	class interval_master {
 		uint8_t buff_[1024];
 		volatile uint16_t	inc_;
@@ -32,8 +34,9 @@ namespace pwm {
 		volatile uint16_t	pos_;
 
 	public:
-		interval_master() : inc_(0), rate_(4410), skip_(4), l_ofs_(0), r_ofs_(2), wofs_(0x80), pos_(0) { }
+		interval_master() : inc_(0), rate_(4410), skip_(0), l_ofs_(0), r_ofs_(2), wofs_(0x80), pos_(0) { }
 
+		// リセット後初期化
 		void init()
 		{
 			for(uint16_t i = 0; i < sizeof(buff_); ++i) {
@@ -41,18 +44,29 @@ namespace pwm {
 			}
 		}
 
+		// バッファを取得
 		uint8_t* get_buff() { return buff_; }
 
+		// 波形位置を取得
 		uint16_t get_pos() const { return pos_; }
 
+		// サンプルレートを設定
+		// ex:
+		// 48KHz    ---> 4800
+		// 38KHz    ---> 3800
+		// 44.1KHz  ---> 4410
+		// 22.05KHz ---> 2205
 		void set_rate(uint16_t rate) { rate_ = rate / 10; }
 
+		// 波形位置更新タイミングで同期
 		void sync() {
 			if(skip_ == 0) return;
 			volatile auto n = pos_;
 			while(n == pos_) ;
 		}
 
+		// ポーズ（無音）
+		// skip: 波形の移動量
 		void pause(uint8_t skip) {
 			if(skip == 0) {
 				sync();
@@ -65,6 +79,13 @@ namespace pwm {
 			}
 		}
 
+		// 波形バッファに直接「値」を書き込む
+		void set_level(uint8_t val) {
+			buff_[pos_ + l_ofs_] = val;
+			buff_[pos_ + r_ofs_] = val;
+		}
+
+		// 再生パラメーターの設定
 		void set_param(uint8_t skip, uint8_t l_ofs, uint8_t r_ofs, uint8_t wofs) {
 			sync();
 			inc_ = 0;
@@ -84,6 +105,7 @@ namespace pwm {
 			skip_ = skip;
 		} 
 
+		// 割り込み、functor
 		void operator() () {
 			device::TAU01::TDRL = buff_[pos_ + l_ofs_] + wofs_;
 			device::TAU02::TDRL = buff_[pos_ + r_ofs_] + wofs_;
@@ -235,22 +257,27 @@ namespace {
 			return;
 		}
 
+		char full[128];
+		std::strcpy(full, sdc_.get_current());
+		std::strcat(full, "/");
+		std::strcat(full, fname);
+
 		FIL fil;
-		if(f_open(&fil, fname, FA_READ) != FR_OK) {
+		if(f_open(&fil, full, FA_READ) != FR_OK) {
 			master_.at_task().set_param(4, 0, 2, 0x80);
-			utils::format("Can't open input file: '%s'\n") % fname;
+			utils::format("Can't open input file: '%s'\n") % full;
 			return;
 		}
 
 		if(!wav_.load_header(&fil)) {
 			master_.at_task().set_param(4, 0, 2, 0x80);
 			f_close(&fil);
-			utils::format("WAV file load fail: '%s'\n") % fname;
+			utils::format("WAV file load fail: '%s'\n") % full;
 			return;
 		}
 
 		auto fsize = wav_.get_size();
-		utils::format("File:   %s\n") % fname;
+		utils::format("File:   '%s'\n") % full;
 		utils::format("Size:   %d\n") % fsize;
 		utils::format("Rate:   %d\n") % wav_.get_rate();
 		utils::format("Chanel: %d\n") % static_cast<uint32_t>(wav_.get_chanel());
@@ -282,7 +309,7 @@ namespace {
 			wofs = 0x80;
 		} else {
 			f_close(&fil);
-			utils::format("Fail bits: '%s'\n") % fname;
+			utils::format("Fail bits: '%s'\n") % full;
 			return;
 		}
 		master_.at_task().set_param(skip, l_ofs, r_ofs, wofs);
@@ -315,12 +342,12 @@ namespace {
 
 			if(sci_length() > 0) {
 				auto ch = sci_getch();
-				if(ch == '>') {
+				if(ch == '>') {  // '>'
 					break;
-				} else if(ch == '<') {
+				} else if(ch == '<') {  // '<'
 					fpos = 0;
 					f_lseek(&fil, wav_.get_top());
-				} else if(ch == ' ') {
+				} else if(ch == ' ') {  // [space]
 					if(pause) {
 						master_.at_task().pause(skip);
 					} else {
@@ -379,6 +406,13 @@ int main(int argc, char* argv[])
 	if(!init_pwm_()) {
 		uart_.puts("PWM initialization fail\n");
 	}
+	// ポップノイズ低減
+//	master_.at_task().pause(0);
+//	for(uint8_t i =  0; i < 128; ++i) {
+//		master_.at_task().set_level(0x80 + i);
+//		utils::delay::milli_second(3);
+//	}
+//	master_.at_task().set_param(4, 0, 2, 0x80);
 
 	uart_.puts("Start RL78/G13 WAV file player sample\n");
 
@@ -399,9 +433,25 @@ int main(int argc, char* argv[])
 					if(!sdc_.get_mount()) {
 						utils::format("SD Card unmount.\n");
 					} else {
-						sdc_.dir("");
+						if(cmdn >= 2) {
+							char tmp[16];
+							command_.get_word(1, sizeof(tmp), tmp);
+							sdc_.dir(tmp);
+						} else {
+							sdc_.dir("");
+						}
 					}
-				} else if(command_.cmp_word(0, "play")) {
+				} else if(command_.cmp_word(0, "cd")) {  // cd [xxx]
+					if(cmdn >= 2) {
+						char tmp[16];
+						command_.get_word(1, sizeof(tmp), tmp);
+						sdc_.cd(tmp);						
+					} else {
+						sdc_.cd("/");
+					}
+				} else if(command_.cmp_word(0, "pwd")) { // pwd
+					utils::format("%s\n") % sdc_.get_current();
+				} else if(command_.cmp_word(0, "play")) {  // play [xxx]
 					if(cmdn >= 2) {
 						char fname[16];
 						command_.get_word(1, sizeof(fname), fname);
@@ -414,9 +464,10 @@ int main(int argc, char* argv[])
 						play_loop_("");
 					}
 				} else {
-					utils::format("dir ---> directory file\n");
-					utils::format("play file-name ---> play file\n");
-					utils::format("play * ---> play file all\n");
+					utils::format("dir [xxx] : list directory\n");
+					utils::format("pwd : list current directory\n");
+					utils::format("cd : change directory\n");
+					utils::format("play [xxx] : play file ('*' wildcard)\n");
 				}
 			}
 		}
