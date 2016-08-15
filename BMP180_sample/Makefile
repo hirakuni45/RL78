@@ -3,7 +3,7 @@
 #	RL78 Makefile 				        				#
 #														#
 #=======================================================#
-TARGET		=	ds3231_sample
+TARGET		=	bmp180_sample
 
 DEVICE		=	R5F100LGAFB
 
