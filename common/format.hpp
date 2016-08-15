@@ -400,6 +400,60 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 		}
 #endif
 
+		void sign_int_(INT val) {
+			if(mode_ == mode::BINARY) {
+				out_bin_(val);
+#ifdef WITH_OCTAL_FORMAT
+			} else if(mode_ == mode::OCTAL) {
+				out_oct_(val);
+#endif
+			} else if(mode_ == mode::DECIMAL) {
+				out_dec_(val);
+			} else if(mode_ == mode::HEX) {
+				out_hex_(static_cast<uint32_t>(val), 'a');
+			} else if(mode_ == mode::HEX_CAPS) {
+				out_hex_(static_cast<uint32_t>(val), 'A');
+			} else if(mode_ == mode::FIXED_REAL) {
+				if(decimal_ == 0) decimal_ = 3;
+				out_fixed_point_(val, ppos_);
+			} else {
+#ifdef ERROR_MESSAGE
+				err_(error_case::DIFFERENT_TYPE);
+#endif
+			}
+			reset_();
+			next_();
+		}
+
+		void unsign_int_(UINT val) {
+			if(mode_ == mode::BINARY) {
+				out_bin_(val);
+#ifdef WITH_OCTAL_FORMAT
+			} else if(mode_ == mode::OCTAL) {
+				out_oct_(val);
+#endif
+			} else if(mode_ == mode::DECIMAL) {
+				out_dec_(val);
+			} else if(mode_ == mode::U_DECIMAL) {
+				char sign = 0;
+				if(sign_) sign = '+';
+				out_udec_(val, sign);
+			} else if(mode_ == mode::HEX) {
+				out_hex_(val, 'a');
+			} else if(mode_ == mode::HEX_CAPS) {
+				out_hex_(val, 'A');
+			} else if(mode_ == mode::FIXED_REAL) {
+				if(decimal_ == 0) decimal_ = 3;
+				out_fixed_point_(val, ppos_);
+			} else {
+#ifdef ERROR_MESSAGE
+				err_(error_case::DIFFERENT_TYPE);
+#endif
+			}
+			reset_();
+			next_();
+		}
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -462,72 +516,78 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  オペレーター「%」
+			@brief  オペレーター「%」（INT）
 			@param[in]	val	整数値
 			@return	自分の参照
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (INT val) {
-			if(mode_ == mode::BINARY) {
-				out_bin_(val);
-#ifdef WITH_OCTAL_FORMAT
-			} else if(mode_ == mode::OCTAL) {
-				out_oct_(val);
-#endif
-			} else if(mode_ == mode::DECIMAL) {
-				out_dec_(val);
-			} else if(mode_ == mode::HEX) {
-				out_hex_(static_cast<uint32_t>(val), 'a');
-			} else if(mode_ == mode::HEX_CAPS) {
-				out_hex_(static_cast<uint32_t>(val), 'A');
-			} else if(mode_ == mode::FIXED_REAL) {
-				if(decimal_ == 0) decimal_ = 3;
-				out_fixed_point_(val, ppos_);
-			} else {
-#ifdef ERROR_MESSAGE
-				err_(error_case::DIFFERENT_TYPE);
-#endif
-			}
-			reset_();
-			next_();
+			sign_int_(val);
 			return *this;
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  オペレーター「%」
+			@brief  オペレーター「%」（int）
+			@param[in]	val	整数値
+			@return	自分の参照
+		*/
+		//-----------------------------------------------------------------//
+		format& operator % (int val) {
+			sign_int_(static_cast<INT>(val));
+			return *this;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  オペレーター「%」（int16_t）
+			@param[in]	val	整数値
+			@return	自分の参照
+		*/
+		//-----------------------------------------------------------------//
+		format& operator % (int16_t val) {
+			sign_int_(static_cast<INT>(val));
+			return *this;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  オペレーター「%」（UINT）
 			@param[in]	val	符号無し整数値
 			@return	自分の参照
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (UINT val) {
-			if(mode_ == mode::BINARY) {
-				out_bin_(val);
-#ifdef WITH_OCTAL_FORMAT
-			} else if(mode_ == mode::OCTAL) {
-				out_oct_(val);
-#endif
-			} else if(mode_ == mode::DECIMAL) {
-				out_dec_(val);
-			} else if(mode_ == mode::U_DECIMAL) {
-				char sign = 0;
-				if(sign_) sign = '+';
-				out_udec_(val, sign);
-			} else if(mode_ == mode::HEX) {
-				out_hex_(val, 'a');
-			} else if(mode_ == mode::HEX_CAPS) {
-				out_hex_(val, 'A');
-			} else if(mode_ == mode::FIXED_REAL) {
-				if(decimal_ == 0) decimal_ = 3;
-				out_fixed_point_(val, ppos_);
-			} else {
-#ifdef ERROR_MESSAGE
-				err_(error_case::DIFFERENT_TYPE);
-#endif
-			}
-			reset_();
-			next_();
+			unsign_int_(static_cast<UINT>(val));
+			return *this;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  オペレーター「%」（uint16_t）
+			@param[in]	val	符号無し整数値
+			@return	自分の参照
+		*/
+		//-----------------------------------------------------------------//
+		format& operator % (uint16_t val) {
+			unsign_int_(static_cast<UINT>(val));
+			return *this;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  オペレーター「%」（unsigned int）
+			@param[in]	val	符号無し整数値
+			@return	自分の参照
+		*/
+		//-----------------------------------------------------------------//
+		format& operator % (unsigned int val) {
+			unsign_int_(static_cast<UINT>(val));
 			return *this;
 		}
 
