@@ -62,6 +62,18 @@ namespace utils {
 			}
 		}
 
+		static const char* match_key_;
+		static char* match_dst_;
+		static uint8_t match_cnt_;
+		static uint8_t match_no_;
+		static void match_func_(const char* name, uint32_t size, bool dir) {
+			if(std::strncmp(name, match_key_, std::strlen(match_key_)) == 0) {
+				if(match_dst_ != nullptr && match_cnt_ == match_no_) {
+					std::strcpy(match_dst_, name);
+				}
+				++match_cnt_;
+			}
+		}
 
 		void create_full_path_(char* full, const char* path) {
 			std::strcpy(full, current_);
@@ -155,10 +167,10 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	SD カードのディレクトリーを取り、タスクを実行する
+			@brief	SD カードのディレクトリーリストでタスクを実行する
 			@param[in]	root	ルート・パス
 			@param[in]	func	実行関数
-			@param[in]	recursive  「true」にすると再帰的にループを回す（スタックの容量に注意）
+			@param[in]	recursive  「true」にすると再帰的にループを回す（スタックの消費に注意）
 			@return ファイル数
 		 */
 		//-----------------------------------------------------------------//
@@ -211,6 +223,26 @@ namespace utils {
 		uint16_t dir(const char* root)
 		{
 			return dir_loop(root, dir_list_func_, true);
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	ファイル名候補の取得
+			@param[in]	name	候補のキー
+			@param[in]	no		候補の順番
+			@param[out]	dst		候補の格納先
+			@return 候補の数
+		 */
+		//-----------------------------------------------------------------//
+		uint8_t match(const char* key, uint8_t no, char* dst)
+		{
+			match_key_ = key;
+			match_dst_ = dst;
+			match_cnt_ = 0;
+			match_no_ = no;
+			dir_loop(current_, match_func_, false);
+			return match_cnt_;
 		}
 
 
@@ -302,4 +334,16 @@ namespace utils {
 		//-----------------------------------------------------------------//
 		mmc_type& at_mmc() { return mmc_; }
 	};
+
+	template <class CSI, class SELECT, class POWER, class DETECT>
+		const char* sdc_io<CSI, SELECT, POWER, DETECT>::match_key_ = nullptr; 
+
+	template <class CSI, class SELECT, class POWER, class DETECT>
+		char* sdc_io<CSI, SELECT, POWER, DETECT>::match_dst_ = nullptr; 
+
+	template <class CSI, class SELECT, class POWER, class DETECT>
+		uint8_t sdc_io<CSI, SELECT, POWER, DETECT>::match_cnt_ = 0;
+
+	template <class CSI, class SELECT, class POWER, class DETECT>
+		uint8_t sdc_io<CSI, SELECT, POWER, DETECT>::match_no_ = 0;
 }
