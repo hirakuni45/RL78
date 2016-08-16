@@ -128,14 +128,6 @@ namespace device {
 
 		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
 		{
-#if 0
-			if(send_.length()) {
-				tx_.SDR_L = send_.get();
-			} else {
-				send_intrrupt_mask_(true);
-				send_stall_ = true;
-			}
-#endif
 		}
 
 
@@ -363,7 +355,7 @@ namespace device {
 			@param[in]	cnt	送信サイズ
 		*/
 		//-----------------------------------------------------------------//
-		void write(const uint8_t* src, uint16_t size)
+		void send(const uint8_t* src, uint16_t size)
 		{
 			auto end = src + size;
 			while(src < end) {
@@ -380,7 +372,7 @@ namespace device {
 			@param[in]	cnt	受信サイズ
 		*/
 		//-----------------------------------------------------------------//
-		void read(uint8_t* dst, uint16_t size)
+		void recv(uint8_t* dst, uint16_t size)
 		{
 			auto end = dst + size;
 			while(dst < end) {

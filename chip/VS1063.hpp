@@ -202,7 +202,7 @@ namespace chip {
 				while(get_status_() == 0) ;
 				uint16_t l = 32;
 				if(l > len) l = len; 
-				csi_.write(p, l);
+				csi_.send(p, l);
 				p += l;
 				len -= l;
 			}

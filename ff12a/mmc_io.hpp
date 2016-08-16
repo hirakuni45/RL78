@@ -59,7 +59,7 @@ namespace fatfs {
 			BYTE d;
 			UINT tmr;
 			for (tmr = 5000; tmr; tmr--) {	/* Wait for ready in timeout of 500ms */
-				csi_.read(&d, 1);
+				csi_.recv(&d, 1);
 				if (d == 0xFF) break;
 				utils::delay::micro_second(100);
 			}
@@ -70,7 +70,7 @@ namespace fatfs {
 		void deselect_() {
 			PORT::P = 1;
 			BYTE d;
-			csi_.read(&d, 1);	/* Dummy clock (force DO hi-z for multiple slave SPI) */
+			csi_.recv(&d, 1);	/* Dummy clock (force DO hi-z for multiple slave SPI) */
 		}
 
 
@@ -78,7 +78,7 @@ namespace fatfs {
 		int select_() {
 			PORT::P = 0;
 			BYTE d;
-			csi_.read(&d, 1);	/* Dummy clock (force DO enabled) */
+			csi_.recv(&d, 1);	/* Dummy clock (force DO enabled) */
 			if (wait_ready_()) return 1;	/* Wait for card ready */
 			deselect_();
 			return 0;			/* Failed */
@@ -93,14 +93,14 @@ namespace fatfs {
 			BYTE d[2];
 			UINT tmr;
 			for (tmr = 1000; tmr; tmr--) {	/* Wait for data packet in timeout of 100ms */
-				csi_.read(d, 1);
+				csi_.recv(d, 1);
 				if (d[0] != 0xFF) break;
 				utils::delay::micro_second(100);
 			}
 			if (d[0] != 0xFE) return 0;		/* If not valid data token, return with error */
 
-			csi_.read(buff, btr);			/* Receive the data block into buffer */
-			csi_.read(d, 2);				/* Discard CRC */
+			csi_.recv(buff, btr);			/* Receive the data block into buffer */
+			csi_.recv(d, 2);				/* Discard CRC */
 
 			return 1;						/* Return with success */
 		}
@@ -115,11 +115,11 @@ namespace fatfs {
 			if (!wait_ready_()) return 0;
 
 			d[0] = token;
-			csi_.write(d, 1);	/* Xmit a token */
+			csi_.send(d, 1);	/* Xmit a token */
 			if (token != 0xFD) {		/* Is it data token? */
-				csi_.write(buff, 512);	/* Xmit the 512 byte data block to MMC */
-				csi_.read(d, 2);		/* Xmit dummy CRC (0xFF,0xFF) */
-				csi_.read(d, 1);		/* Receive data response */
+				csi_.send(buff, 512);	/* Xmit the 512 byte data block to MMC */
+				csi_.recv(d, 2);		/* Xmit dummy CRC (0xFF,0xFF) */
+				csi_.recv(d, 1);		/* Receive data response */
 				if ((d[0] & 0x1F) != 0x05)	/* If not accepted, return with error */
 				return 0;
 			}
@@ -154,18 +154,18 @@ namespace fatfs {
 			if (c == static_cast<uint8_t>(command::CMD0)) n = 0x95;		/* (valid CRC for CMD0(0)) */
 			if (c == static_cast<uint8_t>(command::CMD8)) n = 0x87;		/* (valid CRC for CMD8(0x1AA)) */
 			buf[5] = n;
-			csi_.write(buf, 6);
+			csi_.send(buf, 6);
 
 			/* Receive command response */
 			if (c == static_cast<uint8_t>(command::CMD12)) {  /* Skip a stuff byte when stop reading */
 				BYTE d;
-				csi_.read(&d, 1);
+				csi_.recv(&d, 1);
 			}
 
 			n = 10;		/* Wait for a valid response in timeout of 10 attempts */
 			BYTE d;
 			do {
-				csi_.read(&d, 1);
+				csi_.recv(&d, 1);
 			} while ((d & 0x80) && --n) ;
 
 			return d;			/* Return with the response value */
@@ -226,12 +226,12 @@ namespace fatfs {
 #endif
 			/* Apply 80 dummy clocks and the card gets ready to receive command */
 			BYTE buf[4];
-			for (uint8_t n = 10; n; n--) csi_.read(buf, 1);
+			for (uint8_t n = 10; n; n--) csi_.recv(buf, 1);
 
 			BYTE ty = 0;
 			if (send_cmd_(command::CMD0, 0) == 1) {			/* Enter Idle state */
 				if (send_cmd_(command::CMD8, 0x1AA) == 1) {	/* SDv2? */
-					csi_.read(buf, 4);						/* Get trailing return value of R7 resp */
+					csi_.recv(buf, 4);						/* Get trailing return value of R7 resp */
 					if (buf[2] == 0x01 && buf[3] == 0xAA) {	/* The card can work at vdd range of 2.7-3.6V */
 						uint16_t tmr;
 						for (tmr = 1000; tmr; tmr--) {	/* Wait for leaving idle state (ACMD41 with HCS bit) */
@@ -239,7 +239,7 @@ namespace fatfs {
 							utils::delay::micro_second(1000);
 						}
 						if (tmr && send_cmd_(command::CMD58, 0) == 0) {	/* Check CCS bit in the OCR */
-							csi_.read(buf, 4);
+							csi_.recv(buf, 4);
 							ty = (buf[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;	/* SDv2 */
 						}
 					}
