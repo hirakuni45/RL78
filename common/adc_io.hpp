@@ -21,6 +21,27 @@ namespace device {
 	class adc_io {
 	public:
 
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  ＋基準電圧タイプ
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class REFP : uint8_t {
+			VDD,      ///< VDD
+			VREFP,    ///< P20/VREFP
+			INT_1_45  ///< 内臓 1.45V
+		};
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  －基準電圧タイプ
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class REFM : uint8_t {
+			VSS,    ///< VSS
+			VREFM,  ///< P21/VREFM
+		};
 
 	private:
 		inline void sleep_() { asm("nop"); }
@@ -38,9 +59,11 @@ namespace device {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	スタート
+			@param[in]	refp	＋基準電圧選択
+			@param[in]	refm	－基準電圧選択
 		 */
 		//-----------------------------------------------------------------//
-		void start()
+		void start(REFP refp, REFM refm)
 		{
 			// ADC 許可
 			PER0.ADCEN = 1;
@@ -51,8 +74,8 @@ namespace device {
 			ADM0.FR = 6;  // fclk/4
 			ADM0.LV = 0;  // 19 fAD
 
-			ADM2.ADREFP = 0;  // 0:VDD, 1:P20/VREFP, 2:Internal 1.45V
-			ADM2.ADREFM = 0;  // 0:VSS, 1:P21/VREFM
+			ADM2.ADREFP = static_cast<uint8_t>(refp);  // 0:VDD, 1:P20/VREFP, 2:Internal 1.45V
+			ADM2.ADREFM = static_cast<uint8_t>(refm);  // 0:VSS, 1:P21/VREFM
 			ADM2.ADTYP  = 0;  // 0: 10bits, 1:8bits
 
 			ADM0.ADCE = 1;  // A/D 許可

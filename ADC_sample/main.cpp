@@ -24,7 +24,8 @@ namespace {
 
 	device::itimer<uint8_t> itm_;
 
-	device::adc_io adc_;
+	typedef device::adc_io adc;
+	adc adc_;
 }
 
 /// 割り込みベクターの定義
@@ -91,7 +92,7 @@ int main(int argc, char* argv[])
 	{
 		device::PM2.B2 = 1;
 		device::PM2.B3 = 1;
-		adc_.start();
+		adc_.start(adc::REFP::VDD, adc::REFM::VSS);
 	}
 
 	uart_.puts("Start RL78/G13 A/D Convert sample\n");
