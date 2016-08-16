@@ -16,8 +16,10 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  A/D 制御クラス
+		@param[in]	TASK	割り込みタスク
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class TASK>
 	class adc_io {
 	public:
 
@@ -44,15 +46,30 @@ namespace device {
 		};
 
 	private:
+		static TASK task_;
+
+		uint8_t	level_;
+
 		inline void sleep_() { asm("nop"); }
 
 	public:
 		//-----------------------------------------------------------------//
 		/*!
+			@brief  インターバル・タイマー割り込みタスク
+		*/
+		//-----------------------------------------------------------------//
+		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
+		{
+			task_();
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	コンストラクター
 		 */
 		//-----------------------------------------------------------------//
-		adc_io() { }
+		adc_io() : level_(0) { }
 
 
 		//-----------------------------------------------------------------//
@@ -60,10 +77,13 @@ namespace device {
 			@brief	スタート
 			@param[in]	refp	＋基準電圧選択
 			@param[in]	refm	－基準電圧選択
+			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
 		 */
 		//-----------------------------------------------------------------//
-		void start(REFP refp, REFM refm)
+		void start(REFP refp, REFM refm, uint8_t level)
 		{
+			level_ = level;
+
 			// ADC 許可
 			PER0.ADCEN = 1;
 
@@ -83,6 +103,15 @@ namespace device {
 			ADM1.ADTMD = 0;  // soft trigger
 			ADM1.ADSCM = 1;  // one shot convert
 
+			// 割り込みレベル設定とマスク解除
+			if(level > 0) {
+				--level;
+				level ^= 0x03;
+				intr::PR01H.ADPR = (level) & 1;
+				intr::PR11H.ADPR = (level & 2) >> 1;
+				intr::MK1H.ADMK = 0;
+			}
+
 			utils::delay::micro_second(1);
 		}
 
@@ -98,8 +127,6 @@ namespace device {
 		{
 			ADS = ch;
 			ADM0.ADCS = 1;  // start
-///			while(intr::IF1H.ADIF() == 0) sleep_();
-///			intr::IF1H.ADIF = 0;
 			while(ADM0.ADCS() != 0) sleep_();
 			return ADCR();
 		}
