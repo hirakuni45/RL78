@@ -50,6 +50,7 @@ E-Mail: hira@rvf-rc45.net
  - /WAV_PLAYER_sample ---> RL78/G13 WAV file 再生サンプル（PWM 変調による８ビット出力）
  - /VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
  - /BMP180_sample ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
+ - /ADC_sample ---> RL78/G13 内臓 A/D 変換サンプル
  - /KiCAD_Lib       --->   KiCAD 用部品ライブラリー
    
 ## RL78 開発環境
