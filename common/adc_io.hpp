@@ -9,6 +9,7 @@
 #include "G13/system.hpp"
 #include "G13/adc.hpp"
 #include "G13/intr.hpp"
+#include "common/delay.hpp"
 
 namespace device {
 
@@ -18,10 +19,67 @@ namespace device {
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	class adc_io {
-
-
 	public:
 
 
+	private:
+		inline void sleep_() { asm("nop"); }
+
+
+	public:
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	コンストラクター
+		 */
+		//-----------------------------------------------------------------//
+		adc_io() { }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	スタート
+		 */
+		//-----------------------------------------------------------------//
+		void start()
+		{
+			// ADC 許可
+			PER0.ADCEN = 1;
+
+			// ポート設定
+//			ADPC = 0x00;  // all port A/D
+
+			ADM0.FR = 6;  // fclk/4
+			ADM0.LV = 0;  // 19 fAD
+
+			ADM2.ADREFP = 0;  // 0:VDD, 1:P20/VREFP, 2:Internal 1.45V
+			ADM2.ADREFM = 0;  // 0:VSS, 1:P21/VREFM
+			ADM2.ADTYP  = 0;  // 0: 10bits, 1:8bits
+
+			ADM0.ADCE = 1;  // A/D 許可
+			ADM0.ADMD = 0;  // セレクトモード
+
+			ADM1.ADTMD = 0;  // soft trigger
+			ADM1.ADSCM = 1;  // one shot convert
+
+			utils::delay::micro_second(1);
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	A/D 変換結果を取得
+			@param[in]	ch	変換チャネル
+			@return 変換結果（上位１０ビット）
+		 */
+		//-----------------------------------------------------------------//
+		uint16_t get(uint8_t ch)
+		{
+			ADS = ch;
+			ADM0.ADCS = 1;  // start
+///			while(intr::IF1H.ADIF() == 0) sleep_();
+///			intr::IF1H.ADIF = 0;
+			while(ADM0.ADCS() != 0) sleep_();
+			return ADCR();
+		}
 	};
 }
