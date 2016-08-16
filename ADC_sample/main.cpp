@@ -1,17 +1,17 @@
 //=====================================================================//
 /*!	@file
-	@brief	A/D の簡単なサンプル
+	@brief	A/D 変換のサンプル @n
+			P22/ANI2(54)、P23/ANI3(53) を変換して表示
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
 #include <cstdint>
-#include "G13/system.hpp"
 #include "common/port_utils.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
 #include "common/format.hpp"
 #include "common/itimer.hpp"
-#include "G13/adc.hpp"
+#include "common/adc_io.hpp"
 
 namespace {
 	void wait_()
@@ -19,10 +19,12 @@ namespace {
 		asm("nop");
 	}
 
-	typedef utils::fifo<128> buffer;
-	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_io_;
+	typedef utils::fifo<64> buffer;
+	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
 	device::itimer<uint8_t> itm_;
+
+	device::adc_io adc_;
 }
 
 /// 割り込みベクターの定義
@@ -40,12 +42,12 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart0_io_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart0_io_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart0_io_.error_task),
-	/* 16 */  nullptr,
-	/* 17 */  nullptr,
-	/* 18 */  nullptr,
+	/* 13 */  nullptr,
+	/* 14 */  nullptr,
+	/* 15 */  nullptr,
+	/* 16 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
+	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
+	/* 18 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
 	/* 19 */  nullptr,
 	/* 20 */  nullptr,
 	/* 21 */  nullptr,
@@ -60,12 +62,12 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 extern "C" {
 	void sci_putch(char ch)
 	{
-		uart0_io_.putch(ch);
+		uart_.putch(ch);
 	}
 
 	void sci_puts(const char* str)
 	{
-		uart0_io_.puts(str);
+		uart_.puts(str);
 	}
 };
 
@@ -77,8 +79,8 @@ int main(int argc, char* argv[])
 	device::PM4.B3 = 0;  // output
 
 	{
-		uint8_t intr_level = 0;
-		uart0_io_.start(115200, intr_level);
+		uint8_t intr_level = 1;
+		uart_.start(115200, intr_level);
 	}
 
 	{
@@ -86,22 +88,31 @@ int main(int argc, char* argv[])
 		itm_.start(60, intr_level);
 	}
 
-	uart0_io_.puts("Start RL78/G13 A/D sample\n");
+	{
+		device::PM2.B2 = 1;
+		device::PM2.B3 = 1;
+		adc_.start();
+	}
 
-	bool f = false;
-	uint32_t n = 0;
+	uart_.puts("Start RL78/G13 A/D Convert sample\n");
+
+	uint8_t n = 0;
+	uint8_t t = 0;
 	while(1) {
 		itm_.sync();
-		if(uart0_io_.recv_length()) {
-			auto ch = uart0_io_.getch();
-			if(ch == '\r') {
-				utils::format("%d\n") % n;
-				++n;
-			} else {
-				uart0_io_.putch(ch);
-			}
+
+		if(t >= 60) {
+			auto val = adc_.get(2);
+			utils::format("A/D CH2: %d\n") % (val >> 6);
+			val = adc_.get(3);
+			utils::format("A/D CH3: %d\n") % (val >> 6);
+			t = 0;
+		} else {
+			++t;
 		}
-		device::P4.B3 = f;
-		f = !f;
+
+		++n;
+		if(n >= 30) n = 0;
+		device::P4.B3 = n < 10 ? false : true; 	
 	}
 }
