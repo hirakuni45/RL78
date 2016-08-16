@@ -12,6 +12,7 @@
 #include "common/format.hpp"
 #include "common/itimer.hpp"
 #include "common/adc_io.hpp"
+#include "common/task.hpp"
 
 namespace {
 	void wait_()
@@ -24,7 +25,7 @@ namespace {
 
 	device::itimer<uint8_t> itm_;
 
-	typedef device::adc_io adc;
+	typedef device::adc_io<utils::null_task> adc;
 	adc adc_;
 }
 
@@ -92,7 +93,8 @@ int main(int argc, char* argv[])
 	{
 		device::PM2.B2 = 1;
 		device::PM2.B3 = 1;
-		adc_.start(adc::REFP::VDD, adc::REFM::VSS);
+		uint8_t intr_level = 0;
+		adc_.start(adc::REFP::VDD, adc::REFM::VSS, intr_level);
 	}
 
 	uart_.puts("Start RL78/G13 A/D Convert sample\n");
