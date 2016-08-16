@@ -29,7 +29,7 @@ namespace device {
 		enum class REFP : uint8_t {
 			VDD,      ///< VDD
 			VREFP,    ///< P20/VREFP
-			INT_1_45  ///< 内臓 1.45V
+			INT_1_45  ///< 内臓 1.45V リファレンス
 		};
 
 
@@ -45,7 +45,6 @@ namespace device {
 
 	private:
 		inline void sleep_() { asm("nop"); }
-
 
 	public:
 		//-----------------------------------------------------------------//
