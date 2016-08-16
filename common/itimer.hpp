@@ -19,7 +19,8 @@ namespace device {
 				※シングルトン @n
 				※内部低速オシレーターを使ったタイマー　@n
 				※設定周波数に大きな制限がある。
-		@param[in]	T	内部カウンターの
+		@param[in]	T	内部カウンターの「型」
+		@param[in]	TASK	割り込みタスク
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <typename T, class TASK = utils::null_task>
@@ -41,7 +42,7 @@ namespace device {
 		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
 		{
 			++counter_;
-//			task_();
+			task_();
 		}
 
 
