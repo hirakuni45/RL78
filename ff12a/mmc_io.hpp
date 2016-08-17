@@ -11,6 +11,7 @@
 #include "common/delay.hpp"
 #include "ff12a/src/diskio.h"
 #include "ff12a/src/ff.h"
+#include "common/format.hpp"
 
 namespace fatfs {
 
@@ -171,6 +172,17 @@ namespace fatfs {
 			return d;			/* Return with the response value */
 		}
 
+		void start_csi_(bool fast)
+		{
+			uint8_t intr_level = 0;
+			uint32_t speed;
+			if(fast) speed = 16000000;
+			else speed = 4000000;
+			if(!csi_.start(speed, CSI::PHASE::TYPE4, intr_level)) {
+				utils::format("CSI Start fail ! (Clock spped over range)\n");
+			}
+		}
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -224,6 +236,8 @@ namespace fatfs {
 			DI_INIT();				/* Initialize port pin tied to DI */
 			DO_INIT();				/* Initialize port pin tied to DO */
 #endif
+			start_csi_(false);
+
 			/* Apply 80 dummy clocks and the card gets ready to receive command */
 			BYTE buf[4];
 			for (uint8_t n = 10; n; n--) csi_.recv(buf, 1);
@@ -266,6 +280,8 @@ namespace fatfs {
 			Stat_ = s;
 
 			deselect_();
+
+			start_csi_(true);
 
 			return s;
 		}
