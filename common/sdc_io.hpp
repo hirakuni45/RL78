@@ -265,7 +265,6 @@ namespace utils {
 
 			char oem[path_buff_size_];
 			utf8_to_sjis(full, oem);
-// utils::format("%s\n") % oem;
 			if(f_open(fp, oem, mode) != FR_OK) {
 				return false;
 			}
