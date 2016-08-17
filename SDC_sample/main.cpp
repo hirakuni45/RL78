@@ -149,7 +149,7 @@ namespace {
 
 		auto st = itm_.get_counter();
 		FIL fp;
-		if(f_open(&fp, fname, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) {
+		if(!sdc_.open(&fp, fname, FA_WRITE | FA_CREATE_ALWAYS)) {
 			utils::format("Can't create file: '%s'\n") % fname;
 			return false;
 		}
@@ -189,7 +189,7 @@ namespace {
 
 		utils::format("SD Read test...\n");
 		FIL fp;
-		if(f_open(&fp, test_file, FA_READ) != FR_OK) {
+		if(!sdc_.open(&fp, test_file, FA_READ)) {
 			utils::format("Can't read file: '%s'\n") % test_file;
 		}
 		auto rs = size;
@@ -283,6 +283,10 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
+		// TAB キーが押された場合の動作
+//		if(command_.probe_tab()) {
+//			command_.injection_tab("asdfghj");
+//		}
 
 		++n;
 		if(n >= 30) n = 0;
