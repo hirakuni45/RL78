@@ -191,6 +191,10 @@ SECTIONS
     KEEP (*(.fini))
   } > ROM
 
+  .hightext : {
+    *(.hightext)
+  } > ROM
+
   /* The rest are all not normally part of the runtime image.  */
 
   /* Stabs debugging sections.  */
