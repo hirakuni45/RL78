@@ -28,8 +28,11 @@ namespace utils {
 		int16_t	bpos_;
 		int16_t	pos_;
 		int16_t	len_;
+		int16_t tab_top_;
 
 		const char*	prompt_;
+
+		bool	tab_;
 
 		void clear_line_() {
 			// VT-100 ESC シーケンス 
@@ -49,7 +52,8 @@ namespace utils {
             @brief  コンストラクター
         */
         //-----------------------------------------------------------------//
-		command() : bpos_(-1), pos_(0), len_(0), prompt_(nullptr) { buff_[0] = 0; }
+		command() : bpos_(-1), pos_(0), len_(0), tab_top_(-1),
+			prompt_(nullptr), tab_(false) { buff_[0] = 0; }
 
 
         //-----------------------------------------------------------------//
@@ -73,6 +77,7 @@ namespace utils {
 				if(prompt_) sci_puts(prompt_);
 			}
 			bpos_ = pos_;
+			tab_ = false;
 			while(sci_length()) {
 				if(pos_ >= (buffsize - 1)) {	///< バッファが溢れた・・
 					sci_putch('\\');		///< バックスラッシュ
@@ -87,15 +92,17 @@ namespace utils {
 
 				char ch = sci_getch();
 				switch(ch) {
-				case '\r':	///< Enter キー
+				case '\r':	// Enter キー
 					buff_[pos_] = 0;
 					len_ = pos_;
 					clear_line_();
 					crlf_();
 					pos_ = 0;
 					bpos_ = -1;
+					tab_top_ = -1;
 					return true;
-				case 0x08:	///< バックスペース
+
+				case 0x08:	// バックスペース
 					if(pos_) {
 						--pos_;
 						sci_putch(0x08);
@@ -108,6 +115,12 @@ namespace utils {
 						crlf_();
 					}
 					break;
+
+				case '\t':  // TAB キー
+					if(tab_top_ < 0) tab_top_ = pos_;
+					tab_ = true;
+					break;
+
 				default:
 					if(ch < 0x20) {	///< 他の ctrl コード
 						buff_[pos_] = ch;
@@ -119,6 +132,7 @@ namespace utils {
 						++pos_;
 						sci_putch(ch);
 					}
+					buff_[pos_] = 0;
 					break;
 				}
 			}
@@ -224,6 +238,40 @@ namespace utils {
 				++p;
 			}
 			return false;
+		}
+
+
+        //-----------------------------------------------------------------//
+        /*!
+            @brief  TAB キーが押されたか
+			@return 押されたら「true」
+        */
+        //-----------------------------------------------------------------//
+		bool probe_tab() const { return tab_; } 
+
+
+        //-----------------------------------------------------------------//
+        /*!
+            @brief  TAB 注入位置のリセット
+        */
+        //-----------------------------------------------------------------//
+		void reset_tab() { tab_top_ = -1; } 
+
+
+        //-----------------------------------------------------------------//
+        /*!
+            @brief  TAB キーの候補を注入
+			@param[in]	key	注入文字列
+        */
+        //-----------------------------------------------------------------//
+		void injection_tab(const char* key) {
+			if(tab_top_ < 0) return;
+			std::strcpy(&buff_[tab_top_], key);
+
+			clear_line_();
+			sci_putch('\r');  // CR
+			if(prompt_) sci_puts(prompt_);
+			sci_puts(buff_);
 		}
 	};
 }
