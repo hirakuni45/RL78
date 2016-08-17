@@ -257,25 +257,22 @@ namespace {
 			return;
 		}
 
-		char full[128];
-		sdc_.make_full_path(fname, full);
-
 		FIL fil;
-		if(f_open(&fil, full, FA_READ) != FR_OK) {
+		if(!sdc_.open(&fil, fname, FA_READ)) {
 			master_.at_task().set_param(4, 0, 2, 0x80);
-			utils::format("Can't open input file: '%s'\n") % full;
+			utils::format("Can't open input file: '%s'\n") % fname;
 			return;
 		}
 
 		if(!wav_.load_header(&fil)) {
 			master_.at_task().set_param(4, 0, 2, 0x80);
 			f_close(&fil);
-			utils::format("WAV file load fail: '%s'\n") % full;
+			utils::format("WAV file load fail: '%s'\n") % fname;
 			return;
 		}
 
 		auto fsize = wav_.get_size();
-		utils::format("File:   '%s'\n") % full;
+		utils::format("File:   '%s'\n") % fname;
 		utils::format("Size:   %d\n") % fsize;
 		utils::format("Rate:   %d\n") % wav_.get_rate();
 		utils::format("Chanel: %d\n") % static_cast<uint32_t>(wav_.get_chanel());
@@ -307,7 +304,7 @@ namespace {
 			wofs = 0x80;
 		} else {
 			f_close(&fil);
-			utils::format("Fail bits: '%s'\n") % full;
+			utils::format("Fail bits: '%s'\n") % fname;
 			return;
 		}
 		master_.at_task().set_param(skip, l_ofs, r_ofs, wofs);
