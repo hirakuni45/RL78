@@ -26,3 +26,8 @@ MPU6050：
 ・InvenSense
 ・Digital Motion Processor
 
+
+EEPROM：
+・I2C EEPROM
+・I2C EEPROM（１byte、２byte address）
+
