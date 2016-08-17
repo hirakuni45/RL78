@@ -5,7 +5,7 @@
 
 #include "../ff.h"
 
-#define _TINY_TABLE	0
+#define _TINY_TABLE	1
 
 #if !_USE_LFN || _CODE_PAGE != 932
 #error This file is not needed in current configuration. Remove from the project.
@@ -13,7 +13,7 @@
 
 
 static
-const WCHAR uni2sjis[] = {
+const WCHAR __far uni2sjis[] __attribute__ ((section (".hightext"))) = {
 /*  Unicode - Sjis, Unicode - Sjis, Unicode - Sjis, Unicode - Sjis, */
 	0x00A7, 0x8198, 0x00A8, 0x814E, 0x00B0, 0x818B, 0x00B1, 0x817D,
 	0x00B4, 0x814C, 0x00B6, 0x81F7, 0x00D7, 0x817E, 0x00F7, 0x8180,
@@ -1867,7 +1867,7 @@ const WCHAR uni2sjis[] = {
 
 #if !_TINY_TABLE
 static
-const WCHAR sjis2uni[] = {
+const WCHAR __far sjis2uni[] __attribute__ ((section (".hightext"))) = {
 /*	SJIS - Unicode, SJIS - Unicode, SJIS - Unicode, SJIS - Unicode, */
 	0x00A1, 0xFF61, 0x00A2, 0xFF62, 0x00A3, 0xFF63, 0x00A4, 0xFF64,
 	0x00A5, 0xFF65, 0x00A6, 0xFF66, 0x00A7, 0xFF67, 0x00A8, 0xFF68,
@@ -3727,7 +3727,7 @@ WCHAR ff_convert (	/* Converted code, 0 means conversion error */
 	UINT	dir		/* 0: Unicode to OEM code, 1: OEM code to Unicode */
 )
 {
-	const WCHAR *p;
+	const WCHAR __far *p;
 	WCHAR c;
 	int i, n, li, hi;
 
