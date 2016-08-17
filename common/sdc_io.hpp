@@ -13,6 +13,123 @@
 
 namespace utils {
 
+	static void utf8_to_utf16(const char* src, WCHAR* dst)
+	{
+		uint8_t cnt = 0;
+		uint16_t code = 0;
+		char tc;
+		while((tc = *src++) != 0) {
+			uint8_t c = static_cast<uint8_t>(tc);
+			if(c < 0x80) { code = c; cnt = 0; }
+			else if((c & 0xf0) == 0xe0) { code = (c & 0x0f); cnt = 2; }
+			else if((c & 0xe0) == 0xc0) { code = (c & 0x1f); cnt = 1; }
+			else if((c & 0xc0) == 0x80) {
+				code <<= 6;
+				code |= c & 0x3f;
+				cnt--;
+				if(cnt == 0 && code < 0x80) {
+					code = 0;	// 不正なコードとして無視
+					break;
+				} else if(cnt < 0) {
+					code = 0;
+				}
+			}
+			if(cnt == 0 && code != 0) {
+				*dst++ = code;
+				code = 0;
+			}
+		}
+		*dst = 0;
+	}
+
+	static char* utf16_to_utf8(uint16_t code, char* dst)
+	{
+		if(code < 0x0080) {
+			*dst++ = code;
+		} else if(code >= 0x0080 && code <= 0x07ff) {
+			*dst++ = 0xc0 | ((code >> 6) & 0x1f);
+			*dst++ = 0x80 | (code & 0x3f);
+		} else if(code >= 0x0800) {
+			*dst++ = 0xe0 | ((code >> 12) & 0x0f);
+			*dst++ = 0x80 | ((code >> 6) & 0x3f);
+			*dst++ = 0x80 | (code & 0x3f);
+		}
+		return dst;
+	}
+
+
+	static void utf16_to_utf8(const WCHAR* src, char* dst) 
+	{
+		uint16_t code;
+		while((code = static_cast<uint16_t>(*src++)) != 0) {
+			dst = utf16_to_utf8(code, dst);
+		}
+		*dst = 0;
+	}
+
+
+	static void sjis_to_utf8(const char* src, char* dst)
+	{
+		if(src == nullptr) return;
+		uint16_t wc = 0;
+		char ch;
+		while((ch = *src++) != 0) {
+			uint8_t c = static_cast<uint8_t>(ch);
+			if(wc) {
+				if(0x40 <= c && c <= 0x7e) {
+					wc <<= 8;
+					wc |= c;
+					dst = utf16_to_utf8(ff_convert(wc, 1), dst);
+				} else if(0x80 <= c && c <= 0xfc) {
+					wc <<= 8;
+					wc |= c;
+					dst = utf16_to_utf8(ff_convert(wc, 1), dst);
+				}
+				wc = 0;
+			} else {
+				if(0x81 <= c && c <= 0x9f) wc = c;
+				else if(0xe0 <= c && c <= 0xfc) wc = c;
+				else {
+					dst = utf16_to_utf8(ff_convert(c, 1), dst);
+				}
+			}
+		}
+		*dst = 0;
+	}
+
+
+	static void utf8_to_sjis(const char* src, char* dst)
+	{
+		uint8_t cnt = 0;
+		uint16_t code = 0;
+		char tc;
+		while((tc = *src++) != 0) {
+			uint8_t c = static_cast<uint8_t>(tc);
+			if(c < 0x80) { *dst++ = tc; code = 0; }
+			else if((c & 0xf0) == 0xe0) { code = (c & 0x0f); cnt = 2; }
+			else if((c & 0xe0) == 0xc0) { code = (c & 0x1f); cnt = 1; }
+			else if((c & 0xc0) == 0x80) {
+				code <<= 6;
+				code |= c & 0x3f;
+				cnt--;
+				if(cnt == 0 && code < 0x80) {
+					code = 0;	// 不正なコードとして無視
+					break;
+				} else if(cnt < 0) {
+					code = 0;
+				}
+			}
+			if(cnt == 0 && code != 0) {
+				auto wc = ff_convert(code, 0);
+				*dst++ = static_cast<char>(wc >> 8);
+				*dst++ = static_cast<char>(wc & 0xff);
+				code = 0;
+			}			
+		}
+		*dst = 0;
+	}
+
+
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  SD カード・アクセス制御テンプレート
@@ -38,22 +155,12 @@ namespace utils {
 		FATFS	fatfs_;  ///< FatFS コンテキスト
 
 		uint8_t	mount_delay_;
+		uint8_t	select_wait_;
 		bool	cd_;
 		bool	mount_;
 
 		char	current_[path_buff_size_];
 
-		// CSI 開始
-		// ※SD カードのアクセスでは、「PHASE::TYPE4」を選択する。
-		void start_csi_()
-		{
-			uint8_t intr_level = 0;
-			if(!csi_.start(16000000, CSI::PHASE::TYPE4, intr_level)) {
-				format("CSI Start fail ! (Clock spped over range)\n");
-			}
-		}
-
-		
 		static void dir_list_func_(const char* name, uint32_t size, bool dir) {
 			if(dir) {
 				format("          /%s\n") % name;
@@ -75,7 +182,7 @@ namespace utils {
 			}
 		}
 
-		void create_full_path_(char* full, const char* path) {
+		void create_full_path_(const char* path, char* full) {
 			std::strcpy(full, current_);
 			if(path == nullptr || path[0] == 0) {
 				if(full[0] == 0) {
@@ -105,7 +212,7 @@ namespace utils {
 		 */
 		//-----------------------------------------------------------------//
 		sdc_io(CSI& csi) : csi_(csi), mmc_(csi_),
-			mount_delay_(0), cd_(false), mount_(false) { }
+			mount_delay_(0), select_wait_(0), cd_(false), mount_(false) { }
 
 
 		//-----------------------------------------------------------------//
@@ -128,12 +235,41 @@ namespace utils {
 			DETECT::PU = 1;  // pull-up
 
 			// CSI を初期化後、廃棄する事で関係ポートを初期化する。
-			start_csi_();
+			uint8_t intr_level = 0;
+			if(!csi_.start(4000000, CSI::PHASE::TYPE4, intr_level)) {
+				format("CSI Start fail ! (Clock spped over range)\n");
+			}
 			csi_.destroy();
 
 			mount_ = false;
 
 			current_[0] = 0;
+			select_wait_ = 0;
+			mount_delay_ = 0;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	カレント・ファイルのオープン
+			@param[in]	fp		ファイル構造体ポインター
+			@param[in]	path	ファイル名
+			@param[in]	mode	オープン・モード
+			@return 移動成功なら「true」
+		 */
+		//-----------------------------------------------------------------//
+		bool open(FIL* fp, const char* path, BYTE mode)
+		{
+			char full[path_buff_size_];
+			create_full_path_(path, full);
+
+			char oem[path_buff_size_];
+			utf8_to_sjis(full, oem);
+// utils::format("%s\n") % oem;
+			if(f_open(fp, oem, mode) != FR_OK) {
+				return false;
+			}
+			return true;
 		}
 
 
@@ -151,10 +287,13 @@ namespace utils {
 			if(path == nullptr) return false;
 
 			char full[path_buff_size_];
-			create_full_path_(full, path);
+			create_full_path_(path, full);
+
+			char oem[path_buff_size_];
+			utf8_to_sjis(full, oem);
 
 			DIR dir;
-			auto st = f_opendir(&dir, full);
+			auto st = f_opendir(&dir, oem);
 			if(st != FR_OK) {
 				return false;
 			}
@@ -179,11 +318,14 @@ namespace utils {
 			if(!mount_) return 0;
 
 			char full[path_buff_size_];
-			create_full_path_(full, root);			
+			create_full_path_(root, full);
+
+			char oem[path_buff_size_];
+			utf8_to_sjis(full, oem);
 
 			uint16_t num = 0;
 			DIR dir;
-			auto st = f_opendir(&dir, full);
+			auto st = f_opendir(&dir, oem);
 			if(st != FR_OK) {
 				format("Can't open dir(%d): '%s'\n") % static_cast<uint32_t>(st) % root;
 			} else {
@@ -197,7 +339,10 @@ namespace utils {
 						break;
 					}
 					if(!fno.fname[0]) break;
-					std::strcpy(p, fno.fname);
+
+					char fn[64];
+					sjis_to_utf8(fno.fname, fn);
+					std::strcpy(p, fn);
 					if(fno.fattrib & AM_DIR) {
 						if(recursive) {
 							func(p, static_cast<uint32_t>(fno.fsize), true);
@@ -255,13 +400,19 @@ namespace utils {
 		bool service()
 		{
 			auto st = !DETECT::P();
-			if(!cd_ && st) {
-				start_csi_();
-				mount_delay_ = 10;  // 10 フレーム後にマウントする
+			if(st) {
+				if(select_wait_ < 255) {
+					++select_wait_;
+				}
+			} else {
+				select_wait_ = 0;
+			}
+			if(!cd_ && select_wait_ >= 10) {
+				mount_delay_ = 30;  // 30 フレーム後にマウントする
 				POWER::P = 0;
 				SELECT::P = 1;
 //				format("Card ditect\n");
-			} else if(cd_ && !st) {
+			} else if(cd_ && select_wait_ == 0) {
 				f_mount(&fatfs_, "", 0);
 				csi_.destroy();
 				POWER::P = 1;
@@ -269,7 +420,8 @@ namespace utils {
 				mount_ = false;
 //				format("Card unditect\n");
 			}
-			cd_ = st;
+			if(select_wait_ >= 10) cd_ = true;
+			else cd_ = false;
 
 			if(mount_delay_) {
 				--mount_delay_;
