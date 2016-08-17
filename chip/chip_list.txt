@@ -15,3 +15,14 @@ ST7565：（ST7565R）、（ST7567）
 ・http://www.hpinfotech.ro/ST7565.pdf
 ・http://www.aitendo.com/product/13327
 ・http://www.aitendo.com/product/12866
+
+
+BMP180：
+・BOSCH
+・digital barometric pressure sensor
+
+
+MPU6050：
+・InvenSense
+・Digital Motion Processor
+
