@@ -24,7 +24,7 @@ namespace {
 	}
 
 	// 送信、受信バッファの定義
-	typedef utils::fifo<64> buffer;
+	typedef utils::fifo<32> buffer;
 	// UART の定義（SAU2、SAU3）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
@@ -241,6 +241,7 @@ int main(int argc, char* argv[])
 	command_.set_prompt("# ");
 
 	uint8_t n = 0;
+	char tmp[64];
 	while(1) {
 		itm_.sync();
 
@@ -253,7 +254,6 @@ int main(int argc, char* argv[])
 				bool f = false;
 				if(command_.cmp_word(0, "dir")) {  // dir [xxx]
 					if(cmdn >= 2) {
-						char tmp[16];
 						command_.get_word(1, sizeof(tmp), tmp);
 						sdc_.dir(tmp);
 					} else {
@@ -262,7 +262,6 @@ int main(int argc, char* argv[])
 					f = true;
 				} else if(command_.cmp_word(0, "cd")) {  // cd [xxx]
 					if(cmdn >= 2) {
-						char tmp[16];
 						command_.get_word(1, sizeof(tmp), tmp);
 						sdc_.cd(tmp);						
 					} else {
@@ -277,7 +276,6 @@ int main(int argc, char* argv[])
 					f = true;
 				}
 				if(!f) {
-					char tmp[16];
 					command_.get_word(0, sizeof(tmp), tmp);
 					utils::format("Command error: '%s'\n") % tmp;
 				}
