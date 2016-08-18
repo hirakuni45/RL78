@@ -27,7 +27,7 @@
 namespace {
 
 	// 送信、受信バッファの定義
-	typedef utils::fifo<64> buffer;
+	typedef utils::fifo<32> buffer;
 	// UART の定義（SAU02、SAU03）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
@@ -143,10 +143,15 @@ namespace {
 			return;
 		}
 
-		char full[128];
-		sdc_.make_full_path(fname, full);
+		utils::format("Play: '%s'\n") % fname;
 
-		vs1063_.play(full);
+		FIL fil;
+		if(sdc_.open(&fil, fname, FA_READ) != FR_OK) {
+			utils::format("Can't open input file: '%s'\n") % fname;
+			return;
+		}
+
+		vs1063_.play(&fil);
 	}
 
 	void play_loop_(const char*);
@@ -198,6 +203,7 @@ int main(int argc, char* argv[])
 
 	uint8_t n = 0;
 	FIL fil;
+	char tmp[64];
 	while(1) {
 		itm_.sync();
 
@@ -212,7 +218,6 @@ int main(int argc, char* argv[])
 						utils::format("SD Card unmount.\n");
 					} else {
 						if(cmdn >= 2) {
-							char tmp[16];
 							command_.get_word(1, sizeof(tmp), tmp);
 							sdc_.dir(tmp);
 						} else {
@@ -221,7 +226,6 @@ int main(int argc, char* argv[])
 					}
 				} else if(command_.cmp_word(0, "cd")) {  // cd [xxx]
 					if(cmdn >= 2) {
-						char tmp[16];
 						command_.get_word(1, sizeof(tmp), tmp);
 						sdc_.cd(tmp);						
 					} else {
@@ -231,12 +235,11 @@ int main(int argc, char* argv[])
 					utils::format("%s\n") % sdc_.get_current();
 				} else if(command_.cmp_word(0, "play")) {  // play [xxx]
 					if(cmdn >= 2) {
-						char fname[16];
-						command_.get_word(1, sizeof(fname), fname);
-						if(std::strcmp(fname, "*") == 0) {
+						command_.get_word(1, sizeof(tmp), tmp);
+						if(std::strcmp(tmp, "*") == 0) {
 							play_loop_("");
 						} else {
-							play_(fname);
+							play_(tmp);
 						}
 					} else {
 						play_loop_("");
