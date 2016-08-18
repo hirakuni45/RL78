@@ -53,11 +53,11 @@ E-Mail: hira@rvf-rc45.net
  - /ADC_sample ---> RL78/G13 内臓 A/D 変換サンプル
  - /KiCAD_Lib       --->   KiCAD 用部品ライブラリー
 
-FatFS LFN の有効／無効：
-SD カードのファイルシステム「fatfs」では、「LFN」（長いファイル名）を標準で使っており、表示は   
+FatFS LFN の有効／無効：   
+SD カードのファイルシステム「fatfs」では、「LFN」（長いファイル名）を標準で使っており、表示は
 UTF-8 を標準で使います。   
-これはメモリーを多く消費します、もし必要無いのであれば、「ff12a/src/ffconf.h」の「_USE_LFN」を   
-「０」にして、コンパイルすれば、文字列コードは OEM、（CP932 の場合 ShiftJIS）となり、最小限の   
+これはメモリーを多く消費します、もし必要無いのであれば、「ff12a/src/ffconf.h」の「_USE_LFN」を
+「０」にして、コンパイルすれば、文字列コードは OEM、（CP932 の場合 ShiftJIS）となり、最小限の
 メモリー消費になります、長いファイル名も無効になり、8.3 形式になります。   
    
 ## RL78 開発環境
@@ -187,6 +187,7 @@ UTF-8 を標準で使います。
 (3) RTS ハードウェアー制御信号   
 (4) VCC 電源（５Ｖ又は３．３Ｖ）   
 (5) GND 電源 ０Ｖ   
+※３．３Ｖは限られた電流しか取り出せない為、レギュレーターを入れる事を推奨します。   
 ※ RTS 信号が取り出せる変換アダプターが必要です、DCD 信号では代用できません。   
 ※中国製の格安なモジュールは、RTS が無い物や、品質が安定していない為、お勧めしません、それらの事
 項を理解していて対処出来る人だけ利用すると良いと思います。
@@ -233,7 +234,8 @@ UTF-8 を標準で使います。
  - 各プロジェクトは、「R5F100LGAFB」（ProgramFlash: 128KB、RAM: 12KB、DataFlash: 8KB）がデフォルトとなっています。
  - Makefile 内で、他のデバイスに変更する事が出来ます。※ワーク RAM サイズが違うので必ず合わせる必要があります。
  - 基本的には、内部発振を使い 32MHz で動作させています。
- - 動作周波数を変更したい場合は、同時に Makefile 内の F_CLK を指定する必要があります。
+ - 動作周波数を変更したい場合は、同時に Makefile 内の F_CLK を指定する必要があります。   
+ - 現状では、ソフトウェアーディレイは３２ＭＨｚにしか対応していません。   
  - より正確なクロックで動かしたい場合、外部にクリスタルを接続し、外部発振を有効にすれば、使う事ができます。
  - 但し、最大２０ＭＨｚまでのクリスタル、又は外部クロックにしか対応しません。
  - 起動時の動作周波数設定は、common/option_bytes.c で行っています。
@@ -275,7 +277,17 @@ UTF-8 を標準で使います。
  - G13/port.hpp　ポート関係定義
  - G13/sau.hpp　シリアル・アレイ・ユニット定義
  - G13/system.hpp　システム関係定義
+ - G13/tau.hpp　タイマ・アレイ・ユニット定義
  - G13/timer.hpp　１２ビットインターバルタイマー定義
+   
+---
+ - chip/chip_list.txt　チップ・リスト
+ - chip/BMP180.hpp　BOSHE BMP180 温度、圧力センサー・ドライバー
+ - chip/DS3231.hpp　Maxim DS3231 RTC リアルタイムクロック・ドライバー
+ - chip/EEPROM.hpp　I2C 接続 EEPROM ドライバー
+ - chip/MPU6050.hpp　InvenSense 加速度、ジャイロ・センサー・ドライバー
+ - chip/ST7565.hpp　LCD 単色、ドットマトリックス・ドライバー
+ - chip/VS1063.hpp　MP3 / OGG VORBIS エンコーダー、デコーダー・ドライバー
    
 ---
  - common/start.s　ハードウェアー・リセット初期化
@@ -285,13 +297,20 @@ UTF-8 を標準で使います。
  - common/vect.c　ハードウェアー・ベクター設定
  - common/time.h　時間関数定義（posix time.h にある機能の縮小版）
  - common/time.c　時間関数実装（posix time.c にある機能の縮小版）
+ - common/io_utils.hpp　I/O 制御テンプレート・ユーティリティー
+ - common/adc_io.hpp　A/D 変換制御テンプレート
  - common/command.hpp　行入力テンプレート
+ - common/csi_io.hpp　CSI(SPI) 変換制御テンプレート
  - common/delay.hpp　ソフトウェアー・ディレイ（３２ＭＨｚ動作、マイクロ秒単位）
- - common/ds3231_io.hpp　ＤＳ３２３１、ＲＴＣ、入出力
- - common/eeprom_io.hpp　Ｉ２Ｃ－ＥＥＰＲＯＭ入出力
  - common/fifo.hpp　First-in first-out バッファ
  - common/format.hpp　文字列整形テンプレート
  - common/iica_io.hpp　ＩＩＣＡ入出力テンプレート
+ - common/itimer.hpp　インターバル・タイマー制御テンプレート
+ - common/monograph.hpp　ビットマップ・グラフィックス制御クラス
+ - common/port_utils.hpp　ポート・ユーティリティー
+ - common/sdc_io.hpp　ＳＤカード制御クラス
+ - common/task.hpp　タスク制御（無効タスククラス）
+ - common/tau_io.hpp　タイマー制御テンプレート
  - common/uart_io.hpp　シリアル・コミュニケーション入出力（ＵＡＲＴ）
    
 ---
