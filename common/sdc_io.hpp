@@ -13,6 +13,38 @@
 
 namespace utils {
 
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  １６進数ダンプ
+		@param[in]	src	ソース
+		@param[in]	num	数
+		@param[in]	lin	１行辺りの表示数
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	static void hex_dump(char* src, uint16_t num, uint8_t lin)
+	{
+		uint8_t l = 0;
+		for(uint16_t i = 0; i < num; ++i) {
+			auto n = *src++;
+			utils::format("%02X") % static_cast<uint16_t>(n);
+			++l;
+			if(l == lin) {
+				utils::format("\n");
+				l = 0;
+			} else {
+				utils::format(" ");
+			}
+		}
+	}
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  UTF-8 から UTF-16 への変換
+		@param[in]	src	ソース
+		@param[in]	dst	変換先
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static void utf8_to_utf16(const char* src, WCHAR* dst)
 	{
 		uint8_t cnt = 0;
@@ -42,6 +74,15 @@ namespace utils {
 		*dst = 0;
 	}
 
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  UTF-16 から UTF-8 への変換
+		@param[in]	code	UTF-16 コード
+		@param[in]	dst	変換先
+		@return 変換先の最終ポインター
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static char* utf16_to_utf8(uint16_t code, char* dst)
 	{
 		if(code < 0x0080) {
@@ -58,6 +99,13 @@ namespace utils {
 	}
 
 
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  UTF-16 から UTF-8 への変換
+		@param[in]	src	ソース
+		@param[in]	dst	変換先
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static void utf16_to_utf8(const WCHAR* src, char* dst) 
 	{
 		uint16_t code;
@@ -67,7 +115,14 @@ namespace utils {
 		*dst = 0;
 	}
 
-
+#if _USE_LFN != 0
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  sjis から UTF-8 への変換
+		@param[in]	src	ソース
+		@param[in]	dst	変換先
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static void sjis_to_utf8(const char* src, char* dst)
 	{
 		if(src == nullptr) return;
@@ -98,9 +153,16 @@ namespace utils {
 	}
 
 
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  UTF-8 から sjis への変換
+		@param[in]	src	ソース
+		@param[in]	dst	変換先
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	static void utf8_to_sjis(const char* src, char* dst)
 	{
-		uint8_t cnt = 0;
+		int8_t cnt = 0;
 		uint16_t code = 0;
 		char tc;
 		while((tc = *src++) != 0) {
@@ -128,7 +190,7 @@ namespace utils {
 		}
 		*dst = 0;
 	}
-
+#endif
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
@@ -263,9 +325,10 @@ namespace utils {
 			char full[path_buff_size_];
 			create_full_path_(path, full);
 
-			char oem[path_buff_size_];
-			utf8_to_sjis(full, oem);
-			if(f_open(fp, oem, mode) != FR_OK) {
+#if _USE_LFN != 0
+			utf8_to_sjis(full, full);
+#endif
+			if(f_open(fp, full, mode) != FR_OK) {
 				return false;
 			}
 			return true;
@@ -287,13 +350,15 @@ namespace utils {
 
 			char full[path_buff_size_];
 			create_full_path_(path, full);
-
+#if _USE_LFN != 0
 			char oem[path_buff_size_];
 			utf8_to_sjis(full, oem);
-
+///			hex_dump((char*)oem, 32, 16);
+#endif
 			DIR dir;
 			auto st = f_opendir(&dir, oem);
 			if(st != FR_OK) {
+				format("Can't open dir(%d): '%s'\n") % static_cast<uint32_t>(st) % full;
 				return false;
 			}
 			std::strcpy(current_, full);
@@ -318,15 +383,14 @@ namespace utils {
 
 			char full[path_buff_size_];
 			create_full_path_(root, full);
-
-			char oem[path_buff_size_];
-			utf8_to_sjis(full, oem);
-
+#if _USE_LFN != 0
+			utf8_to_sjis(full, full);
+#endif
 			uint16_t num = 0;
 			DIR dir;
-			auto st = f_opendir(&dir, oem);
+			auto st = f_opendir(&dir, full);
 			if(st != FR_OK) {
-				format("Can't open dir(%d): '%s'\n") % static_cast<uint32_t>(st) % root;
+				format("Can't open dir(%d): '%s'\n") % static_cast<uint32_t>(st) % full;
 			} else {
 				std::strcat(full, "/");
 				char* p = &full[std::strlen(full)];
