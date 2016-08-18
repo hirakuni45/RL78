@@ -353,10 +353,12 @@ namespace utils {
 #if _USE_LFN != 0
 			char oem[path_buff_size_];
 			utf8_to_sjis(full, oem);
-///			hex_dump((char*)oem, 32, 16);
-#endif
 			DIR dir;
 			auto st = f_opendir(&dir, oem);
+#else
+			DIR dir;
+			auto st = f_opendir(&dir, full);
+#endif
 			if(st != FR_OK) {
 				format("Can't open dir(%d): '%s'\n") % static_cast<uint32_t>(st) % full;
 				return false;
@@ -402,10 +404,13 @@ namespace utils {
 						break;
 					}
 					if(!fno.fname[0]) break;
-
+#if _USE_LFN != 0
 					char fn[64];
 					sjis_to_utf8(fno.fname, fn);
 					std::strcpy(p, fn);
+#else
+					std::strcpy(p, fno.fname);
+#endif
 					if(fno.fattrib & AM_DIR) {
 						if(recursive) {
 							func(p, static_cast<uint32_t>(fno.fsize), true);
