@@ -16,16 +16,20 @@ ST7565：（ST7565R）、（ST7567）
 ・http://www.aitendo.com/product/13327
 ・http://www.aitendo.com/product/12866
 
+VS1063：
+・VLSI Solution
+・MP3 / OGG VORBIS ENCODER AND AUDIO CODEC
+・http://www.vlsi.fi/fileadmin/datasheets/vs1063ds.pdf
 
 BMP180：
 ・BOSCH
 ・digital barometric pressure sensor
-
+・http://akizukidenshi.com/catalog/g/gI-06585/
 
 MPU6050：
 ・InvenSense
 ・Digital Motion Processor
-
+・https://www.invensense.com/products/motion-tracking/6-axis/mpu-6050/
 
 EEPROM：
 ・I2C EEPROM
