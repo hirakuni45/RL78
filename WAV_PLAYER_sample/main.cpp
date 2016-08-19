@@ -327,12 +327,21 @@ namespace {
 				}
 				fpos += 512;
 				wpos = pos;
-			}
 
-			++n;
-			if(n >= 20) {
-				n = 0;
-				device::P4.B3 = !device::P4.B3();  // LED モニターの点滅
+				// LED モニターの点滅
+				if(n >= 20) {  // play 時
+					n = 0;
+					device::P4.B3 = !device::P4.B3();
+				}
+				++n;
+			} else {  // pause 時
+				if(n < 192) {
+					device::P4.B3 = (n >> 5) & 1;
+				} else {
+					device::P4.B3 = 1;
+				}
+				utils::delay::milli_second(2);
+				++n;
 			}
 
 			if(sci_length() > 0) {
