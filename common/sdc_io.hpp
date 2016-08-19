@@ -387,6 +387,7 @@ namespace utils {
 			create_full_path_(root, full);
 #if _USE_LFN != 0
 			utf8_to_sjis(full, full);
+			char fn[64];
 #endif
 			uint16_t num = 0;
 			DIR dir;
@@ -405,7 +406,6 @@ namespace utils {
 					}
 					if(!fno.fname[0]) break;
 #if _USE_LFN != 0
-					char fn[64];
 					sjis_to_utf8(fno.fname, fn);
 					std::strcpy(p, fn);
 #else
