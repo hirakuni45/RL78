@@ -33,9 +33,7 @@ namespace chip {
 
 		CSI&	csi_;
 
-		FIL		fp_;
 		uint8_t	frame_;
-		bool	open_;
 
 		uint8_t buff_[256];
 
@@ -101,14 +99,13 @@ namespace chip {
 			return data;
 		}
 
-		bool probe_mp3_()
+		bool probe_mp3_(FIL* fp)
 		{
 			UINT len;
-			if(f_read(&fp_, buff_, 10, &len) != FR_OK) {
+			if(f_read(fp, buff_, 10, &len) != FR_OK) {
 				return false;
 			}
 			if(len != 10) {
-				f_close(&fp_);
 				return false;
 			}
 
@@ -122,7 +119,7 @@ namespace chip {
 			ofs |= static_cast<uint32_t>(buff_[7]) << 14;
 			ofs |= static_cast<uint32_t>(buff_[8]) << 7;
 			ofs |= static_cast<uint32_t>(buff_[9]);
-			f_lseek(&fp_, ofs);
+			f_lseek(fp, ofs);
 
 			utils::format("Find ID3 tag skip: %d\n") % ofs;
 
@@ -135,7 +132,7 @@ namespace chip {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		VS1063(CSI& csi) : csi_(csi), frame_(0), open_(false) { }
+		VS1063(CSI& csi) : csi_(csi), frame_(0) { }
 
 
 		//-----------------------------------------------------------------//
@@ -156,8 +153,6 @@ namespace chip {
 	
 			SEL::P = 1;  // /xCS = H
 			DCS::P = 1;  // /xDCS = H
-
-			open_ = false;
 
 			uint8_t intr_level = 0;
 			if(!csi_.start(500000, CSI::PHASE::TYPE4, intr_level)) {
@@ -189,10 +184,10 @@ namespace chip {
 			@brief  サービス
 		*/
 		//----------------------------------------------------------------//
-		bool service()
+		bool service(FIL* fp)
 		{
 			UINT len;
-			if(f_read(&fp_, buff_, sizeof(buff_), &len) != FR_OK) {
+			if(f_read(fp, buff_, sizeof(buff_), &len) != FR_OK) {
 				return false;
 			}
 			if(len == 0) return false;
@@ -226,35 +221,30 @@ namespace chip {
 		//----------------------------------------------------------------//
 		/*!
 			@brief  再生
-			@param[in]	fname	ファイル名
+			@param[in]	fp	ファイル・ディスクリプタ
 			@return エラーなら「false」
 		*/
 		//----------------------------------------------------------------//
-		bool play(const char* fname)
+		bool play(FIL* fp)
 		{
-			utils::format("Play: '%s'\n") % fname;
+			if(fp == nullptr) return false;
 
-			if(f_open(&fp_, fname, FA_READ) != FR_OK) {
-				utils::format("Can't open input file: '%s'\n") % fname;
+			// ファイル・フォーマットを確認
+			if(!probe_mp3_(fp)) {
+				f_close(fp);
 				return false;
 			}
 
-			// ファイル・フォーマットを確認
-			probe_mp3_();
-
 			{
-				open_ = true;
-
 				frame_ = 0;
 				DCS::P = 0;
-				while(service()) {
+				while(service(fp)) {
 					sleep_();
 				}
 				DCS::P = 1;
 			}
 
-			f_close(&fp_);
-			open_ = false;
+			f_close(fp);
 
 			return true;
 		}
