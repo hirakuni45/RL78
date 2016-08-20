@@ -4,6 +4,7 @@ for file in `ls -d *_sample`; do
 	make
 #	echo $?
 	if [ $? -ne 0 ]; then
+		echo "Compile error: " ${file}
 		break;
 	fi
 	cd ..
