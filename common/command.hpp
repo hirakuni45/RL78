@@ -34,15 +34,25 @@ namespace utils {
 
 		bool	tab_;
 
-		void clear_line_() {
-			// VT-100 ESC シーケンス 
+		// VT-100 ESC シーケンス 
+		static void clear_line_() {
 			sci_putch(0x1b);
 			sci_putch('[');
 			sci_putch('0');
 			sci_putch('J');
 		}
 
-		void crlf_() {
+		static void save_cursor_() {
+			sci_putch(0x1b);
+			sci_putch('7');
+		}
+
+		static void load_cursor_() {
+			sci_putch(0x1b);
+			sci_putch('8');
+		}
+
+		static void crlf_() {
 			sci_putch('\r');	///< CR
 			sci_putch('\n');	///< LF
 		}
@@ -117,7 +127,10 @@ namespace utils {
 					break;
 
 				case '\t':  // TAB キー
-					if(tab_top_ < 0) tab_top_ = pos_;
+					if(tab_top_ < 0) {
+						tab_top_ = pos_;
+						save_cursor_();
+					}
 					tab_ = true;
 					break;
 
@@ -268,10 +281,8 @@ namespace utils {
 			if(tab_top_ < 0) return;
 			std::strcpy(&buff_[tab_top_], key);
 
-			clear_line_();
-			sci_putch('\r');  // CR
-			if(prompt_) sci_puts(prompt_);
-			sci_puts(buff_);
+			load_cursor_();
+			sci_puts(key);
 		}
 	};
 }
