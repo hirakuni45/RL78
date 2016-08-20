@@ -20,7 +20,7 @@ namespace {
 		asm("nop");
 	}
 
-	typedef utils::fifo<64> buffer;
+	typedef utils::fifo<uint8_t, 32> buffer;
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
 	device::itimer<uint8_t> itm_;

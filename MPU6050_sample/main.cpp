@@ -25,7 +25,7 @@ namespace {
 
 	chip::MPU6050<IICA> mpu6050_(iica_);
 
-	typedef utils::fifo<64> buffer;
+	typedef utils::fifo<uint8_t, 64> buffer;
 
 	// UART1 の定義（SAU2、SAU3）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 			utils::format("ACCEL: %d, %d, %d\n") % a.x % a.y % a.z;
 
 			auto t = mpu6050_.get_temp();
-			utils::format("TEMP: %d\n") % t;
+			utils::format("TEMP:  %d.%1d\n") % (t / 10) % (t % 10);
 
 			auto g = mpu6050_.get_gyro();
 			utils::format("GYRO:  %d, %d, %d\n") % g.x % g.y % g.z;

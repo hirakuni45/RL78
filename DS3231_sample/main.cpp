@@ -29,7 +29,7 @@ namespace {
 
 	chip::DS3231<IICA> rtc_(iica0_);
 
-	typedef utils::fifo<128> buffer;
+	typedef utils::fifo<uint8_t, 32> buffer;
 
 #ifdef UART0
 	// UART0 の定義（SAU0、SAU1）

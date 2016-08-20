@@ -25,7 +25,7 @@ namespace {
 
 	chip::BMP180<IICA> bmp180_(iica_);
 
-	typedef utils::fifo<64> buffer;
+	typedef utils::fifo<uint8_t, 64> buffer;
 
 	// UART1 の定義（SAU2、SAU3）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;

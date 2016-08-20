@@ -21,11 +21,11 @@ namespace {
 	}
 	device::itimer<uint8_t> itm_;
 
-	typedef utils::fifo<128> buffer;
-	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart0_;
+	typedef utils::fifo<uint8_t, 32> buffer;
+	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
 	typedef device::iica_io<device::IICA0> IICA;
-	IICA iica0_;
+	IICA iica_;
 
 	utils::command<64> command_;
 }
@@ -44,12 +44,12 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 10 */  nullptr,
 	/* 11 */  nullptr,
 	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart0_.send_task),
-	/* 14 */  reinterpret_cast<void*>(uart0_.recv_task),
-	/* 15 */  reinterpret_cast<void*>(uart0_.error_task),
-	/* 16 */  nullptr,
-	/* 17 */  nullptr,
-	/* 18 */  nullptr,
+	/* 13 */  nullptr,
+	/* 14 */  nullptr,
+	/* 15 */  nullptr,
+	/* 16 */  reinterpret_cast<void*>(uart_.send_task),
+	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),
+	/* 18 */  reinterpret_cast<void*>(uart_.error_task),
 	/* 19 */  nullptr,
 	/* 20 */  nullptr,
 	/* 21 */  nullptr,
@@ -63,22 +63,22 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 extern "C" {
 	void sci_putch(char ch)
 	{
-		uart0_.putch(ch);
+		uart_.putch(ch);
 	}
 
 	void sci_puts(const char* str)
 	{
-		uart0_.puts(str);
+		uart_.puts(str);
 	}
 
 	char sci_getch(void)
 	{
-		return uart0_.getch();
+		return uart_.getch();
 	}
 
 	uint16_t sci_length()
 	{
-		return uart0_.recv_length();
+		return uart_.recv_length();
 	}
 };
 
@@ -97,22 +97,22 @@ int main(int argc, char* argv[])
 		itm_.start(60, intr_level);
 	}
 
-	// UART0 の開始
+	// UART の開始
 	{
 		uint8_t intr_level = 1;
-		uart0_.start(115200, intr_level);
+		uart_.start(115200, intr_level);
 	}
 
 	// IICA(I2C) の開始
 	{
 		uint8_t intr_level = 0;
-		if(!iica0_.start(IICA::speed::fast, intr_level)) {
-//		if(!iica0_.start(IICA::speed::standard, intr_level)) {
-			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica0_.get_last_error());
+		if(!iica_.start(IICA::speed::fast, intr_level)) {
+//		if(!iica_.start(IICA::speed::standard, intr_level)) {
+			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 		}
 	}
 
-	uart0_.puts("Start RL78/G13 I2C sample\n");
+	uart_.puts("Start RL78/G13 I2C sample\n");
 
 	command_.set_prompt("# ");
 

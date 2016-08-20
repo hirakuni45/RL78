@@ -28,7 +28,7 @@ namespace {
 	}
 
 	// 送信、受信バッファの定義
-	typedef utils::fifo<128> buffer;
+	typedef utils::fifo<uint8_t, 32> buffer;
 	// UART の定義（SAU2、SAU3）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 

@@ -122,7 +122,7 @@ namespace pwm {
 namespace {
 
 	// 送信、受信バッファの定義
-	typedef utils::fifo<32> buffer;
+	typedef utils::fifo<uint32_t, 32> buffer;
 	// UART の定義（SAU02、SAU03）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 

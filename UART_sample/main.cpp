@@ -25,7 +25,7 @@ namespace {
 	}
 
 	// 送信、受信バッファの定義
-	typedef utils::fifo<128> buffer;
+	typedef utils::fifo<uint8_t, 64> buffer;
 #ifdef UART0
 	// UART0 の定義（SAU0、SAU1）
 	device::uart_io<device::SAU00, device::SAU01, buffer, buffer> uart_;
@@ -86,6 +86,9 @@ int main(int argc, char* argv[])
 	}
 
 	utils::format("Start RL78/G13 UART%d sample\n") % static_cast<uint32_t>(uart_.get_chanel_no());
+
+	float a = 1000.0005f;
+	utils::format("%4.4f\n") % a;
 
 	bool f = false;
 	uint32_t n = 0;
