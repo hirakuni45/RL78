@@ -16,11 +16,11 @@ namespace utils {
 		@param[in]	SIZE	バッファサイズ
     */
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint16_t SIZE>
+	template <typename T, T SIZE>
 	class fifo {
 
 		typedef char DT;
-		typedef uint16_t PTS;
+		typedef T PTS;
 
 		volatile PTS	get_ = 0;
 		volatile PTS	put_ = 0;
@@ -45,8 +45,13 @@ namespace utils {
 		void put(DT v) {
 			buff_[put_] = v;
 			++put_;
-			if(put_ >= SIZE) {
-				put_ = 0;
+			if(SIZE == 8 || SIZE == 16 || SIZE == 32 || SIZE == 64 || SIZE == 128) {
+				put_ &= SIZE - 1;
+			} else if(SIZE == 256) {
+			} else {
+				if(put_ >= SIZE) {
+					put_ = 0;
+				}
 			}
 		}
 
@@ -60,8 +65,13 @@ namespace utils {
 		DT get() {
 			DT data = buff_[get_];
 			++get_;
-			if(get_ >= SIZE) {
-				get_ = 0;
+			if(SIZE == 8 || SIZE == 16 || SIZE == 32 || SIZE == 64 || SIZE == 128) {
+				get_ &= SIZE - 1;
+			} else if(SIZE == 256) {
+			} else {
+				if(get_ >= SIZE) {
+					get_ = 0;
+				}
 			}
 			return data;
 		}
