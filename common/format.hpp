@@ -11,7 +11,7 @@
 /// ８進数のサポート
 /// #define WITH_OCTAL_FORMAT
 /// 浮動小数点(float)のサポート
-/// #define WITH_FLOAT_FORMAT
+#define WITH_FLOAT_FORMAT
 /// 浮動小数点(double)のサポート
 /// #define WITH_DOUBLE_FORMAT
 
@@ -22,6 +22,20 @@ extern "C" {
 	void sci_putch(char ch);
 	void sci_puts(const char* str);
 };
+
+#if 0
+e, E
+    double 引き数を丸めて [-]d.ddde±dd の形に変換する。 小数点の前には一桁の数字があり、小数点以下の桁数は精度で指定された桁数 になる。精度は指定されなかった場合 6 とみなされる。 精度が 0 の場合には、 小数点以下は表示されない。E 変換では、指数を表現するときに (e で はなく) E が使われる。指数部分は少なくとも 2桁表示される。つまり、 指数の値が 0 の場合には、00 と表示される。 
+
+f, F
+    double 引き数を丸めて [-]ddd.ddd の形の10進表現に変換する。 小数点の後の桁数は、精度で指定された値となる。 精度が指定されていない場合には 6 として扱われる。 精度として明示的に 0 が指定されたときには、小数点以下は表示されない。 小数点を表示する際には、小数点の前に少なくとも一桁は数字が表示される。
+
+    (SUSv2 では、F は規定されておらず、無限や NaN に関する文字列表現を 行ってもよいことになっている。
+     C99 標準では、f 変換では、無限は "[-]inf" か "[-]infinity" と表示し、 NaN は文字列の先頭に `nan をつけて表示するように規定されている。 F 変換の場合は "[-]INF", "[-]INFINITY", "NAN*" と表示される。) 
+g, G
+    double 引き数を f か e (G 変換の場合は F か E) の形式に変換する。 精度は表示する桁数を指定する。 精度が指定されない場合は、6桁とみなされる。 精度が 0 の場合は、1桁とみなされる。 変換される値の指数が、 -4 より小さいか、精度以上の場合に、 e 形式が使用される。 変換された結果の小数部分の末尾の 0 は削除される。小数点が表示されるのは、 小数点以下に数字が少なくとも一つある場合にだけである。 
+
+#endif
 
 namespace utils {
 
@@ -201,6 +215,8 @@ namespace utils {
 					} else if(ch == '%') {
 						sci_putch(ch);
 						fm = false;
+					} else if(ch == '-') {  // 無視する
+
 					} else {
 #ifdef ERROR_MESSAGE
 						err_(error_case::UNKNOWN_TYPE);
@@ -215,7 +231,10 @@ namespace utils {
 			}
 		}
 
-		void out_str_(const char* str, uint8_t n = 0) {
+		void out_str_(const char* str, char sign, uint8_t n) {
+			if(zerosupp_) {
+				if(sign != 0) { sci_putch(sign); }
+			}
 			if(n && n < real_) {
 				uint8_t spc = real_ - n;
 				while(spc) {
@@ -223,6 +242,9 @@ namespace utils {
 					if(zerosupp_) sci_putch('0');
 					else sci_putch(' ');
 				}
+			}
+			if(!zerosupp_) {
+				if(sign != 0) { sci_putch(sign); }
 			}
 			sci_puts(str);
 		}
@@ -237,8 +259,7 @@ namespace utils {
 				v >>= 1;
 				++n;
 			} while(v != 0) ;
-			if(sign_) { --p; ++n; *p = '+'; }
-			out_str_(p, n);
+			out_str_(p, '+', n);
 		}
 
 #ifdef WITH_OCTAL_FORMAT
@@ -252,8 +273,7 @@ namespace utils {
 				v >>= 3;
 				++n;
 			} while(v != 0) ;
-			if(sign_) { --p; ++n; *p = '+'; }
-			out_str_(p, n);
+			out_str_(p, '+', n);
 		}
 #endif
 
@@ -267,8 +287,7 @@ namespace utils {
 				v /= 10;
 				++n;
 			} while(v != 0) ;
-			if(sign) { --p; ++n; *p = sign; }
-			out_str_(p, n);
+			out_str_(p, sign, n);
 		}
 
 
@@ -293,12 +312,11 @@ namespace utils {
 				v >>= 4;
 				++n;
 			} while(v != 0) ;
-			if(sign_) { --p; ++n; *p = '+'; }
-			out_str_(p, n);
+			out_str_(p, '+', n);
 		}
 
-		uint32_t make_mask_(uint8_t num) {
-			uint32_t m = 0;
+		uint64_t make_mask_(uint8_t num) {
+			uint64_t m = 0;
 			while(num > 0) {
 				m += m;
 				++m;
@@ -307,58 +325,48 @@ namespace utils {
 			return m;
 		}
 
-		void out_fixed_point_(INT v, uint8_t fixpoi) {
+		void out_fixed_point_(int64_t v, uint8_t fixpoi, bool sign)
+		{
+			// 四捨五入処理用 0.5
+			uint64_t m = static_cast<uint64_t>(5) << fixpoi;
+			uint8_t n = decimal_ + 1;
+			while(n > 0) { m /= 10; --n; }
 
-			out_dec_(v >> fixpoi);
+			char sch = 0;
+			if(sign) sch = '-';
+			else if(sign_) sch = '+';
+			out_udec_(v >> fixpoi, sch);
 			sci_putch('.');
 
-			uint32_t d;
+			uint64_t d;
 			if(v < 0) { d = -v; } else { d = v; }
-			uint32_t dec = d & make_mask_(fixpoi);
-
+			d += m;
+			uint64_t dec = d & make_mask_(fixpoi);
 			uint8_t l = 0;
-			char buff[18];  // 大きめに確保
-			if(decimal_ > (sizeof(buff) - 1)) decimal_ = sizeof(buff) - 1;
 			while(dec > 0) {
 				dec *= 10;
-				uint32_t n = dec >> fixpoi;
-				buff[l] = n + '0';
+				uint64_t n = dec >> fixpoi;
+				sci_putch(n + '0');
 				dec -= n << fixpoi;
 				++l;
-				if(l >= decimal_ || l >= (sizeof(buff) - 1)) break;
+				if(l >= decimal_) break;
 			}
 			while(l < decimal_) {
-				buff[l] = '0';
+				sci_putch('0');
 				++l;
 			}
-			buff[l] = 0;
-			sci_puts(buff);
 		}
-
-#if 0
-e, E
-    double 引き数を丸めて [-]d.ddde±dd の形に変換する。 小数点の前には一桁の数字があり、小数点以下の桁数は精度で指定された桁数 になる。精度は指定されなかった場合 6 とみなされる。 精度が 0 の場合には、 小数点以下は表示されない。E 変換では、指数を表現するときに (e で はなく) E が使われる。指数部分は少なくとも 2桁表示される。つまり、 指数の値が 0 の場合には、00 と表示される。 
-
-f, F
-    double 引き数を丸めて [-]ddd.ddd の形の10進表現に変換する。 小数点の後の桁数は、精度で指定された値となる。 精度が指定されていない場合には 6 として扱われる。 精度として明示的に 0 が指定されたときには、小数点以下は表示されない。 小数点を表示する際には、小数点の前に少なくとも一桁は数字が表示される。
-
-    (SUSv2 では、F は規定されておらず、無限や NaN に関する文字列表現を 行ってもよいことになっている。
-     C99 標準では、f 変換では、無限は "[-]inf" か "[-]infinity" と表示し、 NaN は文字列の先頭に `nan をつけて表示するように規定されている。 F 変換の場合は "[-]INF", "[-]INFINITY", "NAN*" と表示される。) 
-g, G
-    double 引き数を f か e (G 変換の場合は F か E) の形式に変換する。 精度は表示する桁数を指定する。 精度が指定されない場合は、6桁とみなされる。 精度が 0 の場合は、1桁とみなされる。 変換される値の指数が、 -4 より小さいか、精度以上の場合に、 e 形式が使用される。 変換された結果の小数部分の末尾の 0 は削除される。小数点が表示されるのは、 小数点以下に数字が少なくとも一つある場合にだけである。 
-
-#endif
 
 #ifdef WITH_FLOAT_FORMAT
 		void out_real_(float v) {
-
-			uint32_t fpv = *(reinterpret_cast<uint32_t*>(&v));
+//			uint32_t fpv = *(reinterpret_cast<uint32_t*>(&tmp));
+			void* p = &v;
+			uint32_t fpv = *(uint32_t*)p;
 			bool sign = fpv >> 31;
 			int32_t exp = (fpv >> 23) & 0xff;
 			exp -= 127;	// bias (-127)
-			int val = fpv & 0x7fffff;	// 23 bits
-			int shift = 23;
-			if(sign) val = -val;
+			int32_t val = fpv & 0x7fffff;	// 23 bits
+			int32_t shift = 23;
 			if(val == 0 && exp == -127) ; // [0.0]
 			else {
 				val |= 0x800000; // add offset 1.0
@@ -377,14 +385,14 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 			}
 
 			if(decimal_ == 0) decimal_ = 6;
-			out_fixed_point_(val, shift);
+			out_fixed_point_(static_cast<uint64_t>(val) << 24, shift + 24, sign);
 		}
+
 
 		void out_exp_(float v) {
 		}
 
 		void out_real_auto_(float v) {
-
 		}
 #endif
 
@@ -396,7 +404,6 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 		}
 
 		void out_real_auto_(double v) {
-
 		}
 #endif
 
@@ -415,7 +422,7 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 				out_hex_(static_cast<uint32_t>(val), 'A');
 			} else if(mode_ == mode::FIXED_REAL) {
 				if(decimal_ == 0) decimal_ = 3;
-				out_fixed_point_(val, ppos_);
+				out_fixed_point_(val, ppos_, false);
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
@@ -444,7 +451,7 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 				out_hex_(val, 'A');
 			} else if(mode_ == mode::FIXED_REAL) {
 				if(decimal_ == 0) decimal_ = 3;
-				out_fixed_point_(val, ppos_);
+				out_fixed_point_(val, ppos_, true);
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
@@ -502,7 +509,7 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 					const char* p = val;
 					while((*p++) != 0) { ++n; }
 				}
-				out_str_(val, n);
+				out_str_(val, 0, n);
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
