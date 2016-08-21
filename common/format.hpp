@@ -104,7 +104,8 @@ namespace utils {
 			FIXED_REAL,	///< 固定小数点
 #if defined(WITH_FLOAT_FORMAT) | defined(WITH_DOUBLE_FORMAT)
 			REAL,		///< 浮動小数点
-			EXPONENT,	///< 浮動小数点 exp 形式
+			EXPONENT_CAPS,	///< 浮動小数点 exp 形式(E)
+			EXPONENT,	///< 浮動小数点 exp 形式(e)
 			REAL_AUTO,	///< 浮動小数点自動
 #endif
 			NONE_		///< 不明
@@ -119,6 +120,7 @@ namespace utils {
 
 		uint8_t		real_;
 		uint8_t		decimal_;
+		uint8_t		fpu_num_;
 		uint8_t		ppos_;
 		uint8_t		mode_;
 		bool		zerosupp_;
@@ -127,6 +129,7 @@ namespace utils {
 		void reset_() {
 			real_ = 0;
 			decimal_ = 0;
+			fpu_num_ = 6;
 			ppos_ = 0;
 			zerosupp_ = false;
 			sign_ = false;
@@ -157,6 +160,7 @@ namespace utils {
 							if(point) {
 								decimal_ *= 10;
 								decimal_ += static_cast<uint8_t>(ch);
+								fpu_num_ = decimal_;
 							} else {
 								ppos_ *= 10;
 								ppos_ += static_cast<uint8_t>(ch);
@@ -205,8 +209,11 @@ namespace utils {
 					} else if(ch == 'f' || ch == 'F') {
 						mode_ = mode::REAL;
 						return;
-					} else if(ch == 'e' || ch == 'E') {
+					} else if(ch == 'e') {
 						mode_ = mode::EXPONENT;
+						return;
+					} else if(ch == 'E') {
+						mode_ = mode::EXPONENT_CAPS;
 						return;
 					} else if(ch == 'g' || ch == 'G') {
 						mode_ = mode::REAL_AUTO;
@@ -327,6 +334,8 @@ namespace utils {
 
 		void out_fixed_point_(int64_t v, uint8_t fixpoi, bool sign)
 		{
+			decimal_ = fpu_num_;
+
 			// 四捨五入処理用 0.5
 			uint64_t m = static_cast<uint64_t>(5) << fixpoi;
 			uint8_t n = decimal_ + 1;
@@ -336,6 +345,8 @@ namespace utils {
 			if(sign) sch = '-';
 			else if(sign_) sch = '+';
 			out_udec_(v >> fixpoi, sch);
+			if(fpu_num_ == 0) return;
+
 			sci_putch('.');
 
 			uint64_t d;
@@ -358,52 +369,64 @@ namespace utils {
 		}
 
 #ifdef WITH_FLOAT_FORMAT
-		void out_real_(float v) {
-//			uint32_t fpv = *(reinterpret_cast<uint32_t*>(&tmp));
+		void out_real_(float v, char e) {
 			void* p = &v;
 			uint32_t fpv = *(uint32_t*)p;
+
 			bool sign = fpv >> 31;
-			int32_t exp = (fpv >> 23) & 0xff;
+			int16_t exp = (fpv >> 23) & 0xff;
+			if((exp & 0x7f) == 0x7f) {
+				if(sign) sci_putch('-');
+				sci_puts("inf");
+				return;
+			}
+
 			exp -= 127;	// bias (-127)
 			int32_t val = fpv & 0x7fffff;	// 23 bits
-			int32_t shift = 23;
+			int16_t shift = 23;
 			if(val == 0 && exp == -127) ; // [0.0]
 			else {
 				val |= 0x800000; // add offset 1.0
 			}
-#if 0
-std::cout << "Real: " << v << std::endl;
-std::cout << "S: " << static_cast<int>(sign) << std::endl;
-std::cout << "E: " << static_cast<int>(exp) << std::endl;
-std::cout << "P: " << static_cast<int>(val) << std::endl;
-#endif
+			shift -= exp;
 
-			if(exp > 0) {
-				shift -= exp;
-			} else if(exp < 0) {
-				shift -= exp;
+			// 64 ビットに拡張
+			uint64_t v64 = static_cast<uint64_t>(val);
+			if(shift < 28) {
+				shift += 32;
+				v64 <<= 32;
 			}
 
-			if(decimal_ == 0) decimal_ = 6;
-			out_fixed_point_(static_cast<uint64_t>(val) << 24, shift + 24, sign);
-		}
+			// エキスポーネント表記の場合
+			int8_t dexp = 0;
+			if(e != 0) {
+				if(v64 > (static_cast<uint64_t>(2) << shift)) {  // 2.0 以上の場合
+					while(v64 > (static_cast<uint64_t>(2) << shift)) {
+						v64 /= 10;
+						++dexp;
+					}
+				} else if(v64 < (static_cast<uint64_t>(1) << shift)) {  // 1.0 以下
+					while(v64 < (static_cast<uint64_t>(1) << shift)) {
+						v64 *= 10;
+						--dexp;
+					}
+				}
+			}
 
+			out_fixed_point_(v64, shift, sign);
 
-		void out_exp_(float v) {
-		}
-
-		void out_real_auto_(float v) {
+			if(e) {
+				sci_putch(e);
+				zerosupp_ = true;
+				sign_ = true;
+				real_ = 3;
+				out_dec_(dexp);
+			}
 		}
 #endif
 
 #ifdef WITH_DOUBLE_FORMAT
-		void out_real_(double val) {
-		}
-
-		void out_exp_(double v) {
-		}
-
-		void out_real_auto_(double v) {
+		void out_real_(double val, char e) {
 		}
 #endif
 
@@ -467,7 +490,7 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		format(const char* form) : form_(form), real_(0), decimal_(0), ppos_(0),
+		format(const char* form) : form_(form), real_(0), decimal_(0), fpu_num_(6), ppos_(0),
 			mode_(mode::NONE_), zerosupp_(false), sign_(false) {
 			next_();
 		}
@@ -608,12 +631,15 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (float val) {
+			zerosupp_ = false;
 			if(mode_ == mode::REAL) {
-				out_real_(val);
+				out_real_(val, 0);
+			} else if(mode_ == mode::EXPONENT_CAPS) {
+				out_real_(val, 'E');
 			} else if(mode_ == mode::EXPONENT) {
-				out_exp_(val);
+				out_real_(val, 'e');
 			} else if(mode_ == mode::REAL_AUTO) {
-				out_real_auto_(val);
+				out_real_(val, 0);
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
@@ -635,11 +661,13 @@ std::cout << "P: " << static_cast<int>(val) << std::endl;
 		//-----------------------------------------------------------------//
 		format& operator % (double val) {
 			if(mode_ == mode::REAL) {
-				out_real_(val);
+				out_real_(val, 0);
+			} else if(mode_ == mode::EXPONENT_CAPS) {
+				out_real_(val, 'E');
 			} else if(mode_ == mode::EXPONENT) {
-				out_exp_(val);
+				out_exp_(val, 'e');
 			} else if(mode_ == mode::REAL_AUTO) {
-				out_real_auto_(val);
+				out_real_auto_(val, 0);
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
