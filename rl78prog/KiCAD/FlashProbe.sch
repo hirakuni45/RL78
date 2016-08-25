@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:FlashProbe-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -30,6 +31,7 @@ LIBS:contrib
 LIBS:valves
 LIBS:akizuki
 LIBS:renesas
+LIBS:FlashProbe-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
@@ -127,17 +129,6 @@ Wire Wire Line
 Connection ~ 2800 4300
 Text GLabel 5850 3500 2    60   Output ~ 0
 /RESET(6)
-$Comp
-L 6P-SW SW?
-U 1 1 578DC4AC
-P 4500 3500
-F 0 "SW?" H 4500 3800 60  0000 C CNN
-F 1 "6P-SW" H 4500 3200 60  0000 C CNN
-F 2 "" H 4500 3500 60  0000 C CNN
-F 3 "" H 4500 3500 60  0000 C CNN
-	1    4500 3500
-	1    0    0    -1  
-$EndComp
 Text GLabel 5850 5000 2    60   BiDi ~ 0
 P12/TxD0(44)
 Text GLabel 5850 5300 2    60   BiDi ~ 0
@@ -147,23 +138,23 @@ Wire Wire Line
 Wire Wire Line
 	5600 2700 2300 2700
 Wire Wire Line
-	2300 3500 4000 3500
+	2300 3500 4250 3500
 Wire Wire Line
-	4000 3650 3900 3650
+	3900 3650 4250 3650
 Wire Wire Line
 	3900 3650 3900 5300
 Wire Wire Line
 	3900 5300 5850 5300
 Wire Wire Line
-	5850 3500 5000 3500
+	4750 3500 5850 3500
 Wire Wire Line
 	3450 4000 3450 3000
 Wire Wire Line
 	3450 3000 5100 3000
 Wire Wire Line
-	5100 3000 5100 3350
+	5100 3350 5100 3000
 Wire Wire Line
-	5100 3350 5000 3350
+	4750 3350 5100 3350
 $Comp
 L 2P-SW SW?
 U 1 1 578DC795
@@ -176,7 +167,7 @@ F 3 "" H 4555 5850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5000 3650 5100 3650
+	4750 3650 5100 3650
 Wire Wire Line
 	5100 3650 5100 5800
 Wire Wire Line
@@ -192,7 +183,7 @@ Connection ~ 3450 5800
 Wire Wire Line
 	3900 2500 3900 3350
 Wire Wire Line
-	3900 3350 4000 3350
+	3900 3350 4250 3350
 Wire Wire Line
 	3900 1800 3900 2200
 Wire Wire Line
@@ -224,4 +215,15 @@ Wire Wire Line
 Wire Wire Line
 	5350 1400 5350 1500
 Connection ~ 3900 1400
+$Comp
+L 6P-SW SW?
+U 1 1 57BBF654
+P 4500 3500
+F 0 "SW?" H 4500 3750 60  0000 C CNN
+F 1 "6P-SW" H 4400 3250 60  0000 C CNN
+F 2 "" H 4435 3500 60  0000 C CNN
+F 3 "" H 4435 3500 60  0000 C CNN
+	1    4500 3500
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
