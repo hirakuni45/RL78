@@ -58,10 +58,10 @@ namespace device {
 		static IICA iica_;
 		static volatile uint8_t sync_;
 
-		uint8_t		intr_lvl_ = 0;
-		uint8_t		sadr_ = 0;
-		uint8_t		speed_ = 0;
-		error		error_ = error::none;
+		uint8_t		intr_lvl_;
+		uint8_t		sadr_;
+		uint8_t		speed_;
+		error		error_;
 
 		inline void sleep_() {
 			asm("nop");
@@ -140,7 +140,7 @@ namespace device {
 			@param[in]	sadr	スレーブ・アドレス
 		*/
 		//-----------------------------------------------------------------//
-		iica_io(uint8_t sadr = 0x00) : sadr_(sadr) { }
+		iica_io(uint8_t sadr = 0x00) : intr_lvl_(0), sadr_(sadr), speed_(0), error_(error::none) { }
 
 
 		//-----------------------------------------------------------------//
