@@ -68,9 +68,9 @@ extern "C" {
 
 namespace {
 
-	uint8_t count_active_()
+	uint16_t count_active_()
 	{
-		uint8_t n = 0;
+		uint16_t n = 0;
 		device::PM2.B2 = 1;  // input
 		do {
 			++n;
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 
 	utils::format("Start RL78/G13 touch switch sample\n");
 
-	uint8_t touch_ref = 0;
+	uint16_t touch_ref = 0;
 	//　タッチ入力ポートの設定
 	// プルアップ設定がある場合は、OFF にする。
 	{
