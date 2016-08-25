@@ -1,7 +1,7 @@
 (export (version D)
   (design
-    (source D:\Git\RL78\rl78prog\KiCAD\FTDI231XS\SerialUSB.sch)
-    (date "2016/08/23 18:55:09")
+    (source D:/Git/RL78/rl78prog/KiCAD/FTDI231XS/SerialUSB.sch)
+    (date "2016/08/24 12:28:34")
     (tool "Eeschema 4.0.1-stable")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -23,7 +23,7 @@
       (tstamp 57BBF529))
     (comp (ref P1)
       (value USB_OTG)
-      (footprint Connect:USB_Micro-B)
+      (footprint Akizuki:HRS-MICRO-USB-B)
       (libsource (lib conn) (part USB_OTG))
       (sheetpath (names /) (tstamps /))
       (tstamp 57BBF712))
@@ -304,14 +304,14 @@
         (pin (num 5) (name GND) (type power_in))
         (pin (num 6) (name shield) (type passive)))))
   (libraries
-    (library (logical device)
-      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\device.lib"))
     (library (logical conn)
       (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\conn.lib"))
     (library (logical akizuki)
       (uri D:\Git\RL78\KiCAD_lib\akizuki.lib))
     (library (logical ftdi)
-      (uri D:\Git\RL78\KiCAD_lib\ftdi.lib)))
+      (uri D:\Git\RL78\KiCAD_lib\ftdi.lib))
+    (library (logical device)
+      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\device.lib")))
   (nets
     (net (code 1) (name GND)
       (node (ref C6) (pin 1))
