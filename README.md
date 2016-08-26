@@ -60,7 +60,7 @@ UTF-8 を標準で使います。
 「０」にして、コンパイルすれば、文字列コードは OEM、（CP932 の場合 ShiftJIS）となり、最小限の
 メモリー消費になります、長いファイル名も無効になり、8.3 形式になります。   
    
-## RL78 開発環境
+## RL78 開発環境準備（Windows、MSYS2）
    
  - RL78 用コンパイラ（rl78-elf）は gcc-4.9.3 を使っています。 
  - Windows では、事前に MSYS2 環境をインストールしておきます。
@@ -80,10 +80,6 @@ UTF-8 を標準で使います。
  - アップデートは、複数回行われ、その際、コンソールの指示に従う事。
  - ※複数回、コンソールを開きなおす必要がある。
 
----
-
-### RL78-elf-gcc コンパイラのビルド方法：（msys2）
-
  - gcc、texinfo、gmp、mpfr、mpc、diffutils、automake、zlib tar、make、unzip コマンドなどをインストール
 ```sh
    pacman -S gcc
@@ -102,6 +98,47 @@ UTF-8 を標準で使います。
    pacman -S git
 ```
 
+---
+
+## RL78 開発環境準備（OS-X、Linux）
+
+ - RL78 用コンパイラ（rl78-elf）は gcc-4.9.3 を使っています。 
+ - OS-X では、事前に macports をインストールしておきます。（brew は柔軟性が低いのでお勧めしません）
+ -  OS−X のバージョンによっては、事前にX−Code、Command Line Tools などのインストールが必要になるかもしれません）
+
+ - macports のアップグレード
+
+```sh
+   sudo port -d self update
+```
+
+ - ご存知とは思いますが、OS−X では初期段階では、gcc の呼び出しで llvm が起動するようになっています。
+ - しかしながら、現状では llvm では、gcc のクロスコンパイラをビルドする事は出来ません。
+ - そこで、macports で gcc をインストールします、バージョンは５系を使う事とします。
+```sh
+   sudo port install gcc5
+   sudo ln -sf /opt/local/bin/gcc-mp-5  /usr/local/bin/gcc
+   sudo ln -sf /opt/local/bin/g++-mp-5  /usr/local/bin/g++
+   sudo ln -sf /opt/local/bin/g++-mp-5  /usr/local/bin/c++
+```
+ - 再起動が必要かもしれません。
+ - 一応、確認してみて下さい。
+```sh
+   gcc --version
+```
+   
+ - texinfo、gmp、mpfr、mpc、diffutils、automake コマンドなどをインストール
+```sh
+   sudo port install texinfo
+   sudo port install gmp
+   sudo port install mpfr
+   sudo port install libmpc
+   sudo port install diffutils
+   sudo port install automake
+```
+
+---
+
 #### binutils-2.25.1 をビルド
 ```sh
    cd
@@ -111,7 +148,7 @@ UTF-8 を標準で使います。
    cd rl78_build
    ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf --disable-nls
    make
-   make install
+   make install     OS-X,Linux: (sudo make install)
 ```
 
  -  /usr/local/rl78-elf/bin へパスを通す（.bash_profile を編集して、パスを追加）
@@ -139,7 +176,7 @@ UTF-8 を標準で使います。
 	cd rl78_build
     ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --disable-bootstrap
     make
-    make install
+    make install     OS-X,Linux: (sudo make install)
 ```
   
 #### newlib をビルド
@@ -151,7 +188,7 @@ UTF-8 を標準で使います。
     cd rl78_build
     ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf
 	make
-    make install
+    make install     OS-X,Linux: (sudo make install)
 ```
   
 #### C++ コンパイラをビルド
@@ -161,7 +198,7 @@ UTF-8 を標準で使います。
     cd rl78_build
     ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --disable-bootstrap
     make
-    make install
+    make install     OS-X,Linux: (sudo make install)
 ```
    
 ---
