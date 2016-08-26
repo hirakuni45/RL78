@@ -62,7 +62,6 @@ UTF-8 を標準で使います。
    
 ## RL78 開発環境準備（Windows、MSYS2）
    
- - RL78 用コンパイラ（rl78-elf）は gcc-4.9.3 を使っています。 
  - Windows では、事前に MSYS2 環境をインストールしておきます。
  - MSYS2 には、msys2、mingw32、mingw64 と３つの異なった環境がありますが、msys2 で行います。 
    
@@ -102,7 +101,6 @@ UTF-8 を標準で使います。
 
 ## RL78 開発環境準備（OS-X、Linux）
 
- - RL78 用コンパイラ（rl78-elf）は gcc-4.9.3 を使っています。 
  - OS-X では、事前に macports をインストールしておきます。（brew は柔軟性が低いのでお勧めしません）
  -  OS−X のバージョンによっては、事前にX−Code、Command Line Tools などのインストールが必要になるかもしれません）
 
@@ -135,7 +133,7 @@ UTF-8 を標準で使います。
 ```
    
  - texinfo、gmp、mpfr、mpc、diffutils、automake コマンドなどをインストール
-```sh
+```
    sudo port install texinfo
    sudo port install gmp
    sudo port install mpfr
@@ -145,9 +143,17 @@ UTF-8 を標準で使います。
 ```
 
 ---
+## RL78 開発環境構築
 
+ - RL78 用コンパイラ（rl78-elf-gcc,g++）は gcc-4.9.3 を使います。
+ - binutils-2.25.1.tar.gz をダウンロードしておく
+ - gcc-4.9.3.tar.gz をダウンロードしておく
+ - newlib-2.2.0.tar.gz をダウンロードしておく
+   
+---
+   
 #### binutils-2.25.1 をビルド
-```sh
+```
    cd
    tar xfvz binutils-2.25.1.tar.gz
    cd binutils-2.25.1
