@@ -108,14 +108,14 @@ UTF-8 を標準で使います。
 
  - macports のアップグレード
 
-```sh
+```
    sudo port -d self update
 ```
 
  - ご存知とは思いますが、OS−X では初期段階では、gcc の呼び出しで llvm が起動するようになっています。
  - しかしながら、現状では llvm では、gcc のクロスコンパイラをビルドする事は出来ません。
  - そこで、macports で gcc をインストールします、バージョンは５系を使う事とします。
-```sh
+```
    sudo port install gcc5
    sudo ln -sf /opt/local/bin/gcc-mp-5  /usr/local/bin/gcc
    sudo ln -sf /opt/local/bin/g++-mp-5  /usr/local/bin/g++
@@ -123,8 +123,15 @@ UTF-8 を標準で使います。
 ```
  - 再起動が必要かもしれません。
  - 一応、確認してみて下さい。
-```sh
+```
    gcc --version
+```
+   
+```
+   gcc (MacPorts gcc5 5.4.0_0) 5.4.0
+   Copyright (C) 2015 Free Software Foundation, Inc.
+   This is free software; see the source for copying conditions.  There is NO
+   warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ```
    
  - texinfo、gmp、mpfr、mpc、diffutils、automake コマンドなどをインストール
