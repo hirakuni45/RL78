@@ -112,9 +112,8 @@ time_t get_timezone_offset(void)
 
 //-----------------------------------------------------------------//
 /*!
-	@brief	世界標準時間（グリニッジ）から、tm 構造体のメンバー@n
-			を生成する。
-	@param[in]	tp
+	@brief	グリニッジ標準時への変換
+	@param[in]	timer 
 	@return		グローバル tm 構造体のポインター
 */
 //-----------------------------------------------------------------//
@@ -124,9 +123,6 @@ struct tm *gmtime(const time_t *tp)
 	short	i, j, k;
 
 	t = *tp;
-
-// GMT から JST へ(+9時間）
-	t += (time_t)(timezone_offset_) * 3600;
 
 	time_st_.tm_sec  = t % (time_t)60;
 	t /= (time_t)60;
@@ -155,6 +151,26 @@ struct tm *gmtime(const time_t *tp)
 	}
 	time_st_.tm_mon = k;
 	time_st_.tm_mday = t + 1;
+
+	return &time_st_;
+}
+
+
+//-----------------------------------------------------------------//
+/*!
+	@brief	現地時間に変換
+	@param[in]	timer	現地時間
+	@return		tm 構造体のポインター
+*/
+//-----------------------------------------------------------------//
+struct tm *localtime(const time_t *timer)
+{
+	time_t t = *timer;
+
+// GMT から JST へ(+9時間）
+	t += (time_t)(timezone_offset_) * 3600;
+
+	gmtime(&t);
 
 	return &time_st_;
 }
