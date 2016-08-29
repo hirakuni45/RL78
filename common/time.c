@@ -16,6 +16,14 @@ static const char mday_tbl_[] = {
 /// 大阪、札幌、東京のタイムゾーン +9 hour
 static char timezone_offset_ = 9;
 static struct tm time_st_;
+static const char* wday_[] = {
+	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" 
+};
+static const char* mon_[] = {
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+static const char* null_ = { "" };
 
 //-----------------------------------------------------------------//
 /*!
@@ -233,6 +241,34 @@ void copy_tm(const struct tm *src, struct tm *dst)
 {
 	if(src == NULL || dst == NULL) return;
 	memcpy(dst, src, sizeof(struct tm));
+}
+
+
+//-----------------------------------------------------------------//
+/*!
+	@brief	「曜日」文字列を取得
+	@param[in]	idx	インデックス
+	@return 文字列（３文字）
+*/
+//-----------------------------------------------------------------//
+const char* get_wday(uint8_t idx)
+{
+	if(idx >= 7) return null_;
+	return wday_[idx];
+}
+
+
+//-----------------------------------------------------------------//
+/*!
+	@brief	「月」文字列を取得
+	@param[in]	idx	インデックス
+	@return 文字列（３文字）
+*/
+//-----------------------------------------------------------------//
+const char* get_mon(uint8_t idx)
+{
+	if(idx >= 12) return null_;
+	return mon_[idx];
 }
 
 
