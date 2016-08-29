@@ -17,11 +17,14 @@
 #include "common/sdc_io.hpp"
 #include "common/command.hpp"
 
+// DS3231 RTC を有効にする場合（ファイルの書き込み時間の設定）
+#define WITH_RTC
+
+#ifdef WITH_RTC
+#include "chip/DS3231.hpp"
+#endif
+
 namespace {
-	void wait_()
-	{
-		asm("nop");
-	}
 
 	// 送信、受信バッファの定義
 	typedef utils::fifo<uint8_t, 32> buffer;
@@ -43,6 +46,12 @@ namespace {
 	utils::sdc_io<csi, card_select, card_power, card_detect> sdc_(csi_);
 
 	utils::command<64> command_;
+
+#ifdef WITH_RTC
+	typedef device::iica_io<device::IICA0> IICA;
+	IICA	iica_;
+	chip::DS3231<IICA> rtc_(iica_);
+#endif
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
@@ -118,11 +127,50 @@ extern "C" {
 	}
 
 	DWORD get_fattime(void) {
+#ifdef WITH_RTC
+		time_t t = 0;
+		if(!rtc_.get_time(t)) {
+			utils::format("Stall RTC read (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+		}
+		return utils::get_fattime(t);
+#else
 		return 0;
+#endif
 	}
 };
 
 namespace {
+
+#ifdef WITH_RTC
+	const char* wday_[] = {
+		"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" 
+	};
+
+	const char* mon_[] = {
+		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+	};
+
+	void date_()
+	{
+		time_t t = 0;
+		struct tm *m;
+
+		if(!rtc_.get_time(t)) {
+			utils::format("Stall RTC read (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+		}
+
+		m = localtime(&t);
+		utils::format("%s %s %d %02d:%02d:%02d  %4d\n")
+			% wday_[m->tm_wday]
+			% mon_[m->tm_mon]
+			% static_cast<uint32_t>(m->tm_mday)
+			% static_cast<uint32_t>(m->tm_hour)
+			% static_cast<uint32_t>(m->tm_min)
+			% static_cast<uint32_t>(m->tm_sec)
+			% static_cast<uint32_t>(m->tm_year + 1900);
+	}
+#endif
 
 	uint8_t v_ = 91;
 	uint8_t m_ = 123;
@@ -140,15 +188,16 @@ namespace {
 
 	bool create_test_file_(const char* fname, uint32_t size)
 	{
+		uint8_t buff[512];
+		FIL fp;
+
 		utils::format("SD Write test...\n");
 
-		uint8_t buff[512];
 		for(uint16_t i = 0; i < sizeof(buff); ++i) {
 			buff[i] = rand_();
 		}
 
 		auto st = itm_.get_counter();
-		FIL fp;
 		if(!sdc_.open(&fp, fname, FA_WRITE | FA_CREATE_ALWAYS)) {
 			utils::format("Can't create file: '%s'\n") % fname;
 			return false;
@@ -222,17 +271,33 @@ int main(int argc, char* argv[])
 
 	PM4.B3 = 0;  // output
 
+	// UART 開始
+	{
+		uint8_t intr_level = 1;
+		uart_.start(115200, intr_level);
+	}
+
 	// インターバル・タイマー開始
 	{
 		uint8_t intr_level = 1;
 		itm_.start(60, intr_level);
 	}
 
-	// UART 開始
+#ifdef WITH_RTC
+	// IICA 開始
 	{
-		uint8_t intr_level = 1;
-		uart_.start(115200, intr_level);
+		uint8_t intr_level = 0;
+		if(!iica_.start(IICA::speed::fast, intr_level)) {
+//		if(!iica_.start(IICA::speed::standard, intr_level)) {
+			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+		}
 	}
+
+	// DS3231(RTC) の開始
+	if(!rtc_.start()) {
+		utils::format("Stall DS3231 start (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+	}
+#endif
 
 	sdc_.initialize();
 
@@ -274,7 +339,14 @@ int main(int argc, char* argv[])
 				} else if(command_.cmp_word(0, "speed")) { // speed
 					test_all_();
 					f = true;
+#ifdef WITH_RTC
+				} else if(command_.cmp_word(0, "date")) { // date
+					date_();
+					f = true;
 				}
+#else
+				}
+#endif
 				if(!f) {
 					command_.get_word(0, sizeof(tmp), tmp);
 					utils::format("Command error: '%s'\n") % tmp;
