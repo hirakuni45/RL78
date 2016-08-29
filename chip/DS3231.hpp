@@ -102,21 +102,20 @@ namespace chip {
 		 */
 		//-----------------------------------------------------------------//
 		bool get_time(time_t& tp) const {
-			// 二度読んで、同じだったら正しい時間とする
 			reg_t t;
-			{
-				reg_t tmp;
-				uint8_t n = 5; // ５回ループして正常に読めなかったら、エラーとする
-				do {
-					tmp = t;
-					if(!get_time_(t)) return false;
-					--n;
-					if(n == 0) {
-						return false;
-					}
-				} while(t != tmp) ;
-			}
+			reg_t tmp;
 			tm ts;
+			// 二度読んで、同じだったら正しい時間とする
+			uint8_t n = 5; // ５回ループして正常に読めなかったら、エラーとする
+			do {
+				tmp = t;
+				if(!get_time_(t)) return false;
+				--n;
+				if(n == 0) {
+					return false;
+				}
+			} while(t != tmp) ;
+
 			ts.tm_sec  = ((t.reg[0] >> 4) * 10) + (t.reg[0] & 0xf);
 			ts.tm_min  = ((t.reg[1] >> 4) * 10) + (t.reg[1] & 0xf);
 			ts.tm_hour = ((t.reg[2] >> 4) * 10) + (t.reg[2] & 0xf);
