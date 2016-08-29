@@ -303,11 +303,20 @@ namespace utils {
 			if(fi == nullptr) return;
 
 			time_t t = fatfs_time_to(fi->fdate, fi->ftime);
+			struct tm *m = localtime(&t);
 			if(dir) {
-				format("          /%s\n") % name;
+				format("          ");
 			} else {
-				format("%8d   %s\n") % fi->fsize % name;
+				format("%9d ") % fi->fsize;
 			}
+			format("%s %2d %4d %02d:%02d ") % get_mon(m->tm_mon) % m->tm_mday % (m->tm_year + 1900)
+				% m->tm_hour % m->tm_min;
+			if(dir) {
+				format("/");
+			} else {
+				format(" ");
+			}
+			format("%s\n") % name;
 		}
 
 		static const char* match_key_;
