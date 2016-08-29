@@ -121,42 +121,26 @@ int main(int argc, char* argv[])
 		utils::format("Touch refarence: %d\n") % touch_ref;
 	}
 
-	uint8_t n = 0;
 	bool touch = false;
 	bool touch_back = false;
-	uint8_t touch_cnt = 0;
-	uint8_t untouch_cnt = 0;
+	uint16_t touch_sum = 0;
 	while(1) {
 		itm_.sync();
 
-		++n;
-		if(n >= 30) n = 0;
-		device::P4.B3 = n < 10 ? false : true;
-
 		{
 			auto ref = count_active_();
-			if(ref >= (touch_ref - 1) && ref <= (touch_ref + 1)) {
-				touch_cnt = 0;
 
-				if(untouch_cnt < 255) {
-					untouch_cnt++;
-				}
-				if(untouch_cnt >= 10) {
-					touch = false;
+			if(ref >= (touch_ref + 10)) {
+///				utils::format("%d\n") % static_cast<int>(ref);
+				touch_sum += ref;
+				if(touch_sum >= 1000) {
+					touch = true;
 				}
 			} else {
-				untouch_cnt = 0;
-
-				if(ref >= 110) {
-					if(touch_cnt < 255) {
-						touch_cnt++;
-					}
-					if(touch_cnt >= 10) {
-						touch = true;
-					}
-				}
-///				utils::format("%d\n") % static_cast<int>(ref);
+				touch = false;
+				touch_sum = 0;
 			}
+
 			if(touch && !touch_back) {
 				utils::format("Touch on\n");
 			}
@@ -164,6 +148,8 @@ int main(int argc, char* argv[])
 				utils::format("Touch off\n");
 			}
 			touch_back = touch;
+
+			device::P4.B3 = !touch;
 		}
 	}
 }
