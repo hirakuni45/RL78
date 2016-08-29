@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "time.h"
-// #include "xitoa.h"
 
 // 各月に対する日数（通常年）
 static const char mday_tbl_[] = {
@@ -165,9 +164,13 @@ struct tm *gmtime(const time_t *tp)
 //-----------------------------------------------------------------//
 struct tm *localtime(const time_t *timer)
 {
-	time_t t = *timer;
+	time_t t;
 
-// GMT から JST へ(+9時間）
+	if(timer == NULL) return NULL;
+
+	t = *timer;
+
+// GMT から ローカル時間へ
 	t += (time_t)(timezone_offset_) * 3600;
 
 	gmtime(&t);
