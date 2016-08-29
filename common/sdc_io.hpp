@@ -299,11 +299,14 @@ namespace utils {
 
 		char	current_[path_buff_size_];
 
-		static void dir_list_func_(const char* name, uint32_t size, bool dir) {
+		static void dir_list_func_(const char* name, const FILINFO* fi, bool dir) {
+			if(fi == nullptr) return;
+
+			time_t t = fatfs_time_to(fi->fdate, fi->ftime);
 			if(dir) {
 				format("          /%s\n") % name;
 			} else {
-				format("%8d  %s\n") % size % name;
+				format("%8d   %s\n") % fi->fsize % name;
 			}
 		}
 
@@ -311,7 +314,7 @@ namespace utils {
 		static char* match_dst_;
 		static uint8_t match_cnt_;
 		static uint8_t match_no_;
-		static void match_func_(const char* name, uint32_t size, bool dir) {
+		static void match_func_(const char* name, const FILINFO* fi, bool dir) {
 			if(std::strncmp(name, match_key_, std::strlen(match_key_)) == 0) {
 				if(match_dst_ != nullptr && match_cnt_ == match_no_) {
 					std::strcpy(match_dst_, name);
@@ -341,7 +344,7 @@ namespace utils {
 
 	public:
 ///		typedef std::function<void (const char* name, uint32_t size, bool dir)> dir_loop_func;
-		typedef void (*dir_loop_func)(const char* name, uint32_t size, bool dir);
+		typedef void (*dir_loop_func)(const char* name, const FILINFO* fi, bool dir);
 
 
 		//-----------------------------------------------------------------//
@@ -457,16 +460,20 @@ namespace utils {
 		//-----------------------------------------------------------------//
 		uint16_t dir_loop(const char* root, dir_loop_func func, bool recursive = false)
 		{
+			char full[path_buff_size_];
+#if _USE_LFN != 0
+			char fn[64];
+#endif
+			DIR dir;
+			FILINFO fi;
+
 			if(!mount_) return 0;
 
-			char full[path_buff_size_];
 			create_full_path_(root, full);
 #if _USE_LFN != 0
 			utf8_to_sjis(full, full);
-			char fn[64];
 #endif
 			uint16_t num = 0;
-			DIR dir;
 			auto st = f_opendir(&dir, full);
 			if(st != FR_OK) {
 				format("Can't open dir(%d): '%s'\n") % static_cast<uint32_t>(st) % full;
@@ -474,25 +481,24 @@ namespace utils {
 				std::strcat(full, "/");
 				char* p = &full[std::strlen(full)];
 				for(;;) {
-					FILINFO fno;
 					// Read a directory item
-					if(f_readdir(&dir, &fno) != FR_OK) {
+					if(f_readdir(&dir, &fi) != FR_OK) {
 						format("Can't read dir\n");
 						break;
 					}
-					if(!fno.fname[0]) break;
+					if(!fi.fname[0]) break;
 #if _USE_LFN != 0
-					sjis_to_utf8(fno.fname, fn);
+					sjis_to_utf8(fi.fname, fn);
 					std::strcpy(p, fn);
 #else
-					std::strcpy(p, fno.fname);
+					std::strcpy(p, fi.fname);
 #endif
-					if(fno.fattrib & AM_DIR) {
+					if(fi.fattrib & AM_DIR) {
 						if(recursive) {
-							func(p, static_cast<uint32_t>(fno.fsize), true);
+							func(p, &fi, true);
 						}
 					} else {
-						func(p, static_cast<uint32_t>(fno.fsize), false);
+						func(p, &fi, false);
 					}
 					++num;
 				}
