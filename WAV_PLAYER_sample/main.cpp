@@ -368,7 +368,7 @@ namespace {
 	}
 
 	void play_loop_(const char*);
-	void play_loop_func_(const char* name, uint32_t size, bool dir)
+	void play_loop_func_(const char* name, const FILINFO* fi, bool dir)
 	{
 		if(dir) {
 			play_loop_(name);
