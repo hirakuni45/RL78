@@ -10,6 +10,7 @@
 #include "common/port_utils.hpp"
 #include "ff12a/mmc_io.hpp"
 #include "common/format.hpp"
+#include "common/time.h"
 
 namespace utils {
 
@@ -191,6 +192,81 @@ namespace utils {
 		*dst = 0;
 	}
 #endif
+
+	//-----------------------------------------------------------------//
+	/*!
+		@brief	FatFS が使う時間取得関数
+		@return	FatFS 形式の時刻ビットフィールドを返す。@n
+		        現在のローカル・タイムがDWORD値にパックされて返されます。@n
+				ビット・フィールドは次に示すようになります。@n
+				bit31:25 ---> 1980年を起点とした年が 0..127 で入ります。@n
+				bit24:21 ---> 月が 1..12 の値で入ります。@n
+				bit20:16 ---> 日が 1..31 の値で入ります。@n
+				bit15:11 ---> 時が 0..23 の値で入ります。@n
+				bit10:5 ---> 分が 0..59 の値で入ります。@n
+				bit4:0 ---> 秒/2が 0..29 の値で入ります。
+	*/
+	//-----------------------------------------------------------------//
+	inline DWORD get_fattime(time_t t)
+	{
+//		t = 0;	/* 1970 01-01 00:00:00 */
+		struct tm *tp = localtime(&t);
+
+#ifdef _DEBUG
+		format("get_fattime: (source) %4d/%d/%d/ %02d:%02d:%02d\n")
+			% (tp->tm_year + 1900) % (tp->tm_mon + 1) % tp->tm_mday
+			% tp->tm_hour % tp->tm_min % tp->tm_sec;
+#endif
+
+		DWORD tt = 0;
+		tt |= (DWORD)(tp->tm_sec) >> 1;
+		tt |= (DWORD)tp->tm_min  << 5;
+		tt |= (DWORD)tp->tm_hour << 11;
+
+		tt |= (DWORD)tp->tm_mday << 16;
+		tt |= ((DWORD)(tp->tm_mon) + 1) << 21;
+		if(tp->tm_year >= 80) {
+			tt |= ((DWORD)(tp->tm_year) - 80) << 25;
+		}
+
+		return tt;
+	}
+
+
+	//-----------------------------------------------------------------//
+	/*!
+		@brief	FatFS が扱う時間値から、time_t への変換
+		@param[in]	date	日付
+		@param[in]	time	時間
+		@return 標準時間値
+	*/
+	//-----------------------------------------------------------------//
+	inline time_t fatfs_time_to(WORD date, WORD time)
+	{
+		struct tm ttm;
+/* ftime
+		ファイルの変更された時刻、またはディレクトリの作成された時刻が格納されます。
+		bit15:11 ---> 時が 0..23 の値で入ります。
+		bit10:5  ---> 分が 0..59 の値で入ります。
+		bit4:0   ---> 秒/2が 0..29 の値で入ります。
+*/
+		ttm.tm_sec  =  time & 0x1f;
+		ttm.tm_min  = (time >> 5) & 0x3f;
+		ttm.tm_hour = (time >> 11) & 0x1f;
+
+/* fdate
+		ファイルの変更された日付、またはディレクトリの作成された日付が格納されます。
+		bit15:9 ---> 1980年を起点とした年が 0..127 で入ります。
+		bit8:5  ---> 月が 1..12 の値で入ります。
+		bit4:0  ---> 日が 1..31 の値で入ります。
+*/
+		ttm.tm_mday =  date & 0x1f;
+		ttm.tm_mon  = ((date >> 5) & 0xf) - 1;
+		ttm.tm_year = ((date >> 9) & 0x7f) + 1980 - 1900;
+
+		return mktime(&ttm);
+	}
+
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
