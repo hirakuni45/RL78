@@ -135,7 +135,8 @@ namespace {
 	}
 
 
-	void disp_time_(time_t t) {
+	void disp_time_(time_t t)
+	{
 		struct tm *m = localtime(&t);
 		utils::format("%s %s %d %02d:%02d:%02d  %4d\n")
 			% wday_[m->tm_wday]
@@ -268,6 +269,7 @@ int main(int argc, char* argv[])
 	command_.set_prompt("# ");
 
 	uint8_t cnt = 0;
+	char buff[16];
 	while(1) {
 		itm_.sync();
 
@@ -295,7 +297,6 @@ int main(int argc, char* argv[])
 					sci_puts("date\n");
 					sci_puts("date yyyy/mm/dd hh:mm[:ss]\n");
 				} else {
-					char buff[16];
 					if(command_.get_word(0, sizeof(buff), buff)) {
 						sci_puts("Command error: ");
 						sci_puts(buff);
