@@ -112,17 +112,6 @@ extern "C" {
 };
 
 
-static const char* wday_[] = {
-	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" 
-};
-
-
-static const char* mon_[] = {
-	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-
-
 namespace {
 
 	time_t get_time_()
@@ -138,8 +127,8 @@ namespace {
 	void disp_time_(time_t t) {
 		struct tm *m = localtime(&t);
 		utils::format("%s %s %d %02d:%02d:%02d  %4d\n")
-			% wday_[m->tm_wday]
-			% mon_[m->tm_mon]
+			% get_wday(m->tm_wday)
+			% get_mon(m->tm_mon)
 			% static_cast<uint32_t>(m->tm_mday)
 			% static_cast<uint32_t>(m->tm_hour)
 			% static_cast<uint32_t>(m->tm_min)
