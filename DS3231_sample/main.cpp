@@ -136,7 +136,7 @@ namespace {
 
 
 	void disp_time_(time_t t) {
-		struct tm *m = gmtime(&t);
+		struct tm *m = localtime(&t);
 		utils::format("%s %s %d %02d:%02d:%02d  %4d\n")
 			% wday_[m->tm_wday]
 			% mon_[m->tm_mon]
@@ -172,7 +172,7 @@ namespace {
 		time_t t = get_time_();
 		if(t == 0) return;
 
-		struct tm *m = gmtime(&t);
+		struct tm *m = localtime(&t);
 		bool err = false;
 		if(command_.get_words() == 3) {
 			char buff[12];
