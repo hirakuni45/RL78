@@ -132,7 +132,7 @@ extern "C" {
 		if(!rtc_.get_time(t)) {
 			utils::format("Stall RTC read (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 		}
-		return utils::get_fattime(t);
+		return utils::str::get_fattime(t);
 #else
 		return 0;
 #endif
