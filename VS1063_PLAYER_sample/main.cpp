@@ -146,7 +146,7 @@ namespace {
 		utils::format("Play: '%s'\n") % fname;
 
 		FIL fil;
-		if(sdc_.open(&fil, fname, FA_READ) != FR_OK) {
+		if(!sdc_.open(&fil, fname, FA_READ)) {
 			utils::format("Can't open input file: '%s'\n") % fname;
 			return;
 		}
