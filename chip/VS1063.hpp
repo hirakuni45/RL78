@@ -164,8 +164,8 @@ namespace chip {
 	   		write_(CMD::MODE, 0x4800);
 			write_(CMD::VOL,  0x4040);  // volume
 
-//			write_(CMD::CLOCKF, 0x9800);
-			write_(CMD::CLOCKF, 0x8BE8);  // 12MHz OSC 補正
+			write_(CMD::CLOCKF, 0x9800);  // 12.288MHz 
+//			write_(CMD::CLOCKF, 0x8BE8);  // 12MHz OSC 補正
 
 			utils::delay::milli_second(10);
 
