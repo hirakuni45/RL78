@@ -474,7 +474,7 @@ namespace utils {
 				out_hex_(val, 'A');
 			} else if(mode_ == mode::FIXED_REAL) {
 				if(decimal_ == 0) decimal_ = 3;
-				out_fixed_point_(val, ppos_, true);
+				out_fixed_point_(val, ppos_, false);
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
