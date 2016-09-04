@@ -106,9 +106,13 @@ int main(int argc, char* argv[])
 
 		if(t >= 60) {
 			auto val = adc_.get(2);
-			utils::format("A/D CH2: %d\n") % (val >> 6);
+			val >>= 6;
+			uint32_t vol = static_cast<uint32_t>(val) * 1024 / 310;  // Vref: 3.3V とした場合の電圧
+			utils::format("A/D CH2: %1.2:10y [V] (%d)\n") % vol % val;
 			val = adc_.get(3);
-			utils::format("A/D CH3: %d\n") % (val >> 6);
+			val >>= 6;
+			vol = static_cast<uint32_t>(val) * 1024 / 310;
+			utils::format("A/D CH3: %1.2:10y [V] (%d)\n") % vol % val;
 			t = 0;
 		} else {
 			++t;
