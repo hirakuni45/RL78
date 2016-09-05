@@ -3,9 +3,9 @@
 /*! @file
     @brief  format クラス @n
 			・安全性を考慮した、printf 表示に準じたクラス
-			・組み込みマイコンでは便利な固定小数点表示を拡張してあります @n
-			「%N.M:Ly」@n
-			N 実数部桁数、M 小数部桁数、L 小数部のビット数 @n
+			・二進表記として、「%b」をサポート
+			・固定小数点表示「%N.M:Ly」形式をサポート @n
+			※ N：実数部桁数、M：小数部桁数、L：小数部のビット数 @n
 			Ex: %1.2:8y ---> 256 で 1.00、128 で 0.50、384 で 1.50 と @n
 			と表示される。
 			Copyright 2013,2016 Kunihito Hiramatsu
@@ -338,12 +338,13 @@ namespace utils {
 			return m;
 		}
 
-		void out_fixed_point_(int64_t v, uint8_t fixpoi, bool sign)
+		template <typename VAL, typename UVAL>
+		void out_fixed_point_(VAL v, uint8_t fixpoi, bool sign)
 		{
 			decimal_ = fpu_num_;
 
 			// 四捨五入処理用 0.5
-			uint64_t m = static_cast<uint64_t>(5) << fixpoi;
+			UVAL m = static_cast<UVAL>(5) << fixpoi;
 			uint8_t n = decimal_ + 1;
 			while(n > 0) { m /= 10; --n; }
 
@@ -355,14 +356,14 @@ namespace utils {
 
 			sci_putch('.');
 
-			uint64_t d;
+			UVAL d;
 			if(v < 0) { d = -v; } else { d = v; }
 			d += m;
-			uint64_t dec = d & make_mask_(fixpoi);
+			UVAL dec = d & make_mask_(fixpoi);
 			uint8_t l = 0;
 			while(dec > 0) {
 				dec *= 10;
-				uint64_t n = dec >> fixpoi;
+				UVAL n = dec >> fixpoi;
 				sci_putch(n + '0');
 				dec -= n << fixpoi;
 				++l;
@@ -419,7 +420,7 @@ namespace utils {
 				}
 			}
 
-			out_fixed_point_(v64, shift, sign);
+			out_fixed_point_<int64_t, uint64_t>(v64, shift, sign);
 
 			if(e) {
 				sci_putch(e);
@@ -451,7 +452,11 @@ namespace utils {
 				out_hex_(static_cast<uint32_t>(val), 'A');
 			} else if(mode_ == mode::FIXED_REAL) {
 				if(decimal_ == 0) decimal_ = 3;
-				out_fixed_point_(val, ppos_, false);
+#ifdef WITH_FLOAT_FORMAT
+				out_fixed_point_<int64_t, uint64_t>(val, ppos_, false);
+#else
+				out_fixed_point_<int32_t, uint32_t>(val, ppos_, false);
+#endif
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
@@ -480,7 +485,11 @@ namespace utils {
 				out_hex_(val, 'A');
 			} else if(mode_ == mode::FIXED_REAL) {
 				if(decimal_ == 0) decimal_ = 3;
-				out_fixed_point_(val, ppos_, false);
+#ifdef WITH_FLOAT_FORMAT
+				out_fixed_point_<int64_t, uint64_t>(val, ppos_, false);
+#else
+				out_fixed_point_<int32_t, uint32_t>(val, ppos_, false);
+#endif
 			} else {
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
