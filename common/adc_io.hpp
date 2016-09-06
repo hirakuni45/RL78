@@ -127,7 +127,8 @@ namespace device {
 		{
 			ADS = ch;
 			ADM0.ADCS = 1;  // start
-			while(ADM0.ADCS() != 0) sleep_();
+			while(intr::IF1H.ADIF() == 0) sleep_();
+			intr::IF1H.ADIF = 0;
 			return ADCR();
 		}
 	};
