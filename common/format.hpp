@@ -15,9 +15,9 @@
 #include <cstdint>
 
 /// ８進数のサポート
-/// #define WITH_OCTAL_FORMAT
+#define WITH_OCTAL_FORMAT
 /// 浮動小数点(float)のサポート
-#define WITH_FLOAT_FORMAT
+// #define WITH_FLOAT_FORMAT
 /// 浮動小数点(double)のサポート
 /// #define WITH_DOUBLE_FORMAT
 
@@ -338,36 +338,47 @@ namespace utils {
 			return m;
 		}
 
-		template <typename VAL, typename UVAL>
+		template <typename VAL>
 		void out_fixed_point_(VAL v, uint8_t fixpoi, bool sign)
 		{
 			decimal_ = fpu_num_;
 
+// std::cout << "Shift: " << static_cast<int>(fixpoi) << std::endl;
 			// 四捨五入処理用 0.5
-			UVAL m = static_cast<UVAL>(5) << fixpoi;
-			uint8_t n = decimal_ + 1;
-			while(n > 0) { m /= 10; --n; }
-
+			VAL m = 0;
+			if(fixpoi < (sizeof(VAL) * 8 - 4)) {
+				m = static_cast<VAL>(5) << fixpoi;
+				uint8_t n = decimal_ + 1;
+				while(n > 0) {
+					m /= 10;
+					--n;
+				}
+			}
 			char sch = 0;
 			if(sign) sch = '-';
 			else if(sign_) sch = '+';
-			out_udec_(v >> fixpoi, sch);
+			v += m;
+
+			if(fixpoi < (sizeof(VAL) * 8 - 4)) {
+				out_udec_(v >> fixpoi, sch);
+			} else {
+				out_udec_(0, sch);
+			}
 			if(fpu_num_ == 0) return;
 
 			sci_putch('.');
 
-			UVAL d;
-			if(v < 0) { d = -v; } else { d = v; }
-			d += m;
-			UVAL dec = d & make_mask_(fixpoi);
 			uint8_t l = 0;
-			while(dec > 0) {
-				dec *= 10;
-				UVAL n = dec >> fixpoi;
-				sci_putch(n + '0');
-				dec -= n << fixpoi;
-				++l;
-				if(l >= decimal_) break;
+			if(fixpoi < (sizeof(VAL) * 8 - 4)) {
+				VAL dec = v & make_mask_(fixpoi);
+				while(dec > 0) {
+					dec *= 10;
+					VAL n = dec >> fixpoi;
+					sci_putch(n + '0');
+					dec -= n << fixpoi;
+					++l;
+					if(l >= decimal_) break;
+				}
 			}
 			while(l < decimal_) {
 				sci_putch('0');
@@ -420,7 +431,7 @@ namespace utils {
 				}
 			}
 
-			out_fixed_point_<int64_t, uint64_t>(v64, shift, sign);
+			out_fixed_point_<uint64_t>(v64, shift, sign);
 
 			if(e) {
 				sci_putch(e);
@@ -452,10 +463,15 @@ namespace utils {
 				out_hex_(static_cast<uint32_t>(val), 'A');
 			} else if(mode_ == mode::FIXED_REAL) {
 				if(decimal_ == 0) decimal_ = 3;
+				bool sign = false;
+				if(val < 0) {
+					sign = true;
+					val = -val;
+				}
 #ifdef WITH_FLOAT_FORMAT
-				out_fixed_point_<int64_t, uint64_t>(val, ppos_, false);
+				out_fixed_point_<uint64_t>(val, ppos_, sign);
 #else
-				out_fixed_point_<int32_t, uint32_t>(val, ppos_, false);
+				out_fixed_point_<uint32_t>(val, ppos_, sign);
 #endif
 			} else {
 #ifdef ERROR_MESSAGE
@@ -486,9 +502,9 @@ namespace utils {
 			} else if(mode_ == mode::FIXED_REAL) {
 				if(decimal_ == 0) decimal_ = 3;
 #ifdef WITH_FLOAT_FORMAT
-				out_fixed_point_<int64_t, uint64_t>(val, ppos_, false);
+				out_fixed_point_<uint64_t>(val, ppos_, false);
 #else
-				out_fixed_point_<int32_t, uint32_t>(val, ppos_, false);
+				out_fixed_point_<uint32_t>(val, ppos_, false);
 #endif
 			} else {
 #ifdef ERROR_MESSAGE
