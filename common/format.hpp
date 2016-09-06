@@ -17,7 +17,7 @@
 /// ８進数のサポート
 #define WITH_OCTAL_FORMAT
 /// 浮動小数点(float)のサポート
-// #define WITH_FLOAT_FORMAT
+#define WITH_FLOAT_FORMAT
 /// 浮動小数点(double)のサポート
 /// #define WITH_DOUBLE_FORMAT
 
