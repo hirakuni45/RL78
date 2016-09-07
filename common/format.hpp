@@ -393,7 +393,7 @@ namespace utils {
 
 			bool sign = fpv >> 31;
 			int16_t exp = (fpv >> 23) & 0xff;
-			if((exp & 0x7f) == 0x7f) {
+			if(exp == 0xff) {
 				if(sign) sci_putch('-');
 				sci_puts("inf");
 				return;
