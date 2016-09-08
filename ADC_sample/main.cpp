@@ -107,12 +107,22 @@ int main(int argc, char* argv[])
 		if(t >= 60) {
 			auto val = adc_.get(2);
 			val >>= 6;
+#if 1
 			uint32_t vol = static_cast<uint32_t>(val) * 1024 / 310;  // Vref: 3.3V とした場合の電圧
-			utils::format("A/D CH2: %1.2:10y [V] (%d)\n") % vol % val;
+			utils::format("A/D CH2: %4.2:10y [V] (%d)\n") % vol % val;
+#else
+			float vol = static_cast<float>(val) * 3.3f / 1023.0f;
+			utils::format("A/D CH2: %4.2f [V] (%d)\n") % vol % val;
+#endif
 			val = adc_.get(3);
 			val >>= 6;
+#if 1
 			vol = static_cast<uint32_t>(val) * 1024 / 310;
-			utils::format("A/D CH3: %1.2:10y [V] (%d)\n") % vol % val;
+			utils::format("A/D CH3: %4.2:10y [V] (%d)\n") % vol % val;
+#else
+			vol = static_cast<float>(val) * 3.3f / 1023.0f;
+			utils::format("A/D CH3: %4.2f [V] (%d)\n") % vol % val;
+#endif
 			t = 0;
 		} else {
 			++t;
