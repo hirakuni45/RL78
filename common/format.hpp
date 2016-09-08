@@ -5,7 +5,8 @@
 			・安全性を考慮した、printf 表示に準じたクラス
 			・二進表記として、「%b」をサポート
 			・固定小数点表示「%N.M:Ly」形式をサポート @n
-			※ N：実数部桁数、M：小数部桁数、L：小数部のビット数 @n
+			※ N：全桁数、M：小数部桁数、L：小数部のビット数 @n
+			※ N には、小数点、符号が含まれる @n
 			Ex: %1.2:8y ---> 256 で 1.00、128 で 0.50、384 で 1.50 と @n
 			と表示される。
 			Copyright 2013,2016 Kunihito Hiramatsu
@@ -13,16 +14,12 @@
 */
 //=====================================================================//
 #include <cstdint>
-
 /// ８進数のサポート
-#define WITH_OCTAL_FORMAT
+/// #define WITH_OCTAL_FORMAT
 /// 浮動小数点(float)のサポート
 #define WITH_FLOAT_FORMAT
 /// 浮動小数点(double)のサポート
 /// #define WITH_DOUBLE_FORMAT
-
-/// エラーのメッセージ出力
-// #define ERROR_MESSAGE
 
 extern "C" {
 	void sci_putch(char ch);
@@ -45,18 +42,16 @@ g, G
 
 namespace utils {
 
-#ifdef ERROR_MESSAGE
+#if 0
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  エラー・ケース
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	struct error_case {
-		enum type {
-			NULL_PTR,		///< 無効なポインター
-			UNKNOWN_TYPE,	///< 不明な「型」
-			DIFFERENT_TYPE,	///< 違う「型」
-		};
+	enum class format_error : uint8_t {
+		NULL_PTR,		///< 無効なポインター
+		UNKNOWN_TYPE,	///< 不明な「型」
+		DIFFERENT_TYPE,	///< 異なる「型」
 	};
 
 
@@ -65,21 +60,19 @@ namespace utils {
 		@brief  エラー・クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class OUT>
-	class error {
-		OUT		out_;
-		void str_(const char* str) {
-			char ch;
-			while((ch = *str++) != 0) {
-				out_(ch);
-			}
-		}
+	class format_error_task {
 	public:
-		void operator() (error_case::type t) {
-			if(t == error_case::UNKNOWN_TYPE) {
-				str_("Unknown type\n");
-			} else if(t == error_case::DIFFERENT_TYPE) {
-				str_("Different type\n");
+		void operator() (format_error t) {
+			switch(t) {
+			case format_error::NULL_PTR:
+				sci_puts("NULL ptr\n");
+				break;
+			case format_error::UNKNOWN_TYPE:
+				sci_puts("Unknown type\n");
+				break;
+			case error_case::DIFFERENT_TYPE:
+				sci_puts("Different type\n");
+				break;
 			}
 		}
 	};
@@ -90,13 +83,9 @@ namespace utils {
 		@brief  簡易 format クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-//	template <class OUT, typename INT = int, typename UINT = unsigned int, class ERR = error<OUT> >
 	class format {
 
-		typedef int32_t INT;
-		typedef uint32_t UINT;
-
-		enum mode {
+		enum class mode : uint8_t {
 			CHA,		///< 文字
 			STR,		///< 文字列
 			BINARY,		///< ２進
@@ -114,7 +103,7 @@ namespace utils {
 			EXPONENT,	///< 浮動小数点 exp 形式(e)
 			REAL_AUTO,	///< 浮動小数点自動
 #endif
-			NONE_		///< 不明
+			NONE		///< 不明
 		};
 
 #ifdef ERROR_MESSAGE
@@ -124,64 +113,61 @@ namespace utils {
 
 		char		buff_[34];
 
-		uint8_t		real_;
-		uint8_t		decimal_;
-		uint8_t		fpu_num_;
-		uint8_t		ppos_;
-		uint8_t		mode_;
+		uint8_t		num_;
+		uint8_t		point_;
+		uint8_t		bitlen_;
+		mode		mode_;
 		bool		zerosupp_;
 		bool		sign_;
 
 		void reset_() {
-			real_ = 0;
-			decimal_ = 0;
-			fpu_num_ = 6;
-			ppos_ = 0;
+			num_ = 0;
+			point_ = 0;
+			bitlen_ = 0;
+			mode_ = mode::NONE;
 			zerosupp_ = false;
 			sign_ = false;
-			mode_ = mode::NONE_;
 		}
 
 		void next_() {
-			if(form_ == 0) {
+			enum class apmd : uint8_t {
+				none,
+				num,    // 数字
+				point,	// 小数点
+				bitlen,	// 固定小数点、ビット長さ
+			};
+
+			if(form_ == nullptr) {
 #ifdef ERROR_MESSAGE
 				err_(error_case::NULL_PTR);
 #endif
 				return;
 			}
 			char ch;
-			bool fm = false;
-			bool point = false;
-			bool ppos = false;
-			uint8_t n = 0;
+			apmd md = apmd::none;
 			while((ch = *form_++) != 0) {
-				if(fm) {
+				if(md != apmd::none) {
 					if(ch == '+') {
 						sign_ = true;
 					} else if(ch >= '0' && ch <= '9') {
 						ch -= '0';
-						if(n == 0 && ch == 0) {
-							zerosupp_ = true;
-						} else if(point || ppos) {
-							if(point) {
-								decimal_ *= 10;
-								decimal_ += static_cast<uint8_t>(ch);
-								fpu_num_ = decimal_;
-							} else {
-								ppos_ *= 10;
-								ppos_ += static_cast<uint8_t>(ch);
+						if(md == apmd::num) {
+							if(num_ == 0 && ch == 0) {
+								zerosupp_ = true;
 							}
-						} else {
-							real_ *= 10;
-							real_ += static_cast<uint8_t>(ch);
+							num_ *= 10;
+							num_ += static_cast<uint8_t>(ch);
+						} else if(md == apmd::point) {
+							point_ *= 10;
+							point_ += static_cast<uint8_t>(ch);
+						} else if(md == apmd::bitlen) {
+							bitlen_ *= 10;
+							bitlen_ += static_cast<uint8_t>(ch);
 						}
-						++n;
 					} else if(ch == '.') {
-						ppos = false;
-						point = true;
+						md = apmd::point;
 					} else if(ch == ':') {
-						ppos = true;
-						point = false;
+						md = apmd::bitlen;
 					} else if(ch == 's') {
 						mode_ = mode::STR;
 						return;
@@ -227,7 +213,7 @@ namespace utils {
 #endif
 					} else if(ch == '%') {
 						sci_putch(ch);
-						fm = false;
+						md = apmd::none;
 					} else if(ch == '-') {  // 無視する
 
 					} else {
@@ -237,7 +223,7 @@ namespace utils {
 						return;
 					}
 				} else if(ch == '%') {
-					fm = true;
+					md = apmd::num;
 				} else {
 					sci_putch(ch);
 				}
@@ -248,8 +234,8 @@ namespace utils {
 			if(zerosupp_) {
 				if(sign != 0) { sci_putch(sign); }
 			}
-			if(n && n < real_) {
-				uint8_t spc = real_ - n;
+			if(n && n < num_) {
+				uint8_t spc = num_ - n;
 				while(spc) {
 					--spc;
 					if(zerosupp_) sci_putch('0');
@@ -262,7 +248,7 @@ namespace utils {
 			sci_puts(str);
 		}
 
-		void out_bin_(INT v) {
+		void out_bin_(int32_t v) {
 			char* p = &buff_[sizeof(buff_) - 1];
 			*p = 0;
 			uint8_t n = 0;
@@ -276,7 +262,7 @@ namespace utils {
 		}
 
 #ifdef WITH_OCTAL_FORMAT
-		void out_oct_(INT v) {
+		void out_oct_(int32_t v) {
 			char* p = &buff_[sizeof(buff_) - 1];
 			*p = 0;
 			uint8_t n = 0;
@@ -290,7 +276,7 @@ namespace utils {
 		}
 #endif
 
-		void out_udec_(UINT v, char sign) {
+		void out_udec_(uint32_t v, char sign) {
 			char* p = &buff_[sizeof(buff_) - 1];
 			*p = 0;
 			uint8_t n = 0;
@@ -304,7 +290,7 @@ namespace utils {
 		}
 
 
-		void out_dec_(INT v) {
+		void out_dec_(int32_t v) {
 			char sign = 0;
 			if(v < 0) { v = -v; sign = '-'; }
 			else if(sign_) { sign = '+'; }
@@ -312,7 +298,7 @@ namespace utils {
 		}
 
 
-		void out_hex_(UINT v, char top) {
+		void out_hex_(uint32_t v, char top) {
 			char* p = &buff_[sizeof(buff_) - 1];
 			*p = 0;
 			uint8_t n = 0;
@@ -341,14 +327,12 @@ namespace utils {
 		template <typename VAL>
 		void out_fixed_point_(VAL v, uint8_t fixpoi, bool sign)
 		{
-			decimal_ = fpu_num_;
-
 // std::cout << "Shift: " << static_cast<int>(fixpoi) << std::endl;
 			// 四捨五入処理用 0.5
 			VAL m = 0;
 			if(fixpoi < (sizeof(VAL) * 8 - 4)) {
 				m = static_cast<VAL>(5) << fixpoi;
-				uint8_t n = decimal_ + 1;
+				uint8_t n = point_ + 1;
 				while(n > 0) {
 					m /= 10;
 					--n;
@@ -358,14 +342,18 @@ namespace utils {
 			if(sign) sch = '-';
 			else if(sign_) sch = '+';
 			v += m;
-
+			if(num_ >= point_) num_ -= point_;
+			if(num_ > 0 && sch != 0) --num_;
+			if(num_ > 0 && point_ != 0) {
+				--num_;
+			}
 			if(fixpoi < (sizeof(VAL) * 8 - 4)) {
 				out_udec_(v >> fixpoi, sch);
 			} else {
 				out_udec_(0, sch);
 			}
-			if(fpu_num_ == 0) return;
 
+			if(point_ == 0) return;
 			sci_putch('.');
 
 			uint8_t l = 0;
@@ -377,10 +365,10 @@ namespace utils {
 					sci_putch(n + '0');
 					dec -= n << fixpoi;
 					++l;
-					if(l >= decimal_) break;
+					if(l >= point_) break;
 				}
 			}
-			while(l < decimal_) {
+			while(l < point_) {
 				sci_putch('0');
 				++l;
 			}
@@ -390,7 +378,6 @@ namespace utils {
 		void out_real_(float v, char e) {
 			void* p = &v;
 			uint32_t fpv = *(uint32_t*)p;
-
 			bool sign = fpv >> 31;
 			int16_t exp = (fpv >> 23) & 0xff;
 			if(exp == 0xff) {
@@ -437,7 +424,7 @@ namespace utils {
 				sci_putch(e);
 				zerosupp_ = true;
 				sign_ = true;
-				real_ = 3;
+				num_ = 3;
 				out_dec_(dexp);
 			}
 		}
@@ -448,68 +435,84 @@ namespace utils {
 		}
 #endif
 
-		void sign_int_(INT val) {
-			if(mode_ == mode::BINARY) {
+		void sign_int_(int32_t val) {
+			bool sign = false;
+			switch(mode_) {
+			case mode::BINARY:
 				out_bin_(val);
+				break;
 #ifdef WITH_OCTAL_FORMAT
-			} else if(mode_ == mode::OCTAL) {
+			case mode::OCTAL:
 				out_oct_(val);
+				break;
 #endif
-			} else if(mode_ == mode::DECIMAL) {
+			case mode::DECIMAL:
 				out_dec_(val);
-			} else if(mode_ == mode::HEX) {
+				break;
+			case mode::HEX:
 				out_hex_(static_cast<uint32_t>(val), 'a');
-			} else if(mode_ == mode::HEX_CAPS) {
+				break;
+			case mode::HEX_CAPS:
 				out_hex_(static_cast<uint32_t>(val), 'A');
-			} else if(mode_ == mode::FIXED_REAL) {
-				if(decimal_ == 0) decimal_ = 3;
-				bool sign = false;
+				break;
+			case mode::FIXED_REAL:
+				if(num_ == 0) num_ = 6;
 				if(val < 0) {
 					sign = true;
 					val = -val;
 				}
 #ifdef WITH_FLOAT_FORMAT
-				out_fixed_point_<uint64_t>(val, ppos_, sign);
+				out_fixed_point_<uint64_t>(val, bitlen_, sign);
 #else
-				out_fixed_point_<uint32_t>(val, ppos_, sign);
+				out_fixed_point_<uint32_t>(val, bitlen_, sign);
 #endif
-			} else {
+				break;
+			default:
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
 #endif
+				break;
 			}
 			reset_();
 			next_();
 		}
 
-		void unsign_int_(UINT val) {
-			if(mode_ == mode::BINARY) {
+
+		void unsign_int_(uint32_t val) {
+			switch(mode_) {
+			case mode::BINARY:
 				out_bin_(val);
+				break;
 #ifdef WITH_OCTAL_FORMAT
-			} else if(mode_ == mode::OCTAL) {
+			case mode::OCTAL:
 				out_oct_(val);
+				break;
 #endif
-			} else if(mode_ == mode::DECIMAL) {
+			case mode::DECIMAL:
 				out_dec_(val);
-			} else if(mode_ == mode::U_DECIMAL) {
-				char sign = 0;
-				if(sign_) sign = '+';
-				out_udec_(val, sign);
-			} else if(mode_ == mode::HEX) {
+				break;
+			case mode::U_DECIMAL:
+				out_udec_(val, sign_ ? '+' : 0);
+				break;
+			case mode::HEX:
 				out_hex_(val, 'a');
-			} else if(mode_ == mode::HEX_CAPS) {
+				break;
+			case mode::HEX_CAPS:
 				out_hex_(val, 'A');
-			} else if(mode_ == mode::FIXED_REAL) {
-				if(decimal_ == 0) decimal_ = 3;
+				break;
+			case mode::FIXED_REAL:
+				if(num_ == 0) num_ = 6;
 #ifdef WITH_FLOAT_FORMAT
-				out_fixed_point_<uint64_t>(val, ppos_, false);
+				out_fixed_point_<uint64_t>(val, bitlen_, false);
 #else
-				out_fixed_point_<uint32_t>(val, ppos_, false);
+				out_fixed_point_<uint32_t>(val, bitlen_, false);
 #endif
-			} else {
+				break;
+			default:
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
 #endif
+				break;
 			}
 			reset_();
 			next_();
@@ -521,8 +524,8 @@ namespace utils {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		format(const char* form) : form_(form), real_(0), decimal_(0), fpu_num_(6), ppos_(0),
-			mode_(mode::NONE_), zerosupp_(false), sign_(false) {
+		format(const char* form) : form_(form), num_(0), point_(0), bitlen_(0),
+			mode_(mode::NONE), zerosupp_(false), sign_(false) {
 			next_();
 		}
 
@@ -559,10 +562,8 @@ namespace utils {
 			if(mode_ == mode::STR) {
 				zerosupp_ = false;
 				uint8_t n = 0;
-				if(real_) {
-					const char* p = val;
-					while((*p++) != 0) { ++n; }
-				}
+				const char* p = val;
+				while((*p++) != 0) { ++n; }
 				out_str_(val, 0, n);
 			} else {
 #ifdef ERROR_MESSAGE
@@ -577,26 +578,13 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  オペレーター「%」（INT）
+			@brief  オペレーター「%」int32_t
 			@param[in]	val	整数値
 			@return	自分の参照
 		*/
 		//-----------------------------------------------------------------//
-		format& operator % (INT val) {
+		format& operator % (int32_t val) {
 			sign_int_(val);
-			return *this;
-		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  オペレーター「%」（int）
-			@param[in]	val	整数値
-			@return	自分の参照
-		*/
-		//-----------------------------------------------------------------//
-		format& operator % (int val) {
-			sign_int_(static_cast<INT>(val));
 			return *this;
 		}
 
@@ -609,7 +597,7 @@ namespace utils {
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (int16_t val) {
-			sign_int_(static_cast<INT>(val));
+			sign_int_(static_cast<int32_t>(val));
 			return *this;
 		}
 
@@ -621,8 +609,8 @@ namespace utils {
 			@return	自分の参照
 		*/
 		//-----------------------------------------------------------------//
-		format& operator % (UINT val) {
-			unsign_int_(static_cast<UINT>(val));
+		format& operator % (uint32_t val) {
+			unsign_int_(static_cast<uint32_t>(val));
 			return *this;
 		}
 
@@ -635,20 +623,7 @@ namespace utils {
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (uint16_t val) {
-			unsign_int_(static_cast<UINT>(val));
-			return *this;
-		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  オペレーター「%」（unsigned int）
-			@param[in]	val	符号無し整数値
-			@return	自分の参照
-		*/
-		//-----------------------------------------------------------------//
-		format& operator % (unsigned int val) {
-			unsign_int_(static_cast<UINT>(val));
+			unsign_int_(static_cast<uint32_t>(val));
 			return *this;
 		}
 
@@ -662,19 +637,28 @@ namespace utils {
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (float val) {
-			zerosupp_ = false;
-			if(mode_ == mode::REAL) {
+			if(num_ == 0 && !zerosupp_ && point_ == 0) {
+				num_ = 6;
+				point_ = 6;
+			}
+			switch(mode_) {
+			case mode::REAL:
 				out_real_(val, 0);
-			} else if(mode_ == mode::EXPONENT_CAPS) {
+				break;
+			case mode::EXPONENT_CAPS:
 				out_real_(val, 'E');
-			} else if(mode_ == mode::EXPONENT) {
+				break;
+			case mode::EXPONENT:
 				out_real_(val, 'e');
-			} else if(mode_ == mode::REAL_AUTO) {
+				break;
+			case mode::REAL_AUTO:
 				out_real_(val, 0);
-			} else {
+				break;
+			default:
 #ifdef ERROR_MESSAGE
 				err_(error_case::DIFFERENT_TYPE);
 #endif
+				break;
 			}
 			reset_();
 			next_();
@@ -691,6 +675,7 @@ namespace utils {
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (double val) {
+			if(num_ == 0 && !zerosupp_) num_ = 6;
 			if(mode_ == mode::REAL) {
 				out_real_(val, 0);
 			} else if(mode_ == mode::EXPONENT_CAPS) {
