@@ -21,8 +21,8 @@
 #include "common/monograph.hpp"
 
 // ターゲットＬＣＤのタイプを選択
-// #define LCD_ST7565
-#define LCD_SSD1306
+#define LCD_ST7565
+// #define LCD_SSD1306
 #ifdef LCD_ST7565
 #include "chip/ST7565.hpp"
 #endif
