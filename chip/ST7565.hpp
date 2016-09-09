@@ -125,6 +125,7 @@ namespace chip {
 			write_(CMD::DISPLAY_ON);
 	  		write_(CMD::SET_ALLPTS_NORMAL);
 			set_brightness(contrast);
+			chip_enable_(false);
 		}
 
 
@@ -186,6 +187,7 @@ namespace chip {
 		*/
 		//-----------------------------------------------------------------//
 		void copy(const uint8_t* p) {
+			chip_enable_();
 			uint8_t ofs = 0x00;
 			for(uint8_t page = 0; page < 8; ++page) {
 				reg_select_(0);
@@ -200,6 +202,7 @@ namespace chip {
 				}
 			}
 			reg_select_(0);
+			chip_enable_(false);
 		}
 
 	};
