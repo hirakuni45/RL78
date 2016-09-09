@@ -57,6 +57,8 @@ namespace chip {
 			AICTRL3			///< アプリケーション制御レジスタ３
 		};
 
+		bool	pause_;
+
 		inline void sleep_() { asm("nop"); }
 
 
@@ -132,7 +134,7 @@ namespace chip {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		VS1063(CSI& csi) : csi_(csi), frame_(0) { }
+		VS1063(CSI& csi) : csi_(csi), frame_(0), pause_(false) { }
 
 
 		//-----------------------------------------------------------------//
@@ -202,18 +204,6 @@ namespace chip {
 				len -= l;
 			}
 
-			++frame_;
-			if(frame_ >= 40) {
-				device::P4.B3 = !device::P4.B3();
-				frame_ = 0;
-			}
-
-			if(sci_length()) {
-				auto ch = sci_getch();
-				if(ch == '>') {
-					return false;
-				}
-			}
 			return true;
 		}
 
@@ -237,9 +227,35 @@ namespace chip {
 
 			{
 				frame_ = 0;
+				pause_ = false;
 				DCS::P = 0;
-				while(service(fp)) {
-					sleep_();
+				while(1) {
+					if(!pause_) {
+						if(!service(fp)) break;
+
+						++frame_;
+						if(frame_ >= 40) {
+							device::P4.B3 = !device::P4.B3();
+							frame_ = 0;
+						}
+					} else {
+						if(frame_ < 192) {
+							device::P4.B3 = (frame_ >> 5) & 1;
+						} else {
+							device::P4.B3 = 1;
+						}
+						utils::delay::milli_second(2);
+						++frame_;
+					}
+
+					if(sci_length()) {
+						auto ch = sci_getch();
+						if(ch == '>') {
+							break;
+						} else if(ch == ' ') {
+							pause_ = !pause_;
+						}
+					}
 				}
 				DCS::P = 1;
 			}
