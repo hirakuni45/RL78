@@ -1,11 +1,12 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	ST7565 LCD ドライバー
+	@brief	ST7565(R) LCD ドライバー
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
 #include <cstdint>
+#include "G13/port.hpp"
 #include "common/csi_io.hpp"
 
 namespace chip {
@@ -14,15 +15,14 @@ namespace chip {
 	/*!
 		@brief  ST7565 テンプレートクラス
 		@param[in]	CSI_IO	CSI(SPI) 制御クラス
-		@param[in]	CTRL	デバイス選択、レジスター選択、制御クラス
+		@param[in]	CS	デバイス選択、レジスター選択、制御クラス
+		@param[in]	A0	制御切り替え、レジスター選択、制御クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class CSI_IO>
+	template <class CSI_IO, class CS, class A0>
 	class ST7565 {
 
 		CSI_IO&	csi_;
-
-//		CTRL	ctrl_;
 
 		enum class CMD : uint8_t {
 			DISPLAY_OFF = 0xAE,
@@ -73,11 +73,11 @@ namespace chip {
 		}
 
 		inline void chip_enable_(bool f = true) const {
-			device::P0.B1 = !f;
+			CS::P = !f;
 		}
 
 		inline void reg_select_(bool f) const {
-			device::P0.B0 = f;
+			A0::P = f;
 		}
 
 	public:
@@ -110,8 +110,11 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		void start(uint8_t contrast)
 		{
-			device::PM0.B0 = 0;  // (A0) output
-			device::PM0.B1 = 0;  // (/CS) output
+			CS::PMC = 0;  // (/CS) output
+			CS::PM = 0;
+
+			A0::PMC = 0;  // (A0) output
+			A0::PM = 0;
 
 			reg_select_(0);
 			chip_enable_(false);
