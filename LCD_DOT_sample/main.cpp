@@ -1,12 +1,12 @@
 //=====================================================================//
 /*!	@file
 	@brief	LCD ドットマトリックスの簡単なサンプル @n
-			ST7565、128 x 64 ピクセルの液晶を接続 @n
-			/RES ---> /RESET    ( 6) @n
-			A0   ---> P00       (62) @n
-			/CS  ---> P01       (61) @n
-			SCL  ---> P04/SCL10 (58) @n
-			SI   ---> P02/SO10  (60)  
+			ST7565(R)、128 x 64 ピクセルの液晶を接続 @n
+			/CS  ---> P53       (36) @n
+			A0   ---> P50       (33) @n
+			SD   ---> P13/SO20  (43) @n
+			SCL  ---> P15/SCK20 (41) @n 
+			/RES ---> /RESET    ( 6)
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
@@ -29,15 +29,20 @@ namespace {
 
 	// 送信、受信バッファの定義
 	typedef utils::fifo<uint8_t, 32> buffer;
-	// UART の定義（SAU2、SAU3）
+	// UART の定義（SAU02、SAU03）
 	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
 
 	device::itimer<uint8_t> itm_;
 
-	// CSI(SPI) の定義、CSI10 の通信では、「SAU00」を利用、０ユニット、チャネル０
-	typedef device::csi_io<device::SAU00> csi;
+	// CSI(SPI) の定義、CSI20 の通信では、「SAU10」を利用、１ユニット、チャネル０
+	typedef device::csi_io<device::SAU10> csi;
 	csi csi_;
-	chip::ST7565<csi> lcd_(csi_);
+
+	// LCD インターフェースの定義
+	typedef device::PORT<device::port_no::P5,  device::bitpos::B5> lcd_sel;	///< LCD 選択信号
+	typedef device::PORT<device::port_no::P5,  device::bitpos::B0> lcd_reg;	///< LCD レジスタ選択
+
+	chip::ST7565<csi, lcd_sel, lcd_reg> lcd_(csi_);
 
 	graphics::monograph bitmap_;
 
@@ -113,13 +118,13 @@ int main(int argc, char* argv[])
 		itm_.start(60, intr_level);
 	}
 
-	// UART0 開始
+	// UART 開始
 	{
 		uint8_t intr_level = 1;
 		uart_.start(115200, intr_level);
 	}
 
-	// CSI10 開始
+	// CSI 開始
 	{
 		uint8_t intr_level = 0;
 		if(!csi_.start(8000000, csi::PHASE::TYPE4, intr_level)) {
@@ -127,7 +132,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	uart_.puts("Start RL78/G13 LCD-Dotmatix sample\n");
+	uart_.puts("Start RL78/G13 ST7565(R) sample\n");
 
 	PM4.B3 = 0;  // output
 
@@ -147,6 +152,7 @@ int main(int argc, char* argv[])
 	uint8_t n = 0;
 	while(1) {
 		itm_.sync();
+
 		if(nn >= 4) {
 			lcd_.copy(bitmap_.fb());
 			nn = 0;
@@ -155,7 +161,7 @@ int main(int argc, char* argv[])
 
 		if(loop >= 20) {
 			loop = 0;
-//			bitmap_.clear(0);
+			bitmap_.clear(0);
 			bitmap_.frame(0, 0, 128, 64, 1);
 		}
 		xx = rand_() & 127;
