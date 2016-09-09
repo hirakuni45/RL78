@@ -74,9 +74,6 @@ namespace chip {
 			utils::delay::milli_second(100);
 
 			init();
-//			write_(CMD::DISPLAY_ON);
-//	  		write_(CMD::SET_ALLPTS_NORMAL);
-//			set_brightness(contrast);
 		}
 
 
@@ -88,12 +85,12 @@ namespace chip {
 		void init()
 		{
 			chip_enable_(false);
-			utils::delay::milli_second(500);
+			utils::delay::milli_second(250);
 
 			reg_select_(0);
 			chip_enable_();
 			csi_.xchg(0xAE);	// Set Display Off
-			csi_.xchg(0xd5);	// display divide ratio/osc. freq. mode
+			csi_.xchg(0xD5);	// display divide ratio/osc. freq. mode
 			csi_.xchg(0x80);
 			csi_.xchg(0xA8);	// multiplex ration mode:63
 			csi_.xchg(0x3F);
