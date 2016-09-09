@@ -99,7 +99,7 @@ namespace device {
 					１６ビットアクセス
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw16_t<0xFFF10 + UOFS + CHOFS + SDR_O> SDR;
+		static rw16_t<0xFFF10 + SDR_O> SDR;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -108,7 +108,7 @@ namespace device {
 					下位８ビットアクセス (B0 - B7)
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static  rw8_t<0xFFF10 + UOFS + CHOFS + SDR_O> SDR_L;
+		static  rw8_t<0xFFF10 + SDR_O> SDR_L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -245,14 +245,14 @@ namespace device {
 		static uint8_t get_chanel_no() { return CHOFS / 0x02; }
 	};
 	typedef sau_t<0x00, 0x00, 0x00> SAU00;
-	typedef sau_t<0x00, 0x02, 0x00> SAU01;
-	typedef sau_t<0x00, 0x04, 0x30> SAU02;
-	typedef sau_t<0x00, 0x06, 0x30> SAU03;
+	typedef sau_t<0x00, 0x02, 0x02> SAU01;
+	typedef sau_t<0x00, 0x04, 0x34> SAU02;
+	typedef sau_t<0x00, 0x06, 0x36> SAU03;
 
-	typedef sau_t<0x40, 0x00, 0x08> SAU10;
-	typedef sau_t<0x40, 0x02, 0x08> SAU11;
+	typedef sau_t<0x40, 0x00, 0x38> SAU10;
+	typedef sau_t<0x40, 0x02, 0x3A> SAU11;
 	typedef sau_t<0x40, 0x04, 0x04> SAU12;
-	typedef sau_t<0x40, 0x06, 0x04> SAU13;
+	typedef sau_t<0x40, 0x06, 0x06> SAU13;
 
 	namespace SAU {
 
