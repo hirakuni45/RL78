@@ -18,15 +18,19 @@
 #include "common/itimer.hpp"
 #include "common/format.hpp"
 #include "common/delay.hpp"
-#include "chip/ST7565.hpp"
 #include "common/monograph.hpp"
 
-namespace {
-	void wait_()
-	{
-		asm("nop");
-	}
+// ターゲットＬＣＤのタイプを選択
+// #define LCD_ST7565
+#define LCD_SSD1306
+#ifdef LCD_ST7565
+#include "chip/ST7565.hpp"
+#endif
+#ifdef LCD_SSD1306
+#include "chip/SSD1306.hpp"
+#endif
 
+namespace {
 	// 送信、受信バッファの定義
 	typedef utils::fifo<uint8_t, 32> buffer;
 	// UART の定義（SAU02、SAU03）
@@ -42,7 +46,12 @@ namespace {
 	typedef device::PORT<device::port_no::P5,  device::bitpos::B5> lcd_sel;	///< LCD 選択信号
 	typedef device::PORT<device::port_no::P5,  device::bitpos::B0> lcd_reg;	///< LCD レジスタ選択
 
+#ifdef LCD_ST7565
 	chip::ST7565<csi, lcd_sel, lcd_reg> lcd_(csi_);
+#endif
+#ifdef LCD_SSD1306
+	chip::SSD1306<csi, lcd_sel, lcd_reg> lcd_(csi_);
+#endif
 
 	graphics::monograph bitmap_;
 
