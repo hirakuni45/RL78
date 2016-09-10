@@ -7,86 +7,57 @@
 //=====================================================================//
 #include <cstdint>
 
-// LCD 128x64 の場合
-#define LCD128X64
-
-// LCD 128x32 の場合
-//#define LCD128X32
-
-// 16x16 dot matrix LED
-//#define LED16X16
-
-// 漢字フォントを表示させる場合有効にする
-// #define KANJI_FONTS
-
 namespace graphics {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief	ビットマップ描画クラス
+		@brief	ASCII 無効フォント定義
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	class afont_null {
+	public:
+		static const uint8_t width = 0;
+		static const uint8_t height = 0;
+		static const uint8_t* get(uint8_t code) { return nullptr; }
+		static const int8_t get_width(uint8_t code) { return 0; }
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	漢字 無効フォント定義
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	class kfont_null {
+	public:
+		static const uint8_t width = 0;
+		static const uint8_t height = 0;
+		static const uint8_t* get(uint16_t code) { return nullptr; }
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	ビットマップ描画クラス
+		@param[in]	WIDTH	横幅
+		@param[in]	HEIGHT	高さ
+		@param[in]	AFONT	ASCII フォント・クラス
+		@param[in]	KFONT	漢字フォントクラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <uint16_t WIDTH, uint16_t HEIGHT, class AFONT = afont_null, class KFONT = kfont_null>
 	class monograph {
 
-#ifdef LCD128X64
-		static const uint16_t fb_width_  = 128;
-		static const uint16_t fb_height_ = 64;
-#endif
-#ifdef LCD128X32
-		static const uint16_t fb_width_  = 128;
-		static const uint16_t fb_height_ = 32;
-#endif
-#ifdef LED16X16
-		static const uint16_t fb_width_  = 16;
-		static const uint16_t fb_height_ = 16;
-#endif
-		uint8_t	fb_[fb_width_ * fb_height_ / 8];
+		uint8_t	fb_[WIDTH * HEIGHT / 8];
+
 		uint8_t	multi_byte_hi_;
-		int8_t	font_width_;
-		int8_t	font_height_;
-
-#ifdef KANJI_FONTS
-		// KANJI フォントをキャッシュする数
-		static const int kanji_cash_size_ = 16;
-
-		struct KANJI_CASH {
-			uint8_t	sjis_hi;
-			uint8_t	sjis_lo;
-			uint8_t	bitmap[18];
-		};
-		KANJI_CASH kanji_cash_[kanji_cash_size_];
-		uint8_t cash_first_;
-#endif
-
 	public:
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		monograph() { }
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief	初期化
-		*/
-		//-----------------------------------------------------------------//
-		void start()
-		{
-#ifdef KANJI_FONTS
-			for(uint8_t i = 0; i < KANJI_CASH_SIZE; ++i) {
-				kanji_cash_[i].sjis_lo = 0;
-				kanji_cash_[i].sjis_hi = 0;
-			}
-			cash_first_ = 0;
-#endif
-#ifdef LCD128X64
-			font_width_ = 6;
-			font_height_ = 12;
-#endif
-			multi_byte_hi_ = 0;
-		}
+		monograph() : multi_byte_hi_(0) { }
 
 
 		//-----------------------------------------------------------------//
@@ -95,7 +66,7 @@ namespace graphics {
 			@return 横幅
 		*/
 		//-----------------------------------------------------------------//
-		uint16_t get_width() const { return fb_width_; }
+		uint16_t get_width() const { return WIDTH; }
 
 
 		//-----------------------------------------------------------------//
@@ -104,7 +75,7 @@ namespace graphics {
 			@return 高さ
 		*/
 		//-----------------------------------------------------------------//
-		uint16_t get_height() const { return fb_height_; }
+		uint16_t get_height() const { return HEIGHT; }
 
 
 		//-----------------------------------------------------------------//
@@ -124,15 +95,11 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		void point_set(int16_t x, int16_t y) {
-			if(static_cast<uint16_t>(x) >= fb_width_) return;
-			if(static_cast<uint16_t>(y) >= fb_height_) return;
+			if(static_cast<uint16_t>(x) >= WIDTH) return;
+			if(static_cast<uint16_t>(y) >= HEIGHT) return;
 #ifdef LED16X16
 			fb_[((x & 8) >> 3) + (y << 1)] |= (1 << (x & 7));
-#endif
-#ifdef LCD128X64
-			fb_[((y & 0xf8) << 4) + x] |= (1 << (y & 7));
-#endif
-#ifdef LCD128X32
+#else
 			fb_[((y & 0xf8) << 4) + x] |= (1 << (y & 7));
 #endif
 		}
@@ -146,15 +113,11 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		void point_reset(int16_t x, int16_t y) {
-			if(static_cast<uint16_t>(x) >= fb_width_) return;
-			if(static_cast<uint16_t>(y) >= fb_height_) return;
+			if(static_cast<uint16_t>(x) >= WIDTH) return;
+			if(static_cast<uint16_t>(y) >= HEIGHT) return;
 #ifdef LED16X16
 			fb_[((x & 8) >> 3) + (y << 1)] &= ~(1 << (x & 7));
-#endif
-#ifdef LCD128X64
-			fb_[((y & 0xf8) << 4) + x] &= ~(1 << (y & 7));
-#endif
-#ifdef LCD128X32
+#else
 			fb_[((y & 0xf8) << 4) + x] &= ~(1 << (y & 7));
 #endif
 		}
@@ -170,7 +133,7 @@ namespace graphics {
 			@param[in]	c	カラー
 		*/
 		//-----------------------------------------------------------------//
-		void fill(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t c) {
+		void fill(int16_t x, int16_t y, int16_t w, int16_t h, bool c) {
 			if(c) {
 				for(int16_t i = y; i < (y + h); ++i) {
 					for(int16_t j = x; j < (x + w); ++j) {
@@ -189,12 +152,25 @@ namespace graphics {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	全画面クリアをする
-			@param[in]	c	クリアカラー 0:クリア 0!=:塗る
+			@brief	全画面クリアをする（高速）
+			@param[in]	c	クリアカラー
 		*/
 		//-----------------------------------------------------------------//
-		void clear(uint8_t c) {
-			fill(0, 0, fb_width_, fb_height_, c);
+		void flash(uint8_t c) {
+			for(uint16_t i = 0; i < (WIDTH * HEIGHT / 8); ++i) {
+				fb_[i] = c;
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	全画面クリアをする
+			@param[in]	c	クリアカラー
+		*/
+		//-----------------------------------------------------------------//
+		void clear(bool c) {
+			fill(0, 0, WIDTH, HEIGHT, c);
 		}
 
 
@@ -208,7 +184,7 @@ namespace graphics {
 			@param[in]	c	描画色
 		*/
 		//-----------------------------------------------------------------//
-		void line(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t c) {
+		void line(int16_t x1, int16_t y1, int16_t x2, int16_t y2, bool c) {
 			int16_t dx;
 			int16_t dy;
 			int16_t sx;
@@ -255,7 +231,7 @@ namespace graphics {
 			@param[in]	c	描画色
 		*/
 		//-----------------------------------------------------------------//
-		void frame(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t c) {
+		void frame(int16_t x, int16_t y, int16_t w, int16_t h, bool c) {
 			for(int16_t i = 0; i < w; ++i) {
 				if(c) {
 					point_set(x + i, y);
@@ -288,9 +264,9 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		void draw_image(int16_t x, int16_t y, const uint8_t* img, uint8_t w, uint8_t h) {
+			if(img == nullptr) return;
 			uint8_t k = 1;
 			uint8_t c = *img++;
-
 			for(uint8_t i = 0; i < h; ++i) {
 				int16_t xx = x;
 				for(uint8_t j = 0; j < w; ++j) {
@@ -321,7 +297,7 @@ namespace graphics {
 			draw_image(x, y, img, w, h);
 		}
 
-#if 0
+
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	ascii フォントを描画する。
@@ -359,13 +335,12 @@ namespace graphics {
 			} else
 #endif
 			{
-#ifdef LCD128X64
 				if(code >= 0) {
-					if(-FONT_WIDTH >= x || static_cast<uint16_t>(x) >= fb_width_) {
+					if(-AFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) {
 						return;
 					}
-					draw_image(x, y, &font6x12_[(code << 3) + code], FONT_WIDTH, FONT_HEIGHT);
-				} else if(static_cast<uint8_t>(code) >= 0x81
+					draw_image(x, y, AFONT::get(code), AFONT::width, AFONT::height);
+   				} else if(static_cast<uint8_t>(code) >= 0x81
 					   && static_cast<uint8_t>(code) <= 0x9f) {
 					multi_byte_hi_ = code;
 				} else if(static_cast<uint8_t>(code) >= 0xe0
@@ -374,10 +349,9 @@ namespace graphics {
 				} else {
 					// 無効キャラクターの意味として
 					multi_byte_hi_ = 0;
-					if(-FONT_WIDTH >= x || static_cast<uint16_t>(x) >= fb_width_) return;
-					draw_image(x, y, &font6x12_[(1 << 3)], FONT_WIDTH, FONT_HEIGHT);
+					if(-AFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) return;
+					draw_image(x, y, AFONT::get(1), AFONT::width, AFONT::height);
 				}
-#endif
 			}
 		}
 
@@ -388,19 +362,21 @@ namespace graphics {
 			@param[in]	x	開始点Ｘ軸を指定
 			@param[in]	y	開始点Ｙ軸を指定
 			@param[in]	text	テキストのポインター
+			@param[in]	prop	プロポーショナルの場合「true」
 			@return 文字の終端座標（Ｘ）
 		*/
 		//-----------------------------------------------------------------//
-		int16_t draw_string(int16_t x, int16_t y, const char* text) {
+		int16_t draw_text(int16_t x, int16_t y, const char* text, bool prop = false) {
 			char code;
 			while((code = *text++) != 0) {
 				draw_font(x, y, code);
-				x += font_width_;
+				if(prop) x += AFONT::get_width(code);
+				else x += AFONT::width;
 			}
 			multi_byte_hi_ = 0;
 			return x;
 		}
-#endif
+
 
 		//-----------------------------------------------------------------//
 		/*!
