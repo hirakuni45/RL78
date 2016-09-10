@@ -106,9 +106,10 @@ namespace chip {
 		/*!
 			@brief  開始
 			@param[in]	contrast コントラスト
+			@param[in]	comrvs	コモンライン・リバースの場合：true
 		*/
 		//-----------------------------------------------------------------//
-		void start(uint8_t contrast)
+		void start(uint8_t contrast, bool comrvs)
 		{
 			CS::PMC = 0;  // (/CS) output
 			CS::PM = 0;
@@ -121,7 +122,7 @@ namespace chip {
 
 			utils::delay::milli_second(100);
 
-			init();
+			init(comrvs);
 			write_(CMD::DISPLAY_ON);
 	  		write_(CMD::SET_ALLPTS_NORMAL);
 			set_brightness(contrast);
@@ -132,9 +133,10 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  初期化
+			@param[in]	comrvs	コモンライン・リバースの場合：true
 		*/
 		//-----------------------------------------------------------------//
-		void init()
+		void init(bool comrvs)
 		{
 			reg_select_(0);
 			chip_enable_();
@@ -154,7 +156,12 @@ namespace chip {
 			// ADC select
 			write_(CMD::SET_ADC_NORMAL);
 			// SHL select
-			write_(CMD::SET_COM_NORMAL);
+			if(comrvs) {
+				write_(CMD::SET_COM_REVERSE);
+			} else {
+				write_(CMD::SET_COM_NORMAL);
+			}
+
 			// Initial display line
 			write_(CMD::SET_DISP_START_LINE);
 
