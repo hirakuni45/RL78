@@ -53,7 +53,7 @@ namespace {
 	chip::SSD1306<csi, lcd_sel, lcd_reg> lcd_(csi_);
 #endif
 
-	graphics::monograph bitmap_;
+	graphics::monograph<128, 64> bitmap_;
 
 	uint8_t v_ = 91;
 	uint8_t m_ = 123;
@@ -147,7 +147,6 @@ int main(int argc, char* argv[])
 
 	{
 		lcd_.start(0x04);
-		bitmap_.start();
 		bitmap_.clear(0);
 	}
 
