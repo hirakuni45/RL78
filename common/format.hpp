@@ -578,13 +578,13 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  オペレーター「%」int32_t
+			@brief  オペレーター「%」（int）
 			@param[in]	val	整数値
 			@return	自分の参照
 		*/
 		//-----------------------------------------------------------------//
-		format& operator % (int32_t val) {
-			sign_int_(val);
+		format& operator % (int val) {
+			sign_int_(static_cast<int32_t>(val));
 			return *this;
 		}
 
@@ -604,12 +604,25 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  オペレーター「%」（UINT）
+			@brief  オペレーター「%」int32_t
+			@param[in]	val	整数値
+			@return	自分の参照
+		*/
+		//-----------------------------------------------------------------//
+		format& operator % (int32_t val) {
+			sign_int_(val);
+			return *this;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  オペレーター「%」（unsigned int）
 			@param[in]	val	符号無し整数値
 			@return	自分の参照
 		*/
 		//-----------------------------------------------------------------//
-		format& operator % (uint32_t val) {
+		format& operator % (unsigned int val) {
 			unsign_int_(static_cast<uint32_t>(val));
 			return *this;
 		}
@@ -623,6 +636,19 @@ namespace utils {
 		*/
 		//-----------------------------------------------------------------//
 		format& operator % (uint16_t val) {
+			unsign_int_(static_cast<uint32_t>(val));
+			return *this;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  オペレーター「%」（UINT）
+			@param[in]	val	符号無し整数値
+			@return	自分の参照
+		*/
+		//-----------------------------------------------------------------//
+		format& operator % (uint32_t val) {
 			unsign_int_(static_cast<uint32_t>(val));
 			return *this;
 		}
