@@ -16,6 +16,10 @@ ST7565：（ST7565R）、（ST7567）
 ・http://www.aitendo.com/product/13327
 ・http://www.aitendo.com/product/12866
 
+SSD1306 :
+・SOLOMON SYSTECH
+・128 x 64 Dot Matrix OLED/PLED Segment/Common Driver with Controller
+
 VS1063：
 ・VLSI Solution
 ・MP3 / OGG VORBIS ENCODER AND AUDIO CODEC
