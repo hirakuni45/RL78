@@ -32,6 +32,49 @@ namespace chip {
 			A0::P = f;
 		}
 
+		void init_(uint8_t contrast, bool comrvs)
+		{
+			chip_enable_(false);
+			utils::delay::milli_second(250);
+
+			reg_select_(0);
+			chip_enable_();
+			csi_.xchg(0xAE);	// Set Display Off
+			csi_.xchg(0xD5);	// display divide ratio/osc. freq. mode
+			csi_.xchg(0x80);
+			csi_.xchg(0xA8);	// multiplex ration mode:63
+			csi_.xchg(0x3F);
+			csi_.xchg(0xD3);	// Set Display Offset
+			csi_.xchg(0x00);
+			csi_.xchg(0x40);	// Set Display Start Line
+			csi_.xchg(0x8D);	// Set Display Offset
+			// csi_.xchg(0x10);
+			csi_.xchg(0x14);
+			csi_.xchg(0xA1);	// Segment Remap
+
+			// Sst COM Output Scan Direction
+			if(comrvs) {
+				csi_.xchg(0xC8);
+			} else {
+				csi_.xchg(0xC0);
+			}
+			csi_.xchg(0xDA);	// common pads hardware: alternative
+			csi_.xchg(0x12);
+			csi_.xchg(0x81);	// contrast control 
+//			csi_.xchg(0x9F);
+			csi_.xchg(0x66);
+			csi_.xchg(0xD9);	// set pre-charge period
+//			csi_.xchg(0x22);	// set period 1:1;period 2:15
+			csi_.xchg(0xF1);
+			csi_.xchg(0xDB);	// VCOM deselect level mode
+			csi_.xchg(0x40);	// set Vvcomh=0.83*Vcc
+			csi_.xchg(0xA4);	// Set Entire Display On/Off
+			csi_.xchg(0xA6);	// Set Normal Display
+			csi_.xchg(0xAF);	// Set Display On
+			reg_select_(1);
+			chip_enable_(false);
+		}
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -58,9 +101,10 @@ namespace chip {
 		/*!
 			@brief  開始
 			@param[in]	contrast コントラスト
+			@param[in]	comrvs	コモン・リバースの場合「true」
 		*/
 		//-----------------------------------------------------------------//
-		void start(uint8_t contrast)
+		void start(uint8_t contrast, bool comrvs)
 		{
 			CS::PMC = 0;  // (/CS) output
 			CS::PM = 0;
@@ -73,52 +117,16 @@ namespace chip {
 
 			utils::delay::milli_second(100);
 
-			init();
+			init_(contrast, comrvs);
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  初期化
+			@param[in]	comrvs	コモン・リバースの場合「true」
 		*/
 		//-----------------------------------------------------------------//
-		void init()
-		{
-			chip_enable_(false);
-			utils::delay::milli_second(250);
-
-			reg_select_(0);
-			chip_enable_();
-			csi_.xchg(0xAE);	// Set Display Off
-			csi_.xchg(0xD5);	// display divide ratio/osc. freq. mode
-			csi_.xchg(0x80);
-			csi_.xchg(0xA8);	// multiplex ration mode:63
-			csi_.xchg(0x3F);
-			csi_.xchg(0xD3);	// Set Display Offset
-			csi_.xchg(0x00);
-			csi_.xchg(0x40);	// Set Display Start Line
-			csi_.xchg(0x8D);	// Set Display Offset
-			// csi_.xchg(0x10);
-			csi_.xchg(0x14);
-			csi_.xchg(0xA1);	// Segment Remap
-			csi_.xchg(0xC8);	// Sst COM Output Scan Direction
-			// csi_.xchg(0xC8);
-			csi_.xchg(0xDA);	// common pads hardware: alternative
-			csi_.xchg(0x12);
-			csi_.xchg(0x81);	// contrast control 
-//			csi_.xchg(0x9F);
-			csi_.xchg(0x66);
-			csi_.xchg(0xD9);	// set pre-charge period
-//			csi_.xchg(0x22);	// set period 1:1;period 2:15
-			csi_.xchg(0xF1);
-			csi_.xchg(0xDB);	// VCOM deselect level mode
-			csi_.xchg(0x40);	// set Vvcomh=0.83*Vcc
-			csi_.xchg(0xA4);	// Set Entire Display On/Off
-			csi_.xchg(0xA6);	// Set Normal Display
-			csi_.xchg(0xAF);	// Set Display On
-			reg_select_(1);
-			chip_enable_(false);
-		}
 
 
 		//-----------------------------------------------------------------//

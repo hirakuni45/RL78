@@ -80,64 +80,9 @@ namespace chip {
 			A0::P = f;
 		}
 
-	public:
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  コンストラクター
-		*/
-		//-----------------------------------------------------------------//
-		ST7565(CSI_IO& csi) : csi_(csi) { }
 
+		void init_(bool comrvs) {
 
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  ブライトネス設定
-			@param[in]	val	ブライトネス値
-		*/
-		//-----------------------------------------------------------------//
-		void set_brightness(uint8_t val)
-		{
-    		write_(CMD::SET_VOLUME_FIRST);
-    		write_(CMD::SET_VOLUME_SECOND, (val & 0x3f));
-		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  開始
-			@param[in]	contrast コントラスト
-			@param[in]	comrvs	コモンライン・リバースの場合：true
-		*/
-		//-----------------------------------------------------------------//
-		void start(uint8_t contrast, bool comrvs)
-		{
-			CS::PMC = 0;  // (/CS) output
-			CS::PM = 0;
-
-			A0::PMC = 0;  // (A0) output
-			A0::PM = 0;
-
-			reg_select_(0);
-			chip_enable_(false);
-
-			utils::delay::milli_second(100);
-
-			init(comrvs);
-			write_(CMD::DISPLAY_ON);
-	  		write_(CMD::SET_ALLPTS_NORMAL);
-			set_brightness(contrast);
-			chip_enable_(false);
-		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  初期化
-			@param[in]	comrvs	コモンライン・リバースの場合：true
-		*/
-		//-----------------------------------------------------------------//
-		void init(bool comrvs)
-		{
 			reg_select_(0);
 			chip_enable_();
 
@@ -184,6 +129,55 @@ namespace chip {
 
 			// set lcd operating voltage (regulator resistor, ref voltage resistor)
 			write_(CMD::SET_RESISTOR_RATIO, 0x6);
+		}
+
+	public:
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  コンストラクター
+		*/
+		//-----------------------------------------------------------------//
+		ST7565(CSI_IO& csi) : csi_(csi) { }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  ブライトネス設定
+			@param[in]	val	ブライトネス値
+		*/
+		//-----------------------------------------------------------------//
+		void set_brightness(uint8_t val)
+		{
+    		write_(CMD::SET_VOLUME_FIRST);
+    		write_(CMD::SET_VOLUME_SECOND, (val & 0x3f));
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  開始
+			@param[in]	contrast コントラスト
+			@param[in]	comrvs	コモンライン・リバースの場合：true
+		*/
+		//-----------------------------------------------------------------//
+		void start(uint8_t contrast, bool comrvs)
+		{
+			CS::PMC = 0;  // (/CS) output
+			CS::PM = 0;
+
+			A0::PMC = 0;  // (A0) output
+			A0::PM = 0;
+
+			reg_select_(0);
+			chip_enable_(false);
+
+			utils::delay::milli_second(100);
+
+			init_(comrvs);
+			write_(CMD::DISPLAY_ON);
+	  		write_(CMD::SET_ALLPTS_NORMAL);
+			set_brightness(contrast);
+			chip_enable_(false);
 		}
 
 
