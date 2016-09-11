@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 	PM4.B3 = 0;  // output
 
 	{
-		lcd_.start(0x04);
+		lcd_.start(0x04, true);
 		bitmap_.clear(0);
 	}
 
