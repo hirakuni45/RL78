@@ -32,7 +32,7 @@ namespace graphics {
 	public:
 		static const uint8_t width = 0;
 		static const uint8_t height = 0;
-		static const uint8_t* get(uint16_t code) { return nullptr; }
+		const uint8_t* get(uint16_t code) { return nullptr; }
 	};
 
 
@@ -50,14 +50,14 @@ namespace graphics {
 
 		uint8_t	fb_[WIDTH * HEIGHT / 8];
 
-		uint8_t	multi_byte_hi_;
+		KFONT& kfont_;
 	public:
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		monograph() : multi_byte_hi_(0) { }
+		monograph(KFONT& kf) : kfont_(kf) { }
 
 
 		//-----------------------------------------------------------------//
@@ -300,58 +300,23 @@ namespace graphics {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	ascii フォントを描画する。
+			@brief	フォントを描画する。
 			@param[in]	x	開始点Ｘ軸を指定
 			@param[in]	y	開始点Ｙ軸を指定
-			@param[in]	code	ASCII コード（0x00 to 0x7F)
+			@param[in]	code	コード
 		*/
 		//-----------------------------------------------------------------//
-		void draw_font(int16_t x, int16_t y, char code) {
-#ifdef KANJI_FONTS
-			if(multi_byte_hi_) {
-				uint8_t hi = multi_byte_hi_;
-				multi_byte_hi_ = 0;
-				if(-KANJI_FONT_WIDTH >= x || x >= fb_width_) return;
-
-				if(kanji_mode_ == 0) {
-					draw_image(x - FONT_WIDTH, y, &font6x12_[9 * 18], 6, 12);
-					draw_image(x, y, &font6x12_[9 * 19], 6, 12);
+		void draw_font(int16_t x, int16_t y, uint16_t code) {
+			if(code < 0x80) {
+				if(-AFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) {
 					return;
 				}
-
-				const uint8_t* bitmap = scan_kanji_bitmap(hi, static_cast<uint8_t>(code));
-				if(bitmap != 0) {
-					draw_image(x - FONT_WIDTH, y, bitmap, KANJI_FONT_WIDTH, KANJI_FONT_HWIGHT);
-				} else {
-					uint8_t* bitmap = alloc_kanji_bitmap(hi, static_cast<uint8_t>(code));
-					uint16_t pos = sjis_to_liner(hi, static_cast<uint8_t>(code));
-					if(read_kanji_bitmap(pos, bitmap)) {
-						draw_image(x - FONT_WIDTH, y, bitmap, KANJI_FONT_WIDTH, KANJI_FONT_HEIGHT);
-					} else {
-						draw_image(x - FONT_WIDTH, y, &font6x12_[9 * 18], FONT_WIDTH, FONT_HEIGHT);
-						draw_image(x, y, &font6x12_[9 * 19], FONT_WIDTH, FONT_HEIGHT);
-					}
+				draw_image(x, y, AFONT::get(code), AFONT::width, AFONT::height);
+			} else {
+				if(-KFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) {
+					return;
 				}
-			} else
-#endif
-			{
-				if(code >= 0) {
-					if(-AFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) {
-						return;
-					}
-					draw_image(x, y, AFONT::get(code), AFONT::width, AFONT::height);
-   				} else if(static_cast<uint8_t>(code) >= 0x81
-					   && static_cast<uint8_t>(code) <= 0x9f) {
-					multi_byte_hi_ = code;
-				} else if(static_cast<uint8_t>(code) >= 0xe0
-					   && static_cast<uint8_t>(code) <= 0xef) {
-					multi_byte_hi_ = code;
-				} else {
-					// 無効キャラクターの意味として
-					multi_byte_hi_ = 0;
-					if(-AFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) return;
-					draw_image(x, y, AFONT::get(1), AFONT::width, AFONT::height);
-				}
+				draw_image(x, y, kfont_.get(code), KFONT::width, KFONT::height);
 			}
 		}
 
@@ -367,13 +332,39 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		int16_t draw_text(int16_t x, int16_t y, const char* text, bool prop = false) {
-			char code;
-			while((code = *text++) != 0) {
-				draw_font(x, y, code);
-				if(prop) x += AFONT::get_width(code);
-				else x += AFONT::width;
+			int8_t cnt = 0;
+			uint16_t code = 0;
+			char tc;
+			while((tc = *text++) != 0) {
+				uint8_t c = static_cast<uint8_t>(tc);
+				if(c < 0x80) {
+					draw_font(x, y, tc);
+					if(prop) x += AFONT::get_width(code);
+					else x += AFONT::width;
+					code = 0;
+				} else if((c & 0xf0) == 0xe0) {
+					code = (c & 0x0f);
+					cnt = 2;
+				} else if((c & 0xe0) == 0xc0) {
+					code = (c & 0x1f);
+					cnt = 1;
+				} else if((c & 0xc0) == 0x80) {
+					code <<= 6;
+					code |= c & 0x3f;
+					cnt--;
+					if(cnt == 0 && code < 0x80) {
+						code = 0;	// 不正なコードとして無視
+						break;
+					} else if(cnt < 0) {
+						code = 0;
+					}
+				}
+				if(cnt == 0 && code != 0) {
+					draw_font(x, y, code);
+					x += KFONT::width;
+					code = 0;
+				}			
 			}
-			multi_byte_hi_ = 0;
 			return x;
 		}
 
