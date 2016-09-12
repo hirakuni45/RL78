@@ -39,7 +39,7 @@ namespace graphics {
 			} else {
 				return 0xffff;
 			}
-			int loa = (0x7e + 1 - 0x40) + (0xfc + 1 - 0x80);
+			uint16_t loa = (0x7e + 1 - 0x40) + (0xfc + 1 - 0x80);
 			if(0x40 <= lo && lo <= 0x7e) {
 				code *= loa;
 				code += lo - 0x40;
