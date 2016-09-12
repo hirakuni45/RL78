@@ -7,6 +7,8 @@ TARGET		=	lcd_filer_sample
 
 DEVICE		=	R5F100LGAFB
 
+FATFS_VER	=	ff12a
+
 BUILD		=	release
 
 VPATH		=	../
@@ -15,7 +17,10 @@ ASOURCES	=	common/start.s
 
 CSOURCES	=	common/init.c \
 				common/vect.c \
-				common/option_bytes.c
+				common/option_bytes.c \
+				$(FATFS_VER)/src/ff.c \
+				$(FATFS_VER)/src/option/unicode.c \
+				common/time.c
 
 PSOURCES	=	main.cpp \
 				common/font6x12.cpp
@@ -42,7 +47,8 @@ CP_OPT		=	-Wall -Werror \
 CC_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
 				-Wno-exceptions \
-				-Wno-unused-function
+				-Wno-unused-function \
+				-Wno-unused-but-set-variable
 
 SYSINCS		=	$(addprefix -I, $(INC_SYS))
 APPINCS		=	$(addprefix -I, $(INC_APP))
