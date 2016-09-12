@@ -55,8 +55,8 @@ namespace utils {
 			} else {
 				format("%9d ") % fi->fsize;
 			}
-			format("%s %2d %4d %02d:%02d ") % get_mon(m->tm_mon) % m->tm_mday % (m->tm_year + 1900)
-				% m->tm_hour % m->tm_min;
+			format("%s %2d %4d %02d:%02d ") % get_mon(m->tm_mon) % m->tm_mday
+				% (m->tm_year + 1900) % m->tm_hour % m->tm_min;
 			if(dir) {
 				format("/");
 			} else {
@@ -216,9 +216,6 @@ namespace utils {
 		uint16_t dir_loop(const char* root, dir_loop_func func, bool recursive = false)
 		{
 			char full[path_buff_size_];
-#if _USE_LFN != 0
-			char fn[64];
-#endif
 			DIR dir;
 			FILINFO fi;
 
@@ -243,8 +240,7 @@ namespace utils {
 					}
 					if(!fi.fname[0]) break;
 #if _USE_LFN != 0
-					str::sjis_to_utf8(fi.fname, fn);
-					std::strcpy(p, fn);
+					str::sjis_to_utf8(fi.fname, p);
 #else
 					std::strcpy(p, fi.fname);
 #endif
