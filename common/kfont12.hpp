@@ -15,16 +15,17 @@ namespace graphics {
 		@brief	漢字フォント・クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint16_t CASH_SIZE>
+	template <uint8_t CASH_SIZE>
 	class kfont12 {
 
 		struct kanji_cash {
-			uint16_t	sjis;
+			uint16_t	code;
 			uint8_t		bitmap[18];
 		};
 		kanji_cash cash_[CASH_SIZE];
 		uint8_t cash_idx_;
 
+		bool	mount_;
 
 		static uint16_t sjis_to_liner_(uint16_t sjis)
 		{
@@ -58,9 +59,9 @@ namespace graphics {
 			@brief	コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		kfont12() : cash_idx_(0) {
+		kfont12() : cash_idx_(0), mount_(false) {
 			for(uint8_t i = 0; i < CASH_SIZE; ++i) {
-				cash_[i].sjis = 0;
+				cash_[i].code = 0;
 			}
 		}
 
@@ -83,27 +84,49 @@ namespace graphics {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	マウント状態の設定
+		*/
+		//-----------------------------------------------------------------//
+		void set_mount(bool f) { mount_ = f; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	文字のビットマップを取得
 			@param[in]	code	文字コード（unicode）
 			@return 文字のビットマップ
 		*/
 		//-----------------------------------------------------------------//
 		const uint8_t* get(uint16_t code) {
+
+			if(code == 0) return nullptr;
+
+			// キャッシュ内検索
+			int8_t n = -1;
+			for(uint8_t i = 0; i < CASH_SIZE; ++i) {
+				if(cash_[i].code == code) {
+					return &cash_[i].bitmap[0];
+				} else if(cash_[i].code == 0) {
+					n = i;
+				}
+			}
+			if(n >= 0) cash_idx_ = n;
+			else {
+				for(uint8_t i = 0; i < CASH_SIZE; ++i) {
+					++cash_idx_;
+					if(cash_idx_ >= CASH_SIZE) cash_idx_ = 0;
+					if(cash_[cash_idx_].code != 0) {
+						break;
+					}
+				}
+			}
+
+			if(!mount_) return nullptr;
+
 			uint16_t sjis = ff_convert(code, 0);
 			uint32_t lin = sjis_to_liner_(sjis);
 			if(lin == 0xffff) {
 				return nullptr;
-			}
-
-			// キャッシュ内検索
-			for(uint8_t i = 0; i < CASH_SIZE; ++i) {
-				if(cash_[cash_idx_].sjis == sjis) {
-					return &cash_[cash_idx_].bitmap[0];
-				}
-				++cash_idx_;
-				if(cash_idx_ >= CASH_SIZE) {
-					cash_idx_ = 0;
-				}
 			}
 
 			FIL fp;
@@ -121,7 +144,7 @@ namespace graphics {
 				f_close(&fp);
 				return nullptr;
 			}
-			cash_[cash_idx_].sjis = sjis;
+			cash_[cash_idx_].code = code;
 
 			f_close(&fp);
 
