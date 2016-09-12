@@ -193,7 +193,8 @@ int main(int argc, char* argv[])
 	while(1) {
 		itm_.sync();
 
-		sdc_.service();
+		bool f = sdc_.service();
+		kfont_.set_mount(f);		
 
 		if(nn >= 3) {
 			lcd_.copy(bitmap_.fb());
@@ -202,7 +203,7 @@ int main(int argc, char* argv[])
 		}
 		++nn;
 
-		bitmap_.draw_text(0, 0, "漢字");
+		bitmap_.draw_text(0, 0, "美しい漢字の表示");
 
 		++n;
 		if(n >= 30) n = 0;
