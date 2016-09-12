@@ -125,6 +125,24 @@ namespace graphics {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	点を反転する
+			@param[in]	x	開始点Ｘ軸を指定
+			@param[in]	y	開始点Ｙ軸を指定
+		*/
+		//-----------------------------------------------------------------//
+		void point_reverse(int16_t x, int16_t y) {
+			if(static_cast<uint16_t>(x) >= WIDTH) return;
+			if(static_cast<uint16_t>(y) >= HEIGHT) return;
+#ifdef LED16X16
+			fb_[((x & 8) >> 3) + (y << 1)] ^= (1 << (x & 7));
+#else
+			fb_[((y & 0xf8) << 4) + x] ^= (1 << (y & 7));
+#endif
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	四角を塗りつぶす
 			@param[in]	x	開始位置 X
 			@param[in]	y	開始位置 Y
@@ -145,6 +163,24 @@ namespace graphics {
 					for(int16_t j = x; j < (x + w); ++j) {
 						point_reset(j, i);
 					}
+				}
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	四角を反転
+			@param[in]	x	開始位置 X
+			@param[in]	y	開始位置 Y
+			@param[in]	w	横幅 
+			@param[in]	h	高さ
+		*/
+		//-----------------------------------------------------------------//
+		void reverse(int16_t x, int16_t y, int16_t w, int16_t h) {
+			for(int16_t i = y; i < (y + h); ++i) {
+				for(int16_t j = x; j < (x + w); ++j) {
+					point_reverse(j, i);
 				}
 			}
 		}
@@ -292,6 +328,7 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		void draw_mobj(int16_t x, int16_t y, const uint8_t* img) {
+			if(img == nullptr) return;
 			uint8_t w = *img++;
 			uint8_t h = *img++;
 			draw_image(x, y, img, w, h);
