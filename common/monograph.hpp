@@ -300,7 +300,9 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		void draw_image(int16_t x, int16_t y, const uint8_t* img, uint8_t w, uint8_t h) {
+
 			if(img == nullptr) return;
+
 			uint8_t k = 1;
 			uint8_t c = *img++;
 			for(uint8_t i = 0; i < h; ++i) {
