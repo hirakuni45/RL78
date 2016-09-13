@@ -45,6 +45,7 @@ E-Mail: hira@rvf-rc45.net
  - /INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
  - /SOFT_DELAY_sample ---> RL78/G13 ソフトウェアー・タイマーのサンプル
  - /DS3231_sample   --->   RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
+ - /DS1371_sample   --->   RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
  - /SDC_sample      --->   RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
  - /INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
  - /PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
@@ -52,11 +53,15 @@ E-Mail: hira@rvf-rc45.net
  - /VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
  - /BMP180_sample ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
  - /ADC_sample ---> RL78/G13 内臓 A/D 変換サンプル
+ - /ARITH_sample ---> RL78/G13 四則演算サンプル（文字列で数式を受け取り計算する）
+ - /LCD_DOT_sample ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
+ - /TOUCH_sample ---> RL78/G13 タッチ・スイッチ、サンプル
  - /KiCAD_Lib       --->   KiCAD 用部品ライブラリー
 
 FatFS LFN の有効／無効：   
 SD カードのファイルシステム「fatfs」では、「LFN」（長いファイル名）を標準で使っており、表示は
 UTF-8 を標準で使います。   
+この場合、１２８ＫＢ以上のデバイスが必要です。   
 これはメモリーを多く消費します、もし必要無いのであれば、「ff12a/src/ffconf.h」の「_USE_LFN」を
 「０」にして、コンパイルすれば、文字列コードは OEM、（CP932 の場合 ShiftJIS）となり、最小限の
 メモリー消費になります、長いファイル名も無効になり、8.3 形式になります。   
@@ -335,9 +340,11 @@ UTF-8 を標準で使います。
  - chip/chip_list.txt　チップ・リスト
  - chip/BMP180.hpp　BOSHE BMP180 温度、圧力センサー・ドライバー
  - chip/DS3231.hpp　Maxim DS3231 RTC リアルタイムクロック・ドライバー
+ - chip/DS1371.hpp　Maxim DS1371 RTC リアルタイムクロック・ドライバー（３２ビット、バイナリー・カウンター）
  - chip/EEPROM.hpp　I2C 接続 EEPROM ドライバー
  - chip/MPU6050.hpp　InvenSense 加速度、ジャイロ・センサー・ドライバー
  - chip/ST7565.hpp　LCD 単色、ドットマトリックス・ドライバー
+ - chip/SSD1306.hpp OLED 単色、ドットマトリックス・ドライバー
  - chip/VS1063.hpp　MP3 / OGG VORBIS エンコーダー、デコーダー・ドライバー
    
 ---
@@ -354,9 +361,13 @@ UTF-8 を標準で使います。
  - common/csi_io.hpp　CSI(SPI) 変換制御テンプレート
  - common/delay.hpp　ソフトウェアー・ディレイ（３２ＭＨｚ動作、マイクロ秒単位）
  - common/fifo.hpp　First-in first-out バッファ
+ - common/font6x12.hpp　6x12 ピクセル、ASCII フォント・クラス（定義）
+ - common/font6x12.cpp  6x12 ピクセル、ASCII フォント・クラス（実体）
  - common/format.hpp　文字列整形テンプレート
  - common/iica_io.hpp　ＩＩＣＡ入出力テンプレート
  - common/itimer.hpp　インターバル・タイマー制御テンプレート
+ - common/kfont12.bin　１２ピクセル漢字フォントビットマップデータ
+ - common/kfont12.hpp　１２ピクセル漢字フォント・クラス
  - common/monograph.hpp　ビットマップ・グラフィックス制御クラス
  - common/port_utils.hpp　ポート・ユーティリティー
  - common/sdc_io.hpp　ＳＤカード制御クラス
