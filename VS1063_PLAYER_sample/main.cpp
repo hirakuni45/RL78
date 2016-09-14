@@ -154,8 +154,8 @@ namespace {
 		vs1063_.play(&fil);
 	}
 
-	void play_loop_(const char*);
-	void play_loop_func_(const char* name, const FILINFO* fi, bool dir)
+	void play_loop_(const char* root);
+	void play_loop_func_(const char* name, const FILINFO* fi, bool dir, void* option)
 	{
 		if(dir) {
 			play_loop_(name);
@@ -167,6 +167,7 @@ namespace {
 	void play_loop_(const char* root)
 	{
 		sdc_.dir_loop(root, play_loop_func_);
+//		sdc_.dir_loop(root, play_loop_func_, true);
 	}
 }
 
@@ -245,6 +246,8 @@ int main(int argc, char* argv[])
 						play_loop_("");
 					}
 				} else {
+					utils::format("pwd\n");
+					utils::format("cd ---> current directory\n");
 					utils::format("dir ---> directory file\n");
 					utils::format("play file-name ---> play file\n");
 					utils::format("play * ---> play file all\n");
