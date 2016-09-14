@@ -22,6 +22,7 @@
 #include "common/font6x12.hpp"
 #include "common/kfont12.hpp"
 #include "common/sdc_io.hpp"
+#include "common/filer.hpp"
 
 // ターゲットＬＣＤのタイプを選択
 #define LCD_ST7565
@@ -50,7 +51,8 @@ namespace {
 	typedef device::PORT<device::port_no::P0,  device::bitpos::B1> card_power;	///< カード電源制御
 	typedef device::PORT<device::port_no::P14, device::bitpos::B6> card_detect;	///< カード検出
 
-	utils::sdc_io<csi, card_select, card_power, card_detect> sdc_(csi_);
+	typedef utils::sdc_io<csi, card_select, card_power, card_detect> sdc_io;
+	sdc_io sdc_(csi_);
 
 	// LCD CSI(SPI) の定義、CSI20 の通信では、「SAU10」を利用、１ユニット、チャネル０
 	typedef device::csi_io<device::SAU10> csig;
@@ -70,7 +72,10 @@ namespace {
 	typedef graphics::font6x12 afont;
 	typedef graphics::kfont12<16> kfont;
 	kfont kfont_;
-	graphics::monograph<128, 64, afont, kfont> bitmap_(kfont_);
+	typedef graphics::monograph<128, 64, afont, kfont> bitmap;
+	bitmap bitmap_(kfont_);
+
+	graphics::filer<sdc_io, bitmap> filer_(sdc_, bitmap_);
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
@@ -113,6 +118,16 @@ extern "C" {
 	void sci_puts(const char* str)
 	{
 		uart_.puts(str);
+	}
+
+	char sci_getch(void)
+	{
+		return uart_.getch();
+	}
+
+	uint16_t sci_length()
+	{
+		return uart_.recv_length();
 	}
 
 	DSTATUS disk_initialize(BYTE drv) {
@@ -188,25 +203,43 @@ int main(int argc, char* argv[])
 	}
 
 	uint8_t n = 0;
-	uint8_t nn = 0;
-
+	bool fbf = true;
+	bool fbf_back = false;
 	while(1) {
 		itm_.sync();
+
+		fbf_back = fbf;
+		if(fbf) {
+			bitmap_.flash(0);
+			fbf = false;
+		}
 
 		bool f = sdc_.service();
 		kfont_.set_mount(f);		
 
-		if(nn >= 3) {
-			lcd_.copy(bitmap_.fb());
-			bitmap_.flash(0);
-			nn = 0;
+		if(fbf_back && !fbf) {
+			filer_.service();
 		}
-		++nn;
 
-		bitmap_.draw_text(0, 0, "美しい漢字の表示");
+		if(sci_length()) {
+			if(sci_getch() == ' ') {
+				if(!filer_.get_enable()) {
+					filer_.set_root("/");
+					fbf = true;
+				}
+				filer_.enable(!filer_.get_enable());
+			}
+		}
+
+//		bitmap_.draw_text(0, 0, "美しい漢字の表示");
+//		bitmap_.draw_text(0, 0, "Abcdefghi");
 
 		++n;
 		if(n >= 30) n = 0;
-		P4.B3 = n < 10 ? false : true; 	
+		P4.B3 = n < 10 ? false : true;
+
+		if(fbf_back && !fbf) {
+			lcd_.copy(bitmap_.fb());
+		}
 	}
 }
