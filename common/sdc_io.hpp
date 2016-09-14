@@ -45,7 +45,7 @@ namespace utils {
 
 		char	current_[path_buff_size_];
 
-		static void dir_list_func_(const char* name, const FILINFO* fi, bool dir) {
+		static void dir_list_func_(const char* name, const FILINFO* fi, bool dir, void* option) {
 			if(fi == nullptr) return;
 
 			time_t t = str::fatfs_time_to(fi->fdate, fi->ftime);
@@ -69,7 +69,8 @@ namespace utils {
 		static char* match_dst_;
 		static uint8_t match_cnt_;
 		static uint8_t match_no_;
-		static void match_func_(const char* name, const FILINFO* fi, bool dir) {
+
+		static void match_func_(const char* name, const FILINFO* fi, bool dir, void* option) {
 			if(std::strncmp(name, match_key_, std::strlen(match_key_)) == 0) {
 				if(match_dst_ != nullptr && match_cnt_ == match_no_) {
 					std::strcpy(match_dst_, name);
@@ -98,8 +99,7 @@ namespace utils {
 		}
 
 	public:
-///		typedef std::function<void (const char* name, uint32_t size, bool dir)> dir_loop_func;
-		typedef void (*dir_loop_func)(const char* name, const FILINFO* fi, bool dir);
+		typedef void (*dir_loop_func)(const char* name, const FILINFO* fi, bool dir, void* option);
 
 
 		//-----------------------------------------------------------------//
@@ -209,11 +209,13 @@ namespace utils {
 			@brief	SD カードのディレクトリーリストでタスクを実行する
 			@param[in]	root	ルート・パス
 			@param[in]	func	実行関数
-			@param[in]	recursive  「true」にすると再帰的にループを回す（スタックの消費に注意）
+			@param[in]	todir  「true」の場合、ディレクトリーも関数を呼ぶ
+			@param[in]	option	オプション・ポインター
 			@return ファイル数
 		 */
 		//-----------------------------------------------------------------//
-		uint16_t dir_loop(const char* root, dir_loop_func func = nullptr, bool recursive = false)
+		uint16_t dir_loop(const char* root, dir_loop_func func = nullptr, bool todir = false,
+			void* option = nullptr)
 		{
 			char full[path_buff_size_];
 			DIR dir;
@@ -246,11 +248,11 @@ namespace utils {
 						std::strcpy(p, fi.fname);
 #endif
 						if(fi.fattrib & AM_DIR) {
-							if(recursive) {
-								func(p, &fi, true);
+							if(todir) {
+								func(p, &fi, true, option);
 							}
 						} else {
-							func(p, &fi, false);
+							func(p, &fi, false, option);
 						}
 					}
 					++num;
