@@ -8,6 +8,8 @@
 #include <cstdint>
 #include "ff12a/src/ff.h"
 
+// #include "common/format.hpp"
+
 namespace graphics {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -123,25 +125,28 @@ namespace graphics {
 
 			if(!mount_) return nullptr;
 
-			uint16_t sjis = ff_convert(code, 0);
-			uint32_t lin = sjis_to_liner_(sjis);
+			uint32_t lin = sjis_to_liner_(ff_convert(code, 0));
+
 			if(lin == 0xffff) {
 				return nullptr;
 			}
 
 			FIL fp;
 			if(f_open(&fp, "kfont12.bin", FA_READ) != FR_OK) {
+				utils::format("Open err\n");
 				return nullptr;
 			}
  
 			if(f_lseek(&fp, lin * 18) != FR_OK) {
 				f_close(&fp);
+				utils::format("Seek err\n");
 				return nullptr;
 			}
 
 			UINT rs;
 			if(f_read(&fp, &cash_[cash_idx_].bitmap[0], 18, &rs) != FR_OK) {
 				f_close(&fp);
+				utils::format("Read err\n");
 				return nullptr;
 			}
 			cash_[cash_idx_].code = code;
