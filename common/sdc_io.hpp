@@ -213,7 +213,7 @@ namespace utils {
 			@return ファイル数
 		 */
 		//-----------------------------------------------------------------//
-		uint16_t dir_loop(const char* root, dir_loop_func func, bool recursive = false)
+		uint16_t dir_loop(const char* root, dir_loop_func func = nullptr, bool recursive = false)
 		{
 			char full[path_buff_size_];
 			DIR dir;
@@ -239,17 +239,19 @@ namespace utils {
 						break;
 					}
 					if(!fi.fname[0]) break;
+					if(func != nullptr) {
 #if _USE_LFN != 0
-					str::sjis_to_utf8(fi.fname, p);
+						str::sjis_to_utf8(fi.fname, p);
 #else
-					std::strcpy(p, fi.fname);
+						std::strcpy(p, fi.fname);
 #endif
-					if(fi.fattrib & AM_DIR) {
-						if(recursive) {
-							func(p, &fi, true);
+						if(fi.fattrib & AM_DIR) {
+							if(recursive) {
+								func(p, &fi, true);
+							}
+						} else {
+							func(p, &fi, false);
 						}
-					} else {
-						func(p, &fi, false);
 					}
 					++num;
 				}
