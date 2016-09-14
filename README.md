@@ -374,6 +374,7 @@ UTF-8 を標準で使います。
  - common/task.hpp　タスク制御（無効タスククラス）
  - common/tau_io.hpp　タイマー制御テンプレート
  - common/uart_io.hpp　シリアル・コミュニケーション入出力（ＵＡＲＴ）
+ - common/filer.hpp　ビットマップ・グラフィックス用ファイル選択
    
 ---
 License
