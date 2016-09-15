@@ -189,7 +189,6 @@ UTF-8 を標準で使います。
     cd
     tar xfvz gcc-4.9.4.tar.gz
     cd gcc-4.9.4
-    cp /usr/share/automake-1.9/config.guess .
     mkdir rl78_build
 	cd rl78_build
     ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto
