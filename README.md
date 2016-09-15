@@ -151,9 +151,9 @@ UTF-8 を標準で使います。
 ---
 ## RL78 開発環境構築
 
- - RL78 用コンパイラ（rl78-elf-gcc,g++）は gcc-4.9.3 を使います。
+ - RL78 用コンパイラ（rl78-elf-gcc,g++）は gcc-4.9.4 を使います。
  - binutils-2.25.1.tar.gz をダウンロードしておく
- - gcc-4.9.3.tar.gz をダウンロードしておく
+ - gcc-4.9.4.tar.gz をダウンロードしておく
  - newlib-2.2.0.tar.gz をダウンロードしておく
    
 ---
@@ -185,15 +185,14 @@ UTF-8 を標準で使います。
  -  アセンブラコマンドを実行してみて、パスが有効か確かめる。
   
 #### C コンパイラをビルド
- -  gcc-4.9.3では、MSYS2 環境を認識しない為、automake の設定をコピーする（OS−X、Linux では不要）
 ``` sh
     cd
-    tar xfvz gcc-4.9.3.tar.gz
-    cd gcc-4.9.3
+    tar xfvz gcc-4.9.4.tar.gz
+    cd gcc-4.9.4
     cp /usr/share/automake-1.9/config.guess .
     mkdir rl78_build
 	cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --disable-bootstrap
+    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto
     make
     make install     OS-X,Linux: (sudo make install)
 ```
@@ -213,9 +212,9 @@ UTF-8 を標準で使います。
 #### C++ コンパイラをビルド
 ``` sh
     cd
-    cd gcc-4.9.3
+    cd gcc-4.9.4
     cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --disable-bootstrap
+    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto
     make
     make install     OS-X,Linux: (sudo make install)
 ```
