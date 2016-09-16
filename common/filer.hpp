@@ -23,24 +23,57 @@ namespace graphics {
 		SDC_IO& sdc_;
 		BITMAP&	bitmap_;
 
-		const char* root_;
-		uint16_t	file_num_;
-		uint16_t	file_pos_;
+		int16_t	file_num_;
+		int16_t	file_ofs_;
+		int16_t	file_pos_;
 
-		bool		enable_;
+		enum class task : uint8_t {
+			ready,
+			create_list,
+			ready_list,
+		};
+		task		task_;
+
+		int16_t	shift_pos_;
+		uint8_t	shift_wait_;
+
+		int16_t select_size_;
+		char	select_path_[128];
 
 		struct option_t {
-			BITMAP& bmp;
-			int16_t y;
-			option_t(BITMAP& bitmap) : bmp(bitmap), y(0) { }
+			BITMAP&		bmp_;
+			int16_t		ofsy_;
+			uint16_t	cnt_;
+			uint16_t	match_;
+			int16_t		size_;
+			char*		path_;
+			option_t(BITMAP& bmp) : bmp_(bmp) { }
 		};
 
-		static void dir_(const char* fname, const FILINFO* fi, bool dir, void* option) {
+		static void dir_task_(const char* fname, const FILINFO* fi, bool dir, void* option)
+		{
 			option_t* t = reinterpret_cast<option_t*>(option);
-			if(t->y < 0 || t->y >= static_cast<int16_t>(t->bmp.get_height())) return;
-			t->bmp.draw_text(0, t->y, fname);
-			t->y += t->bmp.get_kfont_height();
+			int16_t sz = 0;
+			if(t->ofsy_ >= -t->bmp_.get_kfont_height() && t->ofsy_ < t->bmp_.get_height()) {
+				int16_t ox = 0;
+				if(fi->fattrib & AM_DIR) {
+					t->bmp_.draw_font(0, t->ofsy_, '/');
+					ox = t->bmp_.get_afont_width();
+				}
+				sz = t->bmp_.draw_text(ox, t->ofsy_, fname);
+			}
+			t->ofsy_ += t->bmp_.get_kfont_height();
+			if(t->cnt_ == t->match_) {
+				char* p = t->path_;
+				if(fi->fattrib & AM_DIR) {
+					*p++ = '/';
+				}
+				std::strncpy(p, fname, sizeof(select_path_) - 1);
+				t->size_ = sz;
+			}
+			++t->cnt_;
 		}
+
 
 	public:
 		//-----------------------------------------------------------------//
@@ -51,55 +84,162 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		filer(SDC_IO& sdc, BITMAP& bitmap) : sdc_(sdc), bitmap_(bitmap),
-			root_(nullptr), file_num_(0), file_pos_(0),
-			enable_(false) { }
+			file_num_(0), file_ofs_(0), file_pos_(0),
+			task_(task::ready), shift_pos_(0), shift_wait_(0) { }
 
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	表示許可の取得
-			@return 表示許可状態
+			@brief	ファイラーの状態を取得
+			@return 「ready」なら「true」
 		*/
 		//-----------------------------------------------------------------//
-		bool get_enable() const { return enable_; }
+		bool ready() const { return task_ == task::ready ? true : false; }
 
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	表示許可
-			@param[in]	ena	不許可の場合「false」
+			@brief	ファイラーを開始
+			@return 開始したら「true」
 		*/
 		//-----------------------------------------------------------------//
-		void enable(bool ena = true) { enable_ = ena; }
+		bool start() {
+			select_path_[0] = 0;
+			file_num_ = sdc_.dir_loop("", nullptr, true);
+			if(file_num_ > 0) {
+				file_ofs_ = 0;
+				file_pos_ = 0;
+				task_ = task::create_list;
+				shift_wait_ = 0;
+				shift_pos_ = 0;
+				return true;
+			} else {
+				task_ = task::ready;
+				return false;
+			}
+		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	ルート・ディレクトリーを設定
-			@param[in]	root	ルート・パス
+			@brief	表示フォーカスを変更
+			@param[in]	ofs	フォーカス・オフセット
+			@return 変更時「true」 
 		*/
 		//-----------------------------------------------------------------//
-		void set_root(const char* root) {
-			root_ = root;
-			file_num_ = sdc_.dir_loop(root, nullptr, true);
-			file_pos_ = 0;
+		bool set_focus(int16_t ofs) {
+			if(task_ != task::ready_list) return false;
+
+			int16_t newpos = file_pos_ + ofs;
+			if(newpos < 0) newpos = 0;
+			else if(newpos >= file_num_) newpos = file_num_ - 1;
+			if(file_pos_ != newpos) {
+				file_pos_ = newpos;
+				shift_wait_ = 0;
+				shift_pos_ = 0;
+				int16_t o = file_ofs_ + file_pos_ * bitmap_.get_kfont_height();
+				if(o < 0) {
+					file_ofs_ += bitmap_.get_kfont_height();
+				} else if(o > (bitmap_.get_height() - bitmap_.get_kfont_height())) {
+					file_ofs_ -= bitmap_.get_kfont_height();
+				}
+				task_ = task::create_list;
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	ディレクトリー移動
+			@param[in]	inc	戻る場合「false」
+			@return 成功なら「true」 
+		*/
+		//-----------------------------------------------------------------//
+		bool set_directory(bool inc = true) {
+			if(task_ != task::ready_list) {
+				return false;
+			}
+
+			bool f = false;
+			if(inc) {
+				if(select_path_[0] != '/') return false;
+				f = sdc_.cd(&select_path_[1]);
+			} else {
+				f = sdc_.cd("..");
+			}
+
+			if(f) {
+				f = start();
+			}
+			return f;
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	サービス 表示、毎フレーム呼ぶ
+			@param[in]	mount	マウント状態
+			@return 「true」が返る場合、フレームバッファの更新要求
 		*/
 		//-----------------------------------------------------------------//
-		void service() {
-			option_t opt(bitmap_);
+		bool service(bool mount)
+		{
+			if(!mount) {
+				task_ = task::ready;
+				return false;
+			}
 
-			if(!enable_) return;
-			if(root_ == nullptr) return;
-			if(file_num_ == 0) return;
+			if(file_num_ == 0 || task_ == task::ready) return false;
 
-			sdc_.dir_loop(root_, dir_, true, &opt);
+			bool fbcopy = false;
+			if(task_ == task::create_list) {
+				option_t opt(bitmap_);
+				opt.ofsy_ = file_ofs_;
+				opt.cnt_ = 0;
+				opt.match_ = file_pos_;
+				opt.size_ = 0;
+				opt.path_ = select_path_;
+				sdc_.dir_loop("", dir_task_, true, &opt);
+				select_size_ = opt.size_;
+				int16_t y = file_pos_ * bitmap_.get_kfont_height() + file_ofs_;
+				bitmap_.reverse(0, y, bitmap_.get_width() - 1, bitmap_.get_kfont_height() - 1);
+				task_ = task::ready_list;
+			} else if(task_ == task::ready_list) {
+				if(select_size_ < bitmap_.get_width()) ;
+				else if(shift_wait_ >= (60 * 4)) {
+					--shift_pos_;
+					int16_t y = file_pos_ * bitmap_.get_kfont_height() + file_ofs_;
+					bitmap_.fill(0, y, bitmap_.get_width() - 1, bitmap_.get_kfont_height() - 1, 0);
+					auto x = bitmap_.draw_text(shift_pos_, y, select_path_);
+					if(x <= 0) {
+						shift_pos_ = bitmap_.get_width();
+					}
+///					bitmap_.frame(0, y, bitmap_.get_width() - 1, bitmap_.get_kfont_height(), 1);
+					shift_wait_ -= 8;  // shift speed delay
+					fbcopy = true;
+				} else {
+					++shift_wait_;
+				}
+			}
+			return fbcopy;
 		}
 
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	選択されたパスを取得
+			@return 選択されたパス
+		*/
+		//-----------------------------------------------------------------//
+		const char* get_select_path() const {
+			if(task_ == task::ready_list) {
+				return select_path_;
+			} else {
+				return nullptr;
+			}
+		}
 	};
 }
