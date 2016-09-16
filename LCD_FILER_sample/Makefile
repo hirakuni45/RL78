@@ -37,7 +37,8 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-OPTIMIZE	=	-Os
+OPTIMIZE	=	-Os -flto
+# OPTIMIZE	=	-O2
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
