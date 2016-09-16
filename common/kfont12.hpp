@@ -73,7 +73,7 @@ namespace graphics {
 			@brief	文字の横幅
 		*/
 		//-----------------------------------------------------------------//
-		static const uint8_t width = 12;
+		static const int8_t width = 12;
 
 
 		//-----------------------------------------------------------------//
@@ -81,7 +81,7 @@ namespace graphics {
 			@brief	文字の高さ
 		*/
 		//-----------------------------------------------------------------//
-		static const uint8_t height = 12;
+		static const int8_t height = 12;
 
 
 		//-----------------------------------------------------------------//
@@ -132,21 +132,21 @@ namespace graphics {
 			}
 
 			FIL fp;
-			if(f_open(&fp, "kfont12.bin", FA_READ) != FR_OK) {
-				utils::format("Open err\n");
+			if(f_open(&fp, "/kfont12.bin", FA_READ) != FR_OK) {
+//				utils::format("Open error\n");
 				return nullptr;
 			}
  
 			if(f_lseek(&fp, lin * 18) != FR_OK) {
 				f_close(&fp);
-				utils::format("Seek err\n");
+//				utils::format("Seek error\n");
 				return nullptr;
 			}
 
 			UINT rs;
 			if(f_read(&fp, &cash_[cash_idx_].bitmap[0], 18, &rs) != FR_OK) {
 				f_close(&fp);
-				utils::format("Read err\n");
+//				utils::format("Read error\n");
 				return nullptr;
 			}
 			cash_[cash_idx_].code = code;
