@@ -205,6 +205,8 @@ int main(int argc, char* argv[])
 	uint8_t n = 0;
 	bool fbf = true;
 	bool fbf_back = false;
+	bool mount = sdc_.service();
+	bool fbcopy = false;
 	while(1) {
 		itm_.sync();
 
@@ -215,30 +217,54 @@ int main(int argc, char* argv[])
 		}
 
 		bool f = sdc_.service();
-		kfont_.set_mount(f);		
+		kfont_.set_mount(f);
 
-		if(fbf_back && !fbf) {
-			filer_.service();
-		}
+		fbcopy = filer_.service(f);
 
 		if(sci_length()) {
-			if(sci_getch() == ' ') {
-				if(!filer_.get_enable()) {
-					filer_.set_root("/");
-					fbf = true;
+			auto ch = sci_getch();
+			if(ch == ' ') {
+				if(filer_.ready()) {
+					fbf = filer_.start();
 				}
-				filer_.enable(!filer_.get_enable());
+			} else if(ch == 'a') {
+				if(!filer_.ready()) {
+					fbf = filer_.set_focus(-1);
+				}
+			} else if(ch == 'z') {
+				if(!filer_.ready()) {
+					fbf = filer_.set_focus(1);
+				}
+			} else if(ch == '\r') {
+				if(!filer_.ready()) {
+					if(filer_.set_directory()) {
+						fbf = true;
+					} else {
+						const char* p = filer_.get_select_path();
+						if(p != nullptr) {
+							utils::format("Path: '%s'\n") % p;
+						}
+					}
+				}
+			} else if(ch == 0x08) {
+				if(!filer_.ready()) {
+					if(filer_.set_directory(false)) {
+						fbf = true;
+					}
+				}
 			}
 		}
 
-//		bitmap_.draw_text(0, 0, "美しい漢字の表示");
-//		bitmap_.draw_text(0, 0, "Abcdefghi");
+		if(!f && mount) {
+			fbf = true;
+		}
+		mount = f;
 
 		++n;
 		if(n >= 30) n = 0;
 		P4.B3 = n < 10 ? false : true;
 
-		if(fbf_back && !fbf) {
+		if((fbf_back && !fbf) || fbcopy) {
 			lcd_.copy(bitmap_.fb());
 		}
 	}
