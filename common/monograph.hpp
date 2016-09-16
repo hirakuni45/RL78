@@ -66,7 +66,7 @@ namespace graphics {
 			@return 横幅
 		*/
 		//-----------------------------------------------------------------//
-		uint16_t get_width() const { return WIDTH; }
+		int16_t get_width() const { return WIDTH; }
 
 
 		//-----------------------------------------------------------------//
@@ -75,7 +75,7 @@ namespace graphics {
 			@return 高さ
 		*/
 		//-----------------------------------------------------------------//
-		uint16_t get_height() const { return HEIGHT; }
+		int16_t get_height() const { return HEIGHT; }
 
 
 		//-----------------------------------------------------------------//
@@ -84,7 +84,7 @@ namespace graphics {
 			@return フォントの幅
 		*/
 		//-----------------------------------------------------------------//
-		uint8_t get_afont_width() const { return AFONT::width; }
+		int8_t get_afont_width() const { return AFONT::width; }
 
 
 		//-----------------------------------------------------------------//
@@ -93,7 +93,7 @@ namespace graphics {
 			@return フォントの高さ
 		*/
 		//-----------------------------------------------------------------//
-		uint8_t get_afont_height() const { return AFONT::height; }
+		int8_t get_afont_height() const { return AFONT::height; }
 
 
 		//-----------------------------------------------------------------//
@@ -102,7 +102,7 @@ namespace graphics {
 			@return フォントの幅
 		*/
 		//-----------------------------------------------------------------//
-		uint8_t get_kfont_width() const { return KFONT::width; }
+		int8_t get_kfont_width() const { return KFONT::width; }
 
 
 		//-----------------------------------------------------------------//
@@ -111,7 +111,7 @@ namespace graphics {
 			@return フォントの高さ
 		*/
 		//-----------------------------------------------------------------//
-		uint8_t get_kfont_height() const { return KFONT::height; }
+		int8_t get_kfont_height() const { return KFONT::height; }
 
 
 		//-----------------------------------------------------------------//
@@ -335,8 +335,8 @@ namespace graphics {
 			@param[in]	h	描画ソースの高さ
 		*/
 		//-----------------------------------------------------------------//
-		void draw_image(int16_t x, int16_t y, const uint8_t* img, uint8_t w, uint8_t h) {
-
+		void draw_image(int16_t x, int16_t y, const uint8_t* img, uint8_t w, uint8_t h)
+		{
 			if(img == nullptr) return;
 
 			uint8_t k = 1;
@@ -365,8 +365,10 @@ namespace graphics {
 			@param[in]	img	描画ソースのポインター
 		*/
 		//-----------------------------------------------------------------//
-		void draw_mobj(int16_t x, int16_t y, const uint8_t* img) {
+		void draw_mobj(int16_t x, int16_t y, const uint8_t* img)
+		{
 			if(img == nullptr) return;
+
 			uint8_t w = *img++;
 			uint8_t h = *img++;
 			draw_image(x, y, img, w, h);
@@ -382,13 +384,16 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		void draw_font(int16_t x, int16_t y, uint16_t code) {
+			if(y <= -AFONT::height || y >= static_cast<int16_t>(HEIGHT)) {
+				return;
+			}
 			if(code < 0x80) {
-				if(-AFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) {
+				if(x <= -AFONT::width || x >= static_cast<int16_t>(WIDTH)) {
 					return;
 				}
 				draw_image(x, y, AFONT::get(code), AFONT::width, AFONT::height);
 			} else {
-				if(-KFONT::width >= x || static_cast<uint16_t>(x) >= WIDTH) {
+				if(x <= -KFONT::width || x >= static_cast<int16_t>(WIDTH)) {
 					return;
 				}
 				draw_image(x, y, kfont_.get(code), KFONT::width, KFONT::height);
