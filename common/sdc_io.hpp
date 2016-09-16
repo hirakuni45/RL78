@@ -65,18 +65,39 @@ namespace utils {
 			format("%s\n") % name;
 		}
 
-		static const char* match_key_;
-		static char* match_dst_;
-		static uint8_t match_cnt_;
-		static uint8_t match_no_;
+		struct match_t {
+			const char* key_;
+			char* dst_;
+			uint8_t cnt_;
+			uint8_t no_;
+		};
 
 		static void match_func_(const char* name, const FILINFO* fi, bool dir, void* option) {
-			if(std::strncmp(name, match_key_, std::strlen(match_key_)) == 0) {
-				if(match_dst_ != nullptr && match_cnt_ == match_no_) {
-					std::strcpy(match_dst_, name);
+			match_t* t = reinterpret_cast<match_t*>(option);
+			if(std::strncmp(name, t->key_, std::strlen(t->key_)) == 0) {
+				if(t->dst_ != nullptr && t->cnt_ == t->no_) {
+					std::strcpy(t->dst_, name);
 				}
-				++match_cnt_;
+				++t->cnt_;
 			}
+		}
+
+		struct copy_t {
+			uint16_t	idx_;
+			uint16_t	match_;
+			char*		path_;
+		};
+
+		static void path_copy_func_(const char* name, const FILINFO* fi, bool dir, void* option) {
+			copy_t* t = reinterpret_cast<match_t*>(option);
+			if(t->idx_ == t->match_) {
+				if(t->path_ != nullptr) {
+					char* p = t->path_;
+					if(dir) *p++ = '/';
+					std::strcpy(p, name);
+				}
+			}
+			++t->idx_;
 		}
 
 		void create_full_path_(const char* path, char* full) {
@@ -265,6 +286,26 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	SD カードのディレクトリから、ファイル名の取得
+			@param[in]	root	ルート・パス
+			@param[in]	match	所得パスのインデックス
+			@param[out]	path	パスのコピー先
+			@return 成功なら「true」
+		 */
+		//-----------------------------------------------------------------//
+		bool get_dir_path(const char* root, uint16_t match, char* path)
+		{
+			copy_t t;
+			t.idx_ = 0;
+			t.match_ = match;
+			t.path_ = path;
+			dir_loop(root, path_copy_func_, true, &t);
+			return true;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	SD カードのディレクトリーをリストする
 			@param[in]	root	ルート・パス
 			@return ファイル数
@@ -287,12 +328,13 @@ namespace utils {
 		//-----------------------------------------------------------------//
 		uint8_t match(const char* key, uint8_t no, char* dst)
 		{
-			match_key_ = key;
-			match_dst_ = dst;
-			match_cnt_ = 0;
-			match_no_ = no;
-			dir_loop(current_, match_func_, false);
-			return match_cnt_;
+			match_t t;
+			t.key_ = key;
+			t.dst_ = dst;
+			t.cnt_ = 0;
+			t.no_ = no;
+			dir_loop(current_, match_func_, false, &t);
+			return t.cnt_;
 		}
 
 
@@ -391,16 +433,4 @@ namespace utils {
 		//-----------------------------------------------------------------//
 		mmc_type& at_mmc() { return mmc_; }
 	};
-
-	template <class CSI, class SELECT, class POWER, class DETECT>
-		const char* sdc_io<CSI, SELECT, POWER, DETECT>::match_key_ = nullptr; 
-
-	template <class CSI, class SELECT, class POWER, class DETECT>
-		char* sdc_io<CSI, SELECT, POWER, DETECT>::match_dst_ = nullptr; 
-
-	template <class CSI, class SELECT, class POWER, class DETECT>
-		uint8_t sdc_io<CSI, SELECT, POWER, DETECT>::match_cnt_ = 0;
-
-	template <class CSI, class SELECT, class POWER, class DETECT>
-		uint8_t sdc_io<CSI, SELECT, POWER, DETECT>::match_no_ = 0;
 }
