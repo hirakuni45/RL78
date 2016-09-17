@@ -6,7 +6,7 @@
                        |                            @n
 			VDD - 10K -+- 3.3K -+- 6.8K -+- 20K -+  @n
                        |        |        |       |  @n
-			          SW0      SW1      SW2     SW3 @n
+			         RIGHT     UP      DOWN    LEFT @n
                        |        |        |       |  @n
                       VSS      VSS      VSS     VSS
 	@author	平松邦仁 (hira@rvf-rc45.net)
