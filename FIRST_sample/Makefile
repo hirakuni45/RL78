@@ -27,7 +27,6 @@ USER_DEFS	=	F_CLK=32000000 DEVICE_SIG=$(DEVICE)
 
 MCU_TARGET	=	-mmul=g13
 
-#INC_SYS		=	/usr/boost_1_53_0
 INC_SYS		=
 
 INC_APP		=	. ../ ../G13
