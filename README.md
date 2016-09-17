@@ -53,6 +53,7 @@ E-Mail: hira@rvf-rc45.net
  - /VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
  - /BMP180_sample ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
  - /ADC_sample ---> RL78/G13 内臓 A/D 変換サンプル
+ - /ADC_SWITCH_sample ---> RL78/G13 シリーズ・スイッチ（４列）A/D 変換のサンプル
  - /ARITH_sample ---> RL78/G13 四則演算サンプル（文字列で数式を受け取り計算する）
  - /LCD_DOT_sample ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
  - /TOUCH_sample ---> RL78/G13 タッチ・スイッチ、サンプル
@@ -356,10 +357,13 @@ UTF-8 を標準で使います。
  - common/time.c　時間関数実装（posix time.c にある機能の縮小版）
  - common/io_utils.hpp　I/O 制御テンプレート・ユーティリティー
  - common/adc_io.hpp　A/D 変換制御テンプレート
+ - common/basic_arith.hpp  四則演算入力クラス
+ - common/bitset.hpp  ビット・パック簡易テンプレート・クラス（std::bitset の縮小セット）
  - common/command.hpp　行入力テンプレート
  - common/csi_io.hpp　CSI(SPI) 変換制御テンプレート
  - common/delay.hpp　ソフトウェアー・ディレイ（３２ＭＨｚ動作、マイクロ秒単位）
  - common/fifo.hpp　First-in first-out バッファ
+ - common/filer.hpp　ビットマップ・グラフィックス用ファイル選択
  - common/font6x12.hpp　6x12 ピクセル、ASCII フォント・クラス（定義）
  - common/font6x12.cpp  6x12 ピクセル、ASCII フォント・クラス（実体）
  - common/format.hpp　文字列整形テンプレート
@@ -370,10 +374,11 @@ UTF-8 を標準で使います。
  - common/monograph.hpp　ビットマップ・グラフィックス制御クラス
  - common/port_utils.hpp　ポート・ユーティリティー
  - common/sdc_io.hpp　ＳＤカード制御クラス
+ - common/string_utils.hpp  文字列ユーティリティー（コード変換など）
+ - common/switch_man.hpp  スイッチ・マネージメントクラス
  - common/task.hpp　タスク制御（無効タスククラス）
  - common/tau_io.hpp　タイマー制御テンプレート
  - common/uart_io.hpp　シリアル・コミュニケーション入出力（ＵＡＲＴ）
- - common/filer.hpp　ビットマップ・グラフィックス用ファイル選択
    
 ---
 License
