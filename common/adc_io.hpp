@@ -125,11 +125,16 @@ namespace device {
 		//-----------------------------------------------------------------//
 		uint16_t get(uint8_t ch)
 		{
-			ADS = ch;
-			ADM0.ADCS = 1;  // start
-			while(intr::IF1H.ADIF() == 0) sleep_();
-			intr::IF1H.ADIF = 0;
-			return ADCR();
+			if(level_ == 0) {
+				ADS = ch;
+				ADM0.ADCS = 1;  // start
+				while(intr::IF1H.ADIF() == 0) sleep_();
+				intr::IF1H.ADIF = 0;
+				return ADCR();
+			} else {
+
+				return 0;
+			}
 		}
 	};
 }
