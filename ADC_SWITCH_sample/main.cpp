@@ -1,14 +1,18 @@
 //=====================================================================//
 /*!	@file
 	@brief	A/D 変換による複数スイッチ検出サンプル @n
-			P22/ANI2(54) に抵抗ネットワークの複数スイッチを接続 @n
+			P22/ANI2(54) ４つのスイッチ（排他）@n
                       P22                           @n
                        |                            @n
 			VDD - 10K -+- 3.3K -+- 6.8K -+- 20K -+  @n
                        |        |        |       |  @n
 			         RIGHT     UP      DOWN    LEFT @n
                        |        |        |       |  @n
-                      VSS      VSS      VSS     VSS
+                      VSS      VSS      VSS     VSS @n
+			P23/ANI3(55)：２つのスイッチ（同時押し対応）@n
+            VDD - 5K -+- 10K -+- 5K -+- VSS @n
+                      |       |      |      @n
+                      +-  A  -+-  B -+
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
@@ -37,7 +41,9 @@ namespace {
 		RIGHT,
 		UP,
 		DOWN,
-		LEFT
+		LEFT,
+		A,
+		B
 	};
 
 	typedef utils::bitset<uint8_t, SWITCH> switch_bits;
@@ -117,41 +123,70 @@ int main(int argc, char* argv[])
 	uint8_t n = 0;
 	while(1) {
 		itm_.sync();
-		switch_bits tmp;
 
+		// ４つのスイッチ判定（排他的）
 		auto val = adc_.get(2);
 		val >>= 6;   // 0 to 1023
 		val += 128;  // 閾値のオフセット（1024 / 4(SWITCH) / 2）
 		val /= 256;  // デコード（1024 / 4(SWITCH）
+
+		switch_bits tmp;
 		if(val < 4) {
 			tmp.set(static_cast<SWITCH>(val));
 		}
+
+		// ２つのスイッチ判定（同時押し判定）
+		val = adc_.get(3);
+		val >>= 6;  // 0 to 1023
+		if(val < 256) {
+			tmp.set(SWITCH::A);
+			tmp.set(SWITCH::B);
+		} else if(val < 594) {
+			tmp.set(SWITCH::A);
+		} else if(val < 722) {
+			tmp.set(SWITCH::B);
+		}
+
 		switch_man_.service(tmp);
 
 		if(switch_man_.get_positive().get(SWITCH::UP)) {
-			utils::format("UP: on\n");
+			utils::format("UP   : on\n");
 		}
 		if(switch_man_.get_positive().get(SWITCH::DOWN)) {
-			utils::format("DOWN: on\n");
+			utils::format("DOWN : on\n");
 		}
 		if(switch_man_.get_positive().get(SWITCH::LEFT)) {
-			utils::format("LEFT: on\n");
+			utils::format("LEFT : on\n");
 		}
 		if(switch_man_.get_positive().get(SWITCH::RIGHT)) {
 			utils::format("RIGHT: on\n");
 		}
 
+		if(switch_man_.get_positive().get(SWITCH::A)) {
+			utils::format("A    : on\n");
+		}
+		if(switch_man_.get_positive().get(SWITCH::B)) {
+			utils::format("B    : on\n");
+		}
+
 		if(switch_man_.get_negative().get(SWITCH::UP)) {
-			utils::format("UP: off\n");
+			utils::format("UP   : off\n");
 		}
 		if(switch_man_.get_negative().get(SWITCH::DOWN)) {
-			utils::format("DOWN: off\n");
+			utils::format("DOWN : off\n");
 		}
 		if(switch_man_.get_negative().get(SWITCH::LEFT)) {
-			utils::format("LEFT: off\n");
+			utils::format("LEFT : off\n");
 		}
 		if(switch_man_.get_negative().get(SWITCH::RIGHT)) {
 			utils::format("RIGHT: off\n");
+		}
+
+		if(switch_man_.get_negative().get(SWITCH::A)) {
+			utils::format("A    : off\n");
+		}
+		if(switch_man_.get_negative().get(SWITCH::B)) {
+			utils::format("B    : off\n");
 		}
 
 		++n;
