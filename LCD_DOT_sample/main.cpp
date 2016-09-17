@@ -53,7 +53,8 @@ namespace {
 	chip::SSD1306<csi, lcd_sel, lcd_reg> lcd_(csi_);
 #endif
 
-	graphics::monograph<128, 64> bitmap_;
+	graphics::kfont_null kfont_;
+	graphics::monograph<128, 64> bitmap_(kfont_);
 
 	uint8_t v_ = 91;
 	uint8_t m_ = 123;
