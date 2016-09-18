@@ -69,31 +69,8 @@ namespace device {
 			}
 		}
 
-	public:
-
-		uart_io() : intr_level_(0), crlf_(true) { }
-
-		// 送信完了割り込み設定
-		static inline void send_intrrupt_mask_(bool f)
-		{
-			switch(get_chanel_no()) {
-			case 0:
-				intr::MK0H.STMK0 = f;
-				break;
-			case 1:
-				intr::MK1L.STMK1 = f;
-				break;
-			case 2:
-				intr::MK0H.STMK2 = f;
-				break;
-			case 3:
-				intr::MK1H.STMK3 = f;
-				break;
-			}
-		}
-
 		// 受信割り込みマスク設定
-		static inline void recv_interrupt_mask_(bool f)
+		static void recv_interrupt_mask_(bool f)
 		{
 			switch(get_chanel_no()) {
 			case 0:
@@ -111,6 +88,37 @@ namespace device {
 			}
 		}
 
+	public:
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  送信割り込みマスク
+			@param[in]	f	マスク状態
+		*/
+		//-----------------------------------------------------------------//
+		static void send_intrrupt_mask_(bool f)
+		{
+			switch(get_chanel_no()) {
+			case 0:
+				intr::MK0H.STMK0 = f;
+				break;
+			case 1:
+				intr::MK1L.STMK1 = f;
+				break;
+			case 2:
+				intr::MK0H.STMK2 = f;
+				break;
+			case 3:
+				intr::MK1H.STMK3 = f;
+				break;
+			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  送信割り込み
+		*/
+		//-----------------------------------------------------------------//
 		static __attribute__ ((interrupt)) void send_task() __attribute__ ((section (".lowtext")))
 		{
 			if(send_.length()) {
@@ -121,14 +129,34 @@ namespace device {
 			}
 		}
 
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  受信割り込み
+		*/
+		//-----------------------------------------------------------------//
 		static __attribute__ ((interrupt)) void recv_task() __attribute__ ((section (".lowtext")))
 		{
 			recv_.put(rx_.SDR_L());
 		}
 
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  エラー割り込み
+		*/
+		//-----------------------------------------------------------------//
 		static __attribute__ ((interrupt)) void error_task()
 		{
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  コンストラクター
+		*/
+		//-----------------------------------------------------------------//
+		uart_io() : intr_level_(0), crlf_(true) { }
 
 
 		//-----------------------------------------------------------------//

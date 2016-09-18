@@ -42,7 +42,7 @@ namespace device {
 		};
 
 	private:
-		uint8_t	intr_level_ = 0;
+		uint8_t	intr_level_;
 
 		inline void sleep_() { asm("nop"); }
 
@@ -88,9 +88,8 @@ namespace device {
 			}
 		}
 
-	public:
 		// 割り込み設定
-		static inline void interrupt_mask_(bool f)
+		static void interrupt_mask_(bool f)
 		{
 			if(SAU::get_unit_no() == 0) {
 				switch(SAU::get_chanel_no()) {
@@ -125,10 +124,23 @@ namespace device {
 			}
 		}
 
-
+	public:
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  割り込みエントリー
+		*/
+		//-----------------------------------------------------------------//
 		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
 		{
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  コンストラクター
+		*/
+		//-----------------------------------------------------------------//
+		csi_io() : intr_level_(0) { }
 
 
 		//-----------------------------------------------------------------//

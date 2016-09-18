@@ -29,7 +29,7 @@ namespace device {
 		static volatile T counter_;
 		static TASK task_;
 
-		uint8_t	intr_level_ = 0;
+		uint8_t	intr_level_;
 
 		inline void sleep_() const { asm("nop"); }
 
@@ -44,6 +44,14 @@ namespace device {
 			++counter_;
 			task_();
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  コンストラクター
+		*/
+		//-----------------------------------------------------------------//
+		itimer() : intr_level_(0) { }
 
 
 		//-----------------------------------------------------------------//
