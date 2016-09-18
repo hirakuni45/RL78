@@ -48,9 +48,10 @@ namespace graphics {
 	template <uint16_t WIDTH, uint16_t HEIGHT, class AFONT = afont_null, class KFONT = kfont_null>
 	class monograph {
 
+		KFONT& kfont_;
+
 		uint8_t	fb_[WIDTH * HEIGHT / 8];
 
-		KFONT& kfont_;
 	public:
 		//-----------------------------------------------------------------//
 		/*!
