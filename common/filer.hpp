@@ -38,37 +38,38 @@ namespace graphics {
 		uint8_t	shift_wait_;
 
 		int16_t select_size_;
-		char	select_path_[128];
+		char	select_path_[256];
 
 		struct option_t {
-			BITMAP&		bmp_;
+			BITMAP*		bmp_;
 			int16_t		ofsy_;
 			uint16_t	cnt_;
 			uint16_t	match_;
 			int16_t		size_;
 			char*		path_;
-			option_t(BITMAP& bmp) : bmp_(bmp) { }
 		};
 
 		static void dir_task_(const char* fname, const FILINFO* fi, bool dir, void* option)
 		{
 			option_t* t = reinterpret_cast<option_t*>(option);
 			int16_t sz = 0;
-			if(t->ofsy_ >= -t->bmp_.get_kfont_height() && t->ofsy_ < t->bmp_.get_height()) {
-				int16_t ox = 0;
+			int16_t ox = 0;
+			if(t->ofsy_ >= -t->bmp_->get_kfont_height() && t->ofsy_ < t->bmp_->get_height()) {
 				if(fi->fattrib & AM_DIR) {
-					t->bmp_.draw_font(0, t->ofsy_, '/');
-					ox = t->bmp_.get_afont_width();
+					t->bmp_->draw_font(0, t->ofsy_, '/');
+					ox = t->bmp_->get_afont_width();
 				}
-				sz = t->bmp_.draw_text(ox, t->ofsy_, fname);
+				sz = t->bmp_->draw_text(ox, t->ofsy_, fname);
 			}
-			t->ofsy_ += t->bmp_.get_kfont_height();
+			t->ofsy_ += t->bmp_->get_kfont_height();
 			if(t->cnt_ == t->match_) {
 				char* p = t->path_;
-				if(fi->fattrib & AM_DIR) {
-					*p++ = '/';
+				if(p != nullptr && fname != nullptr) {
+					if(fi->fattrib & AM_DIR) {
+						*p++ = '/';
+					}
+					std::strncpy(p, fname, sizeof(select_path_) - 2);
 				}
-				std::strncpy(p, fname, sizeof(select_path_) - 1);
 				t->size_ = sz;
 			}
 			++t->cnt_;
@@ -104,7 +105,6 @@ namespace graphics {
 		*/
 		//-----------------------------------------------------------------//
 		bool start() {
-			select_path_[0] = 0;
 			file_num_ = sdc_.dir_loop("", nullptr, true);
 			if(file_num_ > 0) {
 				file_ofs_ = 0;
@@ -117,6 +117,16 @@ namespace graphics {
 				task_ = task::ready;
 				return false;
 			}
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	ファイラーを終了
+		*/
+		//-----------------------------------------------------------------//
+		void close() {
+			task_ = task::ready;
 		}
 
 
@@ -196,11 +206,13 @@ namespace graphics {
 
 			bool fbcopy = false;
 			if(task_ == task::create_list) {
-				option_t opt(bitmap_);
+				option_t opt;
+				opt.bmp_ = &bitmap_;
 				opt.ofsy_ = file_ofs_;
 				opt.cnt_ = 0;
 				opt.match_ = file_pos_;
 				opt.size_ = 0;
+				select_path_[0] = 0;
 				opt.path_ = select_path_;
 				sdc_.dir_loop("", dir_task_, true, &opt);
 				select_size_ = opt.size_;
@@ -217,7 +229,6 @@ namespace graphics {
 					if(x <= 0) {
 						shift_pos_ = bitmap_.get_width();
 					}
-///					bitmap_.frame(0, y, bitmap_.get_width() - 1, bitmap_.get_kfont_height(), 1);
 					shift_wait_ -= 8;  // shift speed delay
 					fbcopy = true;
 				} else {
