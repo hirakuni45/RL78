@@ -19,6 +19,30 @@
 #include "common/command.hpp"
 #include "wav_in.hpp"
 
+// 128x64 LCD を使い、A/D 入力スイッチを使う場合に有効にする。
+#define ENABLE_LCD
+// ターゲットＬＣＤのタイプを選択
+#define LCD_ST7565
+// #define LCD_SSD1306
+
+#ifdef ENABLE_LCD
+
+#ifdef LCD_ST7565
+#include "chip/ST7565.hpp"
+#endif
+#ifdef LCD_SSD1306
+#include "chip/SSD1306.hpp"
+#endif
+
+#include "common/adc_io.hpp"
+#include "common/monograph.hpp"
+#include "common/font6x12.hpp"
+#include "common/kfont12.hpp"
+#include "common/filer.hpp"
+#include "common/bitset.hpp"
+#include "common/switch_man.hpp"
+#endif
+
 namespace pwm {
 
 	// インターバル・タイマー割り込み制御クラス
@@ -138,7 +162,8 @@ namespace {
 	typedef device::PORT<device::port_no::P0,  device::bitpos::B1> card_power;	///< カード電源制御
 	typedef device::PORT<device::port_no::P14, device::bitpos::B6> card_detect;	///< カード検出
 
-	utils::sdc_io<csi, card_select, card_power, card_detect> sdc_(csi_);
+	typedef utils::sdc_io<csi, card_select, card_power, card_detect> sdc_io;
+	sdc_io sdc_(csi_);
 
 	utils::command<64> command_;
 
@@ -146,6 +171,47 @@ namespace {
 	master master_;
 	device::tau_io<device::TAU01> pwm1_;
 	device::tau_io<device::TAU02> pwm2_;
+
+#ifdef ENABLE_LCD
+	// LCD CSI(SPI) の定義、CSI20 の通信では、「SAU10」を利用、１ユニット、チャネル０
+	typedef device::csi_io<device::SAU10> csig;
+	csig csig_;
+
+	// LCD インターフェースの定義
+	typedef device::PORT<device::port_no::P5,  device::bitpos::B5> lcd_sel;	///< LCD 選択信号
+	typedef device::PORT<device::port_no::P5,  device::bitpos::B0> lcd_reg;	///< LCD レジスタ選択
+
+#ifdef LCD_ST7565
+	chip::ST7565<csig, lcd_sel, lcd_reg> lcd_(csig_);
+#endif
+#ifdef LCD_SSD1306
+	chip::SSD1306<csig, lcd_sel, lcd_reg> lcd_(csig_);
+#endif
+
+	typedef graphics::font6x12 afont;
+	typedef graphics::kfont12<16> kfont;
+	kfont kfont_;
+	typedef graphics::monograph<128, 64, afont, kfont> bitmap;
+	bitmap bitmap_(kfont_);
+
+	typedef device::adc_io<utils::null_task> adc;
+	adc adc_;
+
+	graphics::filer<sdc_io, bitmap> filer_(sdc_, bitmap_);
+
+	enum class SWITCH : uint8_t {
+		RIGHT,
+		UP,
+		DOWN,
+		LEFT,
+		A,
+		B
+	};
+
+	typedef utils::bitset<uint8_t, SWITCH> switch_bits;
+	utils::switch_man<switch_bits> switch_man_;
+#endif
+
 }
 
 
@@ -402,6 +468,16 @@ int main(int argc, char* argv[])
 		uart_.start(115200, intr_level);
 	}
 
+#ifdef ENABLE_LCD
+	// A/D 開始
+	{
+		device::PM2.B2 = 1;
+		device::PM2.B3 = 1;
+		uint8_t intr_level = 0;
+		adc_.start(adc::REFP::VDD, adc::REFM::VSS, intr_level);
+	}
+#endif
+
 	// SD カード・サービス開始
 	sdc_.initialize();
 
@@ -418,17 +494,116 @@ int main(int argc, char* argv[])
 //	}
 //	master_.at_task().set_param(4, 0, 2, 0x80);
 
+#ifdef ENABLE_LCD
+	// CSI graphics 開始
+	{
+		uint8_t intr_level = 0;
+		if(!csig_.start(8000000, csig::PHASE::TYPE4, intr_level)) {
+			uart_.puts("CSI Start fail...\n");
+		}
+
+		lcd_.start(0x04, true);
+		bitmap_.flash(0);
+	}
+#endif
+
 	uart_.puts("Start RL78/G13 WAV file player sample\n");
 
 	command_.set_prompt("# ");
 
 	uint8_t n = 0;
-	FIL fil;
+#ifdef ENABLE_LCD
+	bool fbf = true;
+	bool fbf_back = false;
+	bool mount = sdc_.service();
+	bool fbcopy = false;
+#endif
+//	FIL fil;
 	char tmp[64];
 	while(1) {
 		itm_.sync();
 
+#ifdef ENABLE_LCD
+		switch_bits lvl;
+		// ４つのスイッチ判定（排他的）
+		auto val = adc_.get(2);
+		val >>= 6;   // 0 to 1023
+		val += 128;  // 閾値のオフセット（1024 / 4(SWITCH) / 2）
+		val /= 256;  // デコード（1024 / 4(SWITCH）
+
+		if(val < 4) {
+			lvl.set(static_cast<SWITCH>(val));
+		}
+
+		// ２つのスイッチ判定（同時押し判定）
+		val = adc_.get(3);
+		val >>= 6;  // 0 to 1023
+		if(val < 256) {
+			lvl.set(SWITCH::A);
+			lvl.set(SWITCH::B);
+		} else if(val < 594) {
+			lvl.set(SWITCH::A);
+		} else if(val < 722) {
+			lvl.set(SWITCH::B);
+		}
+
+		switch_man_.service(lvl);
+
+		fbf_back = fbf;
+		if(fbf) {
+			bitmap_.flash(0);
+			fbf = false;
+		}
+
+		bool f = sdc_.service();
+		kfont_.set_mount(f);
+
+		fbcopy = filer_.service(f);
+
+		if(switch_man_.get_positive().get(SWITCH::A)) {
+			if(filer_.ready()) {
+				fbf = filer_.start();
+			} else {
+				filer_.close();
+				fbf = true;
+			}
+		} else if(switch_man_.get_positive().get(SWITCH::UP)) {
+			if(!filer_.ready()) {
+				fbf = filer_.set_focus(-1);
+			}
+		} else if(switch_man_.get_positive().get(SWITCH::DOWN)) {
+			if(!filer_.ready()) {
+				fbf = filer_.set_focus(1);
+			}
+		} else if(switch_man_.get_positive().get(SWITCH::RIGHT)) {
+			if(!filer_.ready()) {
+				if(filer_.set_directory()) {
+					fbf = true;
+				} else {
+					const char* p = filer_.get_select_path();
+					if(p != nullptr) {
+///						utils::format("Path: '%s'\n") % p;
+						play_(p);
+						filer_.close();
+						fbf = true;
+					}
+				}
+			}
+		} else if(switch_man_.get_positive().get(SWITCH::LEFT)) {
+			if(!filer_.ready()) {
+				if(filer_.set_directory(false)) {
+					fbf = true;
+				}
+			}
+		}
+
+		if(!f && mount) {
+			fbf = true;
+		}
+		mount = f;
+#else
 		sdc_.service();
+#endif
 
 		// コマンド入力と、コマンド解析
 		if(command_.service()) {
@@ -476,6 +651,12 @@ int main(int argc, char* argv[])
 
 		++n;
 		if(n >= 30) n = 0;
-		device::P4.B3 = n < 10 ? false : true; 	
+		device::P4.B3 = n < 10 ? false : true;
+
+#ifdef ENABLE_LCD
+		if((fbf_back && !fbf) || fbcopy) {
+			lcd_.copy(bitmap_.fb());
+		}
+#endif
 	}
 }
