@@ -16,10 +16,11 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  A/D 制御クラス
+		@param[in]	NUM		最大チャネル数
 		@param[in]	TASK	割り込みタスク
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class TASK>
+	template <uint16_t NUM, class TASK>
 	class adc_io {
 	public:
 
@@ -50,6 +51,8 @@ namespace device {
 
 		uint8_t	level_;
 
+		static volatile uint16_t value_[NUM];
+
 		inline void sleep_() { asm("nop"); }
 
 	public:
@@ -59,7 +62,12 @@ namespace device {
 		*/
 		//-----------------------------------------------------------------//
 		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
-		{
+		{ 
+			value_[ADS()] = ADCR();
+			if(ADS() < NUM) {
+				ADS = ADS() + 1;
+				ADM0.ADCS = 1;  // start
+			}
 			task_();
 		}
 
@@ -69,7 +77,9 @@ namespace device {
 			@brief	コンストラクター
 		 */
 		//-----------------------------------------------------------------//
-		adc_io() : level_(0) { }
+		adc_io() : level_(0) {
+			for(uint8_t i = 0; i < NUM; ++i) value_[i] = 0;
+		}
 
 
 		//-----------------------------------------------------------------//
@@ -118,13 +128,41 @@ namespace device {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	読み込み同期（ポーリングの場合は無視される）
+		 */
+		//-----------------------------------------------------------------//
+		void sync() const {
+			if(level_ == 0) return;
+			while(ADS() < NUM) sleep_();
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	スキャン開始（割り込みモードの場合のみ有効）
+			@param[in]	top	開始チャネル
+		 */
+		//-----------------------------------------------------------------//
+		void start_scan(uint8_t top = 0)
+		{
+			ADS = top;
+			ADM0.ADCS = 1;  // start
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	A/D 変換結果を取得
 			@param[in]	ch	変換チャネル
-			@return 変換結果（上位１０ビット）
+			@return 変換結果（上位１０ビットが有効な値）
 		 */
 		//-----------------------------------------------------------------//
 		uint16_t get(uint8_t ch)
 		{
+			if(ch >= NUM) {
+				return 0xffff;
+			}
+
 			if(level_ == 0) {
 				ADS = ch;
 				ADM0.ADCS = 1;  // start
@@ -132,9 +170,11 @@ namespace device {
 				intr::IF1H.ADIF = 0;
 				return ADCR();
 			} else {
-
-				return 0;
+				return value_[ch];
 			}
 		}
 	};
+
+	template<uint16_t NUM, class TASK>
+		volatile uint16_t adc_io<NUM, TASK>::value_[NUM]; 
 }
