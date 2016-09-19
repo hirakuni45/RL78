@@ -6,13 +6,24 @@
 _start:
 	movw	sp, #__stack
 
-
 ;; block move to initialize .data
 
 	;; we're copying from 00:[_romdatastart] to 0F:[_datastart]
 	;; and our data is not in the mirrored area.
 
 	mov		es, #0
+
+;; clear all RAM
+	sel		rb0		; bank 0
+	movw	hl, #__datastart
+LC0:
+	movw	ax, #0
+	movw	[hl], ax
+	incw	hl
+	incw	hl
+	movw	ax, hl
+	cmpw	ax, #__stack
+	bnz		$LC0
 
 	sel		rb0		; bank 0
 	movw	hl, #__datastart
