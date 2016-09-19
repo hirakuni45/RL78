@@ -34,7 +34,8 @@ namespace {
 
 	device::itimer<uint8_t> itm_;
 
-	typedef device::adc_io<utils::null_task> adc;
+	// A/D 変換の終了チャネル数を設定
+	typedef device::adc_io<4, utils::null_task> adc;
 	adc adc_;
 
 	enum class SWITCH : uint8_t {
@@ -76,7 +77,7 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 21 */  nullptr,
 	/* 22 */  nullptr,
 	/* 23 */  nullptr,
-	/* 24 */  nullptr,
+	/* 24 */  reinterpret_cast<void*>(adc_.task),
 	/* 25 */  nullptr,
 	/* 26 */  reinterpret_cast<void*>(itm_.task),
 };
@@ -123,6 +124,9 @@ int main(int argc, char* argv[])
 	uint8_t n = 0;
 	while(1) {
 		itm_.sync();
+		adc_.start_scan(2);  // チャネル２から開始
+
+		adc_.sync();
 
 		// ４つのスイッチ判定（排他的）
 		auto val = adc_.get(2);
