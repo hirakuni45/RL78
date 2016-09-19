@@ -25,7 +25,8 @@ namespace {
 
 	device::itimer<uint8_t> itm_;
 
-	typedef device::adc_io<utils::null_task> adc;
+	// 最終チャネル番号＋１を設定
+	typedef device::adc_io<4, utils::null_task> adc;
 	adc adc_;
 }
 
@@ -55,7 +56,7 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 21 */  nullptr,
 	/* 22 */  nullptr,
 	/* 23 */  nullptr,
-	/* 24 */  nullptr,
+	/* 24 */  reinterpret_cast<void*>(adc_.task),
 	/* 25 */  nullptr,
 	/* 26 */  reinterpret_cast<void*>(itm_.task),
 };
@@ -93,7 +94,7 @@ int main(int argc, char* argv[])
 	{
 		device::PM2.B2 = 1;
 		device::PM2.B3 = 1;
-		uint8_t intr_level = 0;
+		uint8_t intr_level = 1;  // 割り込み設定
 		adc_.start(adc::REFP::VDD, adc::REFM::VSS, intr_level);
 	}
 
@@ -103,8 +104,9 @@ int main(int argc, char* argv[])
 	uint8_t t = 0;
 	while(1) {
 		itm_.sync();
+		adc_.start_scan(2);  // スキャン開始チャネル
 
-		if(t >= 60) {
+		if(t >= 30) {
 			auto val = adc_.get(2);
 			val >>= 6;
 #if 1
