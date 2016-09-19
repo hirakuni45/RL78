@@ -53,7 +53,7 @@ namespace device {
 
 		static volatile uint16_t value_[NUM];
 
-		inline void sleep_() { asm("nop"); }
+		static inline void sleep_() { asm("nop"); }
 
 	public:
 		//-----------------------------------------------------------------//
