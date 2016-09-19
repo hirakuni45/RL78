@@ -106,6 +106,8 @@ int main(int argc, char* argv[])
 		itm_.sync();
 		adc_.start_scan(2);  // スキャン開始チャネル
 
+		adc_.sync();  // スキャン終了待ち
+
 		if(t >= 30) {
 			auto val = adc_.get(2);
 			val >>= 6;
