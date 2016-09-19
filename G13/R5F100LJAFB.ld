@@ -45,7 +45,7 @@ MEMORY {
 	OPT (r)   : ORIGIN = 0x000c0, LENGTH = 0x00004
 	ROM (r)   : ORIGIN = 0x000d8, LENGTH = 0x3ff28
 	RAM (w)   : ORIGIN = 0xfaf00, LENGTH = 0x04fe0
-	STACK (w) : ORIGIN = 0xffec0, LENGTH = 0x00002
+	STACK (w) : ORIGIN = 0xffee0, LENGTH = 0x00002
 }
 
 SECTIONS
