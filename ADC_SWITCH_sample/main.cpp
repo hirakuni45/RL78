@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 	{
 		device::PM2.B2 = 1;
 		device::PM2.B3 = 1;
-		uint8_t intr_level = 0;
+		uint8_t intr_level = 1;
 		adc_.start(adc::REFP::VDD, adc::REFM::VSS, intr_level);
 	}
 
