@@ -482,6 +482,25 @@ namespace graphics {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	テキストの描画サイズを得る
+			@param[in]	text	テキスト（UTF-8）
+			@param[in]	prop	プロポーショナルの場合「true」
+			@return 描画サイズ
+		*/
+		//-----------------------------------------------------------------//
+		int16_t draw_text_length(const char* text, bool prop = false)
+		{
+			char ch;
+			int16_t x = 0;
+			while((ch = *text++) != 0) {
+				x = draw_font(x, get_height(), ch, prop);
+			}
+			return x;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	水平レベルを表示
 			@param[in]	x	開始点Ｘ軸を指定
 			@param[in]	y	開始点Ｙ軸を指定
