@@ -52,13 +52,16 @@ namespace graphics {
 
 		uint8_t	fb_[WIDTH * HEIGHT / 8];
 
+		uint16_t	code_;
+		uint8_t		cnt_;
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		monograph(KFONT& kf) : kfont_(kf) { }
+		monograph(KFONT& kf) : kfont_(kf), code_(0), cnt_(0) { }
 
 
 		//-----------------------------------------------------------------//
@@ -378,13 +381,14 @@ namespace graphics {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	フォントを描画する。
+			@brief	フォントを描画する（UTF-16）
 			@param[in]	x	開始点Ｘ軸を指定
 			@param[in]	y	開始点Ｙ軸を指定
-			@param[in]	code	コード
+			@param[in]	code	キャラクター・コード
 		*/
 		//-----------------------------------------------------------------//
-		void draw_font(int16_t x, int16_t y, uint16_t code) {
+		void draw_font_utf16(int16_t x, int16_t y, uint16_t code)
+		{
 			if(y <= -AFONT::height || y >= static_cast<int16_t>(HEIGHT)) {
 				return;
 			}
@@ -404,6 +408,53 @@ namespace graphics {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	フォントを描画する（UTF-8）
+			@param[in]	x	開始点Ｘ軸を指定
+			@param[in]	y	開始点Ｙ軸を指定
+			@param[in]	ch	キャラクター・コード
+			@param[in]	prop	プロポーショナルの場合「true」
+			@return 文字の終端座標（Ｘ）
+		*/
+		//-----------------------------------------------------------------//
+		int16_t draw_font(int16_t x, int16_t y, char ch, bool prop = false)
+		{
+			uint8_t c = static_cast<uint8_t>(ch);
+			if(c < 0x80) {
+				draw_font_utf16(x, y, c);
+				if(prop) x += AFONT::get_width(c);
+				else x += AFONT::width;
+				code_ = 0;
+				return x;
+			} else if((c & 0xf0) == 0xe0) {
+				code_ = (c & 0x0f);
+				cnt_ = 2;
+				return x;
+			} else if((c & 0xe0) == 0xc0) {
+				code_ = (c & 0x1f);
+				cnt_ = 1;
+				return x;
+			} else if((c & 0xc0) == 0x80) {
+				code_ <<= 6;
+				code_ |= c & 0x3f;
+				cnt_--;
+				if(cnt_ == 0 && code_ < 0x80) {
+					code_ = 0;	// 不正なコードとして無視
+					return x;
+				} else if(cnt_ < 0) {
+					code_ = 0;
+				}
+			}
+			if(cnt_ == 0 && code_ != 0) {
+				draw_font_utf16(x, y, code_);
+				x += KFONT::width;
+				code_ = 0;
+			}
+			return x;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	テキストを描画する。
 			@param[in]	x	開始点Ｘ軸を指定
 			@param[in]	y	開始点Ｙ軸を指定
@@ -412,39 +463,11 @@ namespace graphics {
 			@return 文字の終端座標（Ｘ）
 		*/
 		//-----------------------------------------------------------------//
-		int16_t draw_text(int16_t x, int16_t y, const char* text, bool prop = false) {
-			int8_t cnt = 0;
-			uint16_t code = 0;
-			char tc;
-			while((tc = *text++) != 0) {
-				uint8_t c = static_cast<uint8_t>(tc);
-				if(c < 0x80) {
-					draw_font(x, y, tc);
-					if(prop) x += AFONT::get_width(code);
-					else x += AFONT::width;
-					code = 0;
-				} else if((c & 0xf0) == 0xe0) {
-					code = (c & 0x0f);
-					cnt = 2;
-				} else if((c & 0xe0) == 0xc0) {
-					code = (c & 0x1f);
-					cnt = 1;
-				} else if((c & 0xc0) == 0x80) {
-					code <<= 6;
-					code |= c & 0x3f;
-					cnt--;
-					if(cnt == 0 && code < 0x80) {
-						code = 0;	// 不正なコードとして無視
-						break;
-					} else if(cnt < 0) {
-						code = 0;
-					}
-				}
-				if(cnt == 0 && code != 0) {
-					draw_font(x, y, code);
-					x += KFONT::width;
-					code = 0;
-				}			
+		int16_t draw_text(int16_t x, int16_t y, const char* text, bool prop = false)
+		{
+			char ch;
+			while((ch = *text++) != 0) {
+				x = draw_font(x, y, ch, prop);
 			}
 			return x;
 		}
