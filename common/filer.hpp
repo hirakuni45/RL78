@@ -192,10 +192,11 @@ namespace graphics {
 		/*!
 			@brief	サービス 表示、毎フレーム呼ぶ
 			@param[in]	mount	マウント状態
+			@param[in]	spd		シフト・スピード遅延
 			@return 「true」が返る場合、フレームバッファの更新要求
 		*/
 		//-----------------------------------------------------------------//
-		bool service(bool mount)
+		bool service(bool mount, int8_t spd)
 		{
 			if(!mount) {
 				task_ = task::ready;
@@ -229,7 +230,7 @@ namespace graphics {
 					if(x <= 0) {
 						shift_pos_ = bitmap_.get_width();
 					}
-					shift_wait_ -= 8;  // shift speed delay
+					shift_wait_ -= spd;  // shift speed delay
 					fbcopy = true;
 				} else {
 					++shift_wait_;
