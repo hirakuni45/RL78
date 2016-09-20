@@ -8,6 +8,10 @@
 #include "ff12a/src/ff.h"
 #include "common/format.hpp"
 
+extern "C" {	
+	void bmp_putch(char ch);
+};
+
 namespace audio {
 
 	//-----------------------------------------------------------------//
@@ -48,7 +52,7 @@ namespace audio {
 		uint8_t		chanel_;
 		uint8_t		bits_;
 
-		bool list_tag_(FIL* fp, uint16_t size) {
+		bool list_tag_(FIL* fp, uint16_t size, bool lcd) {
 			while(size > 0) {
 				char ch = 0;
 				UINT br;
@@ -58,6 +62,9 @@ namespace audio {
 				--size;
 				if(ch != 0) {
 					utils::format("%c") % ch;
+					if(lcd) {
+						bmp_putch(ch);
+					}
 				}
 			}
 			return true;
@@ -76,9 +83,10 @@ namespace audio {
 		/*!
 			@brief	ヘッダーをロードして、フォーマット、サイズを取得する
 			@param[in]	path	ファイル・パス
+			@param[in]	lcd		LCD 向け表示の場合「true」
 		*/
 		//-----------------------------------------------------------------//
-		bool load_header(FIL* fil)
+		bool load_header(FIL* fil, bool lcd = false)
 		{
 			uint32_t ofs = 0;
 			{
@@ -131,10 +139,20 @@ namespace audio {
 							sz -= sizeof(tag);
 							utils::format("%c%c%c%c: ") % tag.szChunkName[0] % tag.szChunkName[1]
 								% tag.szChunkName[2] % tag.szChunkName[3];
+							bool f = lcd;
+							if(f) {
+								if(std::strncmp(tag.szChunkName, "IART", 4) == 0) ;
+								else if(std::strncmp(tag.szChunkName, "INAM", 4) == 0) ;
+								else if(std::strncmp(tag.szChunkName, "IPRD", 4) == 0) ;
+								else f = false;
+							}
 							uint16_t n = tag.ulChunkSize;
 							if(n & 1) ++n;
-							if(!list_tag_(fil, n)) {
+							if(!list_tag_(fil, n, f)) {
 								return false;
+							}
+							if(f) {
+								bmp_putch('\n');
 							}
 							utils::format("\n");
 							sz -= n;
@@ -148,6 +166,7 @@ namespace audio {
 
 			return true;
 		}
+
 
 		//-----------------------------------------------------------------//
 		/*!

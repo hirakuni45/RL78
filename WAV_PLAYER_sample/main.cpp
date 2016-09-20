@@ -172,6 +172,7 @@ namespace {
 	device::tau_io<device::TAU01> pwm1_;
 	device::tau_io<device::TAU02> pwm2_;
 
+	// LCD(128x64)、A/D 変換スイッチを使う場合
 #ifdef ENABLE_LCD
 	// LCD CSI(SPI) の定義、CSI20 の通信では、「SAU10」を利用、１ユニット、チャネル０
 	typedef device::csi_io<device::SAU10> csig;
@@ -194,7 +195,7 @@ namespace {
 	typedef graphics::monograph<128, 64, afont, kfont> bitmap;
 	bitmap bitmap_(kfont_);
 
-	typedef device::adc_io<utils::null_task> adc;
+	typedef device::adc_io<4, utils::null_task> adc;
 	adc adc_;
 
 	graphics::filer<sdc_io, bitmap> filer_(sdc_, bitmap_);
@@ -210,43 +211,90 @@ namespace {
 
 	typedef utils::bitset<uint8_t, SWITCH> switch_bits;
 	utils::switch_man<switch_bits> switch_man_;
+
+	int16_t wav_info_x_;
+	int16_t wav_info_y_;
 #endif
 
 }
 
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
-	/*  0 */  nullptr,
-	/*  1 */  nullptr,
-	/*  2 */  nullptr,
-	/*  3 */  nullptr,
-	/*  4 */  nullptr,
-	/*  5 */  nullptr,
-	/*  6 */  nullptr,
-	/*  7 */  nullptr,
-	/*  8 */  nullptr,
-	/*  9 */  nullptr,
-	/* 10 */  nullptr,
-	/* 11 */  nullptr,
-	/* 12 */  nullptr,
-	/* 13 */  nullptr,
-	/* 14 */  nullptr,
-	/* 15 */  nullptr,
-	/* 16 */  reinterpret_cast<void*>(uart_.send_task),
-	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),
-	/* 18 */  reinterpret_cast<void*>(uart_.error_task),
-	/* 19 */  nullptr,
-	/* 20 */  reinterpret_cast<void*>(master_.task),
-	/* 21 */  nullptr,
-	/* 22 */  nullptr,
-	/* 23 */  nullptr,
-	/* 24 */  nullptr,
-	/* 25 */  nullptr,
-	/* 26 */  reinterpret_cast<void*>(itm_.task),
+	/*  0 WDTI            */  nullptr,
+	/*  1 LVI             */  nullptr,
+	/*  2 P0              */  nullptr,
+	/*  3 P1              */  nullptr,
+	/*  4 P2              */  nullptr,
+	/*  5 P3              */  nullptr,
+	/*  6 P4              */  nullptr,
+	/*  7 P5              */  nullptr,
+	/*  8 ST2/CSI20/IIC20 */  nullptr,
+	/*  9 SR2/CSI21/IIC21 */  nullptr,
+	/* 10 SRE2/TM11H      */  nullptr,
+	/* 11 DMA0            */  nullptr,
+	/* 12 DMA1            */  nullptr,
+	/* 13 ST0/CSI00/IIC00 */  nullptr,
+	/* 14 SR0/CSI01/IIC01 */  nullptr,
+	/* 15 SRE0/TM01H      */  nullptr,
+	/* 16 ST1/CSI10/IIC10 */  reinterpret_cast<void*>(uart_.send_task),
+	/* 17 SR1/CSI11/IIC11 */  reinterpret_cast<void*>(uart_.recv_task),
+	/* 18 SRE1/TM03H      */  reinterpret_cast<void*>(uart_.error_task),
+	/* 19 IICA0           */  nullptr,
+	/* 20 TM00            */  reinterpret_cast<void*>(master_.task),
+	/* 21 TM01            */  nullptr,
+	/* 22 TM02            */  nullptr,
+	/* 23 TM03            */  nullptr,
+	/* 24 AD              */  reinterpret_cast<void*>(adc_.task),
+	/* 25 RTC             */  nullptr,
+	/* 26 IT              */  reinterpret_cast<void*>(itm_.task),
+	/* 27 KR              */  nullptr,
+	/* 28 ST3/CSI30/IIC30 */  nullptr,
+	/* 29 SR3/CSI31/IIC31 */  nullptr,
+	/* 30 TM13            */  nullptr,
+	/* 31 TM04            */  nullptr,
+	/* 32 TM05            */  nullptr,
+	/* 33 TM06            */  nullptr,
+	/* 34 TM07            */  nullptr,
+	/* 35 P6              */  nullptr,
+	/* 36 P7              */  nullptr,
+	/* 37 P8              */  nullptr,
+	/* 38 P9              */  nullptr,
+	/* 39 P10             */  nullptr,
+	/* 40 P11             */  nullptr,
+	/* 41 TM10            */  nullptr,
+	/* 42 TM11            */  nullptr,
+	/* 43 TM12            */  nullptr,
+	/* 44 SRE3/TM13H      */  nullptr,
+	/* 45 MD              */  nullptr,
+	/* 46 IICA1           */  nullptr,
+	/* 47 FL              */  nullptr,
+	/* 48 DMA2            */  nullptr,
+	/* 49 DMA3            */  nullptr,
+	/* 50 TM14            */  nullptr,
+	/* 51 TM15            */  nullptr,
+	/* 52 TM16            */  nullptr,
+	/* 53 TM17            */  nullptr,
 };
 
 
 extern "C" {
+
+#ifdef ENABLE_LCD
+	void bmp_putch(char ch)
+	{
+		if(ch != '\n') {
+			wav_info_x_ = bitmap_.draw_font(wav_info_x_, wav_info_y_, ch);
+		} else {
+			wav_info_x_ = 0;
+			wav_info_y_ += bitmap_.get_kfont_height();
+		}
+	}
+#else
+	void bmp_putch(char ch)
+	{
+	}
+#endif
+
 	void sci_putch(char ch)
 	{
 		uart_.putch(ch);
@@ -295,6 +343,36 @@ extern "C" {
 
 namespace {
 
+#ifdef ENABLE_LCD
+	void switch_decode_()
+	{
+		switch_bits lvl;
+		// ４つのスイッチ判定（排他的）
+		auto val = adc_.get(2);
+		val >>= 6;   // 0 to 1023
+		val += 128;  // 閾値のオフセット（1024 / 4(SWITCH) / 2）
+		val /= 256;  // デコード（1024 / 4(SWITCH）
+
+		if(val < 4) {
+			lvl.set(static_cast<SWITCH>(val));
+		}
+
+		// ２つのスイッチ判定（同時押し判定）
+		val = adc_.get(3);
+		val >>= 6;  // 0 to 1023
+		if(val < 256) {
+			lvl.set(SWITCH::A);
+			lvl.set(SWITCH::B);
+		} else if(val < 594) {
+			lvl.set(SWITCH::A);
+		} else if(val < 722) {
+			lvl.set(SWITCH::B);
+		}
+
+		switch_man_.service(lvl);
+	}
+#endif
+
 	bool init_pwm_()
 	{
 		// 62.5 KHz (16MHz / 256)
@@ -330,7 +408,15 @@ namespace {
 			return;
 		}
 
-		if(!wav_.load_header(&fil)) {
+#ifdef ENABLE_LCD
+		bitmap_.flash(0);
+		bool lcd = true;
+		wav_info_x_ = 0;
+		wav_info_y_ = 0;
+#else
+		bool lcd = false;
+#endif
+		if(!wav_.load_header(&fil, lcd)) {
 			master_.at_task().set_param(4, 0, 2, 0x80);
 			f_close(&fil);
 			utils::format("WAV file load fail: '%s'\n") % fname;
@@ -343,6 +429,11 @@ namespace {
 		utils::format("Rate:   %d\n") % wav_.get_rate();
 		utils::format("Chanel: %d\n") % static_cast<uint32_t>(wav_.get_chanel());
 		utils::format("Bits:   %d\n") % static_cast<uint32_t>(wav_.get_bits());
+
+#ifdef ENABLE_LCD
+
+		lcd_.copy(bitmap_.fb());
+#endif
 
 		master_.at_task().set_rate(wav_.get_rate());
 		uint8_t skip = 0;
@@ -381,6 +472,9 @@ namespace {
 		uint8_t n = 0;
 		bool pause = false;
 		while(fpos < fsize) {
+#ifdef ENABLE_LCD
+			adc_.start_scan(2);
+#endif
 			if(!pause) {
 				while(((wpos ^ pos) & 512) == 0) {
 					pos = master_.at_task().get_pos();
@@ -410,22 +504,37 @@ namespace {
 				++n;
 			}
 
+			char ch = 0;
 			if(sci_length() > 0) {
-				auto ch = sci_getch();
-				if(ch == '>') {  // '>'
-					break;
-				} else if(ch == '<') {  // '<'
-					fpos = 0;
-					f_lseek(&fil, wav_.get_top());
-				} else if(ch == ' ') {  // [space]
-					if(pause) {
-						master_.at_task().pause(skip);
-					} else {
-						master_.at_task().pause(0);
-					}
-					pause = !pause;
+				ch = sci_getch();
+			}
+
+#ifdef ENABLE_LCD
+			switch_decode_();
+
+			if(switch_man_.get_positive().get(SWITCH::RIGHT)) {
+				ch = '>';
+			}
+			if(switch_man_.get_positive().get(SWITCH::LEFT)) {
+				ch = '<';
+			}
+			if(switch_man_.get_positive().get(SWITCH::A)) {
+				ch = ' ';
+			}
+#endif
+			if(ch == '>') {  // '>'
+				break;
+			} else if(ch == '<') {  // '<'
+				fpos = 0;
+				f_lseek(&fil, wav_.get_top());
+			} else if(ch == ' ') {  // [space]
+				if(pause) {
+					master_.at_task().pause(skip);
+				} else {
+					master_.at_task().pause(0);
 				}
-			}			
+				pause = !pause;
+			}
 		}
 
 		master_.at_task().set_param(skip, l_ofs, r_ofs, wofs);
@@ -473,7 +582,7 @@ int main(int argc, char* argv[])
 	{
 		device::PM2.B2 = 1;
 		device::PM2.B3 = 1;
-		uint8_t intr_level = 0;
+		uint8_t intr_level = 1;
 		adc_.start(adc::REFP::VDD, adc::REFM::VSS, intr_level);
 	}
 #endif
@@ -524,30 +633,15 @@ int main(int argc, char* argv[])
 		itm_.sync();
 
 #ifdef ENABLE_LCD
-		switch_bits lvl;
-		// ４つのスイッチ判定（排他的）
-		auto val = adc_.get(2);
-		val >>= 6;   // 0 to 1023
-		val += 128;  // 閾値のオフセット（1024 / 4(SWITCH) / 2）
-		val /= 256;  // デコード（1024 / 4(SWITCH）
+		adc_.start_scan(2);
 
-		if(val < 4) {
-			lvl.set(static_cast<SWITCH>(val));
+		if((fbf_back && !fbf) || fbcopy) {
+			lcd_.copy(bitmap_.fb());
 		}
 
-		// ２つのスイッチ判定（同時押し判定）
-		val = adc_.get(3);
-		val >>= 6;  // 0 to 1023
-		if(val < 256) {
-			lvl.set(SWITCH::A);
-			lvl.set(SWITCH::B);
-		} else if(val < 594) {
-			lvl.set(SWITCH::A);
-		} else if(val < 722) {
-			lvl.set(SWITCH::B);
-		}
+		adc_.sync();
 
-		switch_man_.service(lvl);
+		switch_decode_();
 
 		fbf_back = fbf;
 		if(fbf) {
@@ -558,7 +652,7 @@ int main(int argc, char* argv[])
 		bool f = sdc_.service();
 		kfont_.set_mount(f);
 
-		fbcopy = filer_.service(f);
+		fbcopy = filer_.service(f, 6);
 
 		if(switch_man_.get_positive().get(SWITCH::A)) {
 			if(filer_.ready()) {
@@ -575,7 +669,7 @@ int main(int argc, char* argv[])
 			if(!filer_.ready()) {
 				fbf = filer_.set_focus(1);
 			}
-		} else if(switch_man_.get_positive().get(SWITCH::RIGHT)) {
+		} else if(switch_man_.get_negative().get(SWITCH::RIGHT)) {
 			if(!filer_.ready()) {
 				if(filer_.set_directory()) {
 					fbf = true;
@@ -594,6 +688,12 @@ int main(int argc, char* argv[])
 				if(filer_.set_directory(false)) {
 					fbf = true;
 				}
+			}
+		} else if(switch_man_.get_negative().get(SWITCH::B)) {
+			if(!filer_.ready()) {
+				play_loop_("");
+				filer_.close();
+				fbf = true;
 			}
 		}
 
@@ -652,11 +752,5 @@ int main(int argc, char* argv[])
 		++n;
 		if(n >= 30) n = 0;
 		device::P4.B3 = n < 10 ? false : true;
-
-#ifdef ENABLE_LCD
-		if((fbf_back && !fbf) || fbcopy) {
-			lcd_.copy(bitmap_.fb());
-		}
-#endif
 	}
 }
