@@ -401,7 +401,14 @@ namespace graphics {
 				if(x <= -KFONT::width || x >= static_cast<int16_t>(WIDTH)) {
 					return;
 				}
-				draw_image(x, y, kfont_.get(code), KFONT::width, KFONT::height);
+				auto p = kfont_.get(code);
+				if(p != nullptr) {
+					draw_image(x, y, p, KFONT::width, KFONT::height);
+				} else {
+					draw_image(x, y, AFONT::get(0x12), AFONT::width, AFONT::height);
+					x += AFONT::width;
+					draw_image(x, y, AFONT::get(0x13), AFONT::width, AFONT::height);
+				}
 			}
 		}
 
