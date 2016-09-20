@@ -8,8 +8,6 @@
 #include <cstdint>
 #include "ff12a/src/ff.h"
 
-// #include "common/format.hpp"
-
 namespace graphics {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -133,20 +131,17 @@ namespace graphics {
 
 			FIL fp;
 			if(f_open(&fp, "/kfont12.bin", FA_READ) != FR_OK) {
-//				utils::format("Open error\n");
 				return nullptr;
 			}
  
 			if(f_lseek(&fp, lin * 18) != FR_OK) {
 				f_close(&fp);
-//				utils::format("Seek error\n");
 				return nullptr;
 			}
 
 			UINT rs;
 			if(f_read(&fp, &cash_[cash_idx_].bitmap[0], 18, &rs) != FR_OK) {
 				f_close(&fp);
-//				utils::format("Read error\n");
 				return nullptr;
 			}
 			cash_[cash_idx_].code = code;
