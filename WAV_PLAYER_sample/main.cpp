@@ -460,14 +460,18 @@ namespace {
 		utils::format("Chanel: %d\n") % static_cast<uint32_t>(wav_.get_chanel());
 		utils::format("Bits:   %d\n") % static_cast<uint32_t>(wav_.get_bits());
 
+		auto ti = wav_.get_time();
+		utils::format("Time:   %02d:%02d:%02d\n") % (ti / 3600) % (ti / 60) % (ti % 60);
+
 #ifdef ENABLE_LCD
-		if(!wav_info_idx1_) {
+		if(!wav_info_idx1_) {  // 曲名が無い場合は、ファイル名を曲名とする
 			bmp_locate(1);
 			bmp_puts(fname);
 		}
 		bmp_locate(3);
 		turn_bmp_ = true;
-		utils::format("%d %d %d") % static_cast<uint32_t>(wav_.get_bits())
+		utils::format("%02d:%02d:%02d %d %d %d") % (ti / 3600) % (ti / 60) % (ti % 60)
+			% static_cast<uint32_t>(wav_.get_bits())
 			% static_cast<uint32_t>(wav_.get_chanel())
 			% wav_.get_rate();
 		turn_bmp_ = false;
@@ -510,6 +514,11 @@ namespace {
 		uint16_t pos = wpos;
 		uint8_t n = 0;
 		bool pause = false;
+		uint8_t s_time = 0;
+		uint8_t m_time = 0;
+		uint8_t h_time = 0;
+		uint16_t btime = 0;
+		uint16_t dtime = 512 / (wav_.get_bits() / 8) / wav_.get_chanel();
 		while(fpos < fsize) {
 #ifdef ENABLE_LCD
 			adc_.start_scan(2);
@@ -574,11 +583,27 @@ namespace {
 				}
 				pause = !pause;
 			}
+
+			// 時間の積算と表示
+			if(btime >= wav_.get_rate()) {
+				btime -= wav_.get_rate();
+				++s_time;
+				if(s_time >= 60) { s_time = 0; ++m_time; }
+				if(m_time >= 60) { m_time = 0; ++h_time; }
+				utils::format("\r%02d:%02d:%02d")
+					% static_cast<uint32_t>(h_time)
+					% static_cast<uint32_t>(m_time)
+					% static_cast<uint32_t>(s_time); 
+			} else {
+				btime += dtime;
+			}
 		}
 
 		master_.at_task().set_param(skip, l_ofs, r_ofs, wofs);
 
 		f_close(&fil);
+
+		utils::format("\n");
 	}
 
 	void play_loop_(const char*);

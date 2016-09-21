@@ -53,7 +53,8 @@ namespace audio {
 		uint8_t		chanel_;
 		uint8_t		bits_;
 
-		bool list_tag_(FIL* fp, uint16_t size) {
+		bool list_tag_(FIL* fp, uint16_t size, int8_t idx) {
+			if(idx >= 0) bmp_locate(idx);
 			while(size > 0) {
 				char ch = 0;
 				UINT br;
@@ -63,7 +64,9 @@ namespace audio {
 				--size;
 				if(ch != 0) {
 					utils::format("%c") % ch;
-					bmp_putch(ch);
+					if(idx >= 0) {
+						bmp_putch(ch);
+					}
 				}
 			}
 			return true;
@@ -146,8 +149,7 @@ namespace audio {
 							}
 							uint16_t n = tag.ulChunkSize;
 							if(n & 1) ++n;
-							if(idx >= 0) bmp_locate(idx);
-							if(!list_tag_(fil, n)) {
+							if(!list_tag_(fil, n, idx)) {
 								return false;
 							}
 							utils::format("\n");
@@ -207,5 +209,14 @@ namespace audio {
 		*/
 		//-----------------------------------------------------------------//
 		uint8_t get_bits() const { return  bits_; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	時間を取得（秒）
+			@return 時間
+		*/
+		//-----------------------------------------------------------------//
+		uint32_t get_time() const { return data_size_ / (chanel_ * bits_ / 8) / rate_; }
 	};
 }
