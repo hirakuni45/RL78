@@ -10,6 +10,7 @@
 
 extern "C" {	
 	void bmp_putch(char ch);
+	void bmp_locate(int8_t idx);
 };
 
 namespace audio {
@@ -52,7 +53,7 @@ namespace audio {
 		uint8_t		chanel_;
 		uint8_t		bits_;
 
-		bool list_tag_(FIL* fp, uint16_t size, bool lcd) {
+		bool list_tag_(FIL* fp, uint16_t size) {
 			while(size > 0) {
 				char ch = 0;
 				UINT br;
@@ -62,9 +63,7 @@ namespace audio {
 				--size;
 				if(ch != 0) {
 					utils::format("%c") % ch;
-					if(lcd) {
-						bmp_putch(ch);
-					}
+					bmp_putch(ch);
 				}
 			}
 			return true;
@@ -139,20 +138,17 @@ namespace audio {
 							sz -= sizeof(tag);
 							utils::format("%c%c%c%c: ") % tag.szChunkName[0] % tag.szChunkName[1]
 								% tag.szChunkName[2] % tag.szChunkName[3];
-							bool f = lcd;
-							if(f) {
-								if(std::strncmp(tag.szChunkName, "IART", 4) == 0) ;
-								else if(std::strncmp(tag.szChunkName, "INAM", 4) == 0) ;
-								else if(std::strncmp(tag.szChunkName, "IPRD", 4) == 0) ;
-								else f = false;
+							int8_t idx = -1;
+							if(lcd) {
+								if(std::strncmp(tag.szChunkName, "IART", 4) == 0) idx = 0;
+								else if(std::strncmp(tag.szChunkName, "INAM", 4) == 0) idx = 1;
+								else if(std::strncmp(tag.szChunkName, "IPRD", 4) == 0) idx = 2;
 							}
 							uint16_t n = tag.ulChunkSize;
 							if(n & 1) ++n;
-							if(!list_tag_(fil, n, f)) {
+							if(idx >= 0) bmp_locate(idx);
+							if(!list_tag_(fil, n)) {
 								return false;
-							}
-							if(f) {
-								bmp_putch('\n');
 							}
 							utils::format("\n");
 							sz -= n;
