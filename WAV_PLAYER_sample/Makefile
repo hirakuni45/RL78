@@ -67,6 +67,7 @@ AR			=	rl78-elf-ar
 LD			=	rl78-elf-ld
 OBJCOPY		=	rl78-elf-objcopy
 OBJDUMP		=	rl78-elf-objdump
+SIZE		=	rl78-elf-size
 
 # AFLAGS        = -Wa,-adhlns=$(<:.s=.lst),-gstabs
 # AFLAGS        =	-Wa,-adhlns=$(<:.s=.lst)
@@ -101,6 +102,7 @@ all: $(BUILD) $(TARGET).elf text
 
 $(TARGET).elf: $(OBJECTS) $(LDSCRIPT) Makefile
 	$(CC) $(LDFLAGS) $(LIBINCS) -o $@ $(OBJECTS) $(LIBS)
+	$(SIZE) $@
 
 $(BUILD)/%.o: %.s
 	mkdir -p $(dir $@); \
