@@ -214,6 +214,8 @@ namespace {
 
 	int16_t wav_info_x_;
 	int16_t wav_info_y_;
+	bool	wav_info_idx1_;
+	bool	turn_bmp_;
 #endif
 
 }
@@ -280,29 +282,56 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 extern "C" {
 
 #ifdef ENABLE_LCD
+	void bmp_puts(const char* text)
+	{
+		wav_info_x_ = bitmap_.draw_text(wav_info_x_, wav_info_y_, text);
+	}
+
 	void bmp_putch(char ch)
 	{
-		if(ch != '\n') {
-			wav_info_x_ = bitmap_.draw_font(wav_info_x_, wav_info_y_, ch);
-		} else {
-			wav_info_x_ = 0;
-			wav_info_y_ += bitmap_.get_kfont_height();
-		}
+		wav_info_x_ = bitmap_.draw_font(wav_info_x_, wav_info_y_, ch);
+	}
+
+	void bmp_locate(int8_t idx)
+	{
+		wav_info_x_ = 0;
+		wav_info_y_ = bitmap_.get_kfont_height() * idx;
+		if(idx == 1) wav_info_idx1_ = true;
 	}
 #else
 	void bmp_putch(char ch)
+	{
+	}
+
+	void bmp_locate(int8_t idx)
 	{
 	}
 #endif
 
 	void sci_putch(char ch)
 	{
+#ifdef ENABLE_LCD
+		if(turn_bmp_) {
+			bmp_putch(ch);
+		} else {
+			uart_.putch(ch);
+		}
+#else
 		uart_.putch(ch);
+#endif
 	}
 
 	void sci_puts(const char* str)
 	{
+#ifdef ENABLE_LCD
+		if(turn_bmp_) {
+			bmp_puts(str);
+		} else {
+			uart_.puts(str);
+		}
+#else
 		uart_.puts(str);
+#endif
 	}
 
 	char sci_getch(void)
@@ -413,6 +442,7 @@ namespace {
 		bool lcd = true;
 		wav_info_x_ = 0;
 		wav_info_y_ = 0;
+		wav_info_idx1_ = false;
 #else
 		bool lcd = false;
 #endif
@@ -431,7 +461,16 @@ namespace {
 		utils::format("Bits:   %d\n") % static_cast<uint32_t>(wav_.get_bits());
 
 #ifdef ENABLE_LCD
-
+		if(!wav_info_idx1_) {
+			bmp_locate(1);
+			bmp_puts(fname);
+		}
+		bmp_locate(3);
+		turn_bmp_ = true;
+		utils::format("%d %d %d") % static_cast<uint32_t>(wav_.get_bits())
+			% static_cast<uint32_t>(wav_.get_chanel())
+			% wav_.get_rate();
+		turn_bmp_ = false;
 		lcd_.copy(bitmap_.fb());
 #endif
 
