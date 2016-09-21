@@ -594,7 +594,7 @@ namespace {
 					% static_cast<uint32_t>(h_time)
 					% static_cast<uint32_t>(m_time)
 					% static_cast<uint32_t>(s_time); 
-			} else {
+			} else if(!pause) {
 				btime += dtime;
 			}
 		}
@@ -603,7 +603,7 @@ namespace {
 
 		f_close(&fil);
 
-		utils::format("\n");
+		utils::format("\n\n");
 	}
 
 	void play_loop_(const char*);
