@@ -50,20 +50,6 @@ namespace {
 
 	device::itimer<uint8_t> itm_;
 
-#ifdef ADC_SWITCH
-	enum class SWITCH : uint8_t {
-		RIGHT,
-		UP,
-		DOWN,
-		LEFT,
-		A,
-		B
-	};
-
-	typedef utils::bitset<uint8_t, SWITCH> switch_bits;
-	utils::switch_man<switch_bits> switch_man_;
-#endif
-
 	// SDC CSI(SPI) の定義、CSI00 の通信では、「SAU00」を利用、０ユニット、チャネル０
 	typedef device::csi_io<device::SAU00> csi;
 	csi csi_;
@@ -97,10 +83,25 @@ namespace {
 	typedef graphics::monograph<128, 64, afont, kfont> bitmap;
 	bitmap bitmap_(kfont_);
 
-	typedef device::adc_io<utils::null_task> adc;
+	graphics::filer<sdc_io, bitmap> filer_(sdc_, bitmap_);
+
+#ifdef ADC_SWITCH
+	typedef device::adc_io<4, utils::null_task> adc;
 	adc adc_;
 
-	graphics::filer<sdc_io, bitmap> filer_(sdc_, bitmap_);
+	enum class SWITCH : uint8_t {
+		RIGHT,
+		UP,
+		DOWN,
+		LEFT,
+		A,
+		B
+	};
+
+	typedef utils::bitset<uint8_t, SWITCH> switch_bits;
+	utils::switch_man<switch_bits> switch_man_;
+#endif
+
 }
 
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
@@ -128,7 +129,7 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 21 */  nullptr,
 	/* 22 */  nullptr,
 	/* 23 */  nullptr,
-	/* 24 */  nullptr,
+	/* 24 */  reinterpret_cast<void*>(adc_.task),
 	/* 25 */  nullptr,
 	/* 26 */  reinterpret_cast<void*>(itm_.task),
 };
@@ -213,7 +214,7 @@ int main(int argc, char* argv[])
 	{
 		device::PM2.B2 = 1;
 		device::PM2.B3 = 1;
-		uint8_t intr_level = 0;
+		uint8_t intr_level = 1;
 		adc_.start(adc::REFP::VDD, adc::REFM::VSS, intr_level);
 	}
 
@@ -244,6 +245,10 @@ int main(int argc, char* argv[])
 		itm_.sync();
 
 #ifdef ADC_SWITCH
+		adc_.start_scan(2);
+
+		adc_.sync();
+
 		switch_bits lvl;
 		// ４つのスイッチ判定（排他的）
 		auto val = adc_.get(2);
@@ -279,7 +284,7 @@ int main(int argc, char* argv[])
 		bool f = sdc_.service();
 		kfont_.set_mount(f);
 
-		fbcopy = filer_.service(f);
+		fbcopy = filer_.service(f, 6);
 
 		char ch = 0;
 		if(sci_length()) {
