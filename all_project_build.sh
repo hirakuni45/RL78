@@ -12,10 +12,10 @@ if [[ $1 = "clean" ]]; then
   do
     if [ -e "${file}/Makefile" ]; then
       cd "${file}"
-      echo -e "\e[1;32mClean project: " ${file} "\e[m"
+      echo "\033[1;32mClean project: " ${file} "\033[m"
       make clean >& /dev/null
       if [ $? -ne 0 ]; then
-          echo -e "\e[1;31mError: " ${file} "\e[m"
+          echo "\033[1;31mError: " ${file} "\033[m"
           echo ""
           break;
       fi
@@ -28,15 +28,15 @@ fi
 for file in `ls -d *`
 do
   if [ -e "${file}/Makefile" ]; then
-	echo -e "\e[1;35mStart project: " ${file} "\e[m"
+	echo "\033[1;35mStart project: " ${file} "\033[m"
     cd "${file}"
     make > /dev/null
     if [ $? -ne 0 ]; then
-        echo -e "\e[1;31mCompile error: " ${file} "\e[m"
+        echo "\033[1;31mCompile error: " ${file} "\033[m"
 		echo ""
         break;
     fi
     cd ..
-	echo -e "\e[1;36mBuild project: " ${file} "\e[m"
+	echo "\033[1;36mBuild project: " ${file} "\033[m"
   fi
 done
