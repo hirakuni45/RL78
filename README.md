@@ -150,6 +150,7 @@ UTF-8 を標準で使います。
    sudo port install automake
 ```
 
+---
 ## RL78 開発環境準備（Ubuntu）
 
 Linux 環境は、複数あるので、ここでは「Ubuntu 16.04 LTS」環境の場合を書いておきます。
@@ -249,6 +250,11 @@ make install
 
 ```
    git clone git://github.com/hirakuni45/RL78.git
+```
+   
+ - プロジェクトを全てコンパイル
+```
+   sh all_project_build.sh
 ```
    
 --- 
