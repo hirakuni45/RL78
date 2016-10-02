@@ -107,7 +107,7 @@ UTF-8 を標準で使います。
 
 ---
 
-## RL78 開発環境準備（OS-X、Linux）
+## RL78 開発環境準備（OS-X）
 
  - OS-X では、事前に macports をインストールしておきます。（brew は柔軟性が低いのでお勧めしません）
  -  OS−X のバージョンによっては、事前にX−Code、Command Line Tools などのインストールが必要になるかもしれません）
@@ -150,6 +150,21 @@ UTF-8 を標準で使います。
    sudo port install automake
 ```
 
+## RL78 開発環境準備（Ubuntu）
+
+Linux 環境は、複数あるので、ここでは「Ubuntu 16.04 LTS」環境の場合を書いておきます。
+
+ - texinfo、gmp、mpfr、mpc、diffutils、automake コマンドなどをインストール
+```
+   sudo apt-get install texinfo
+   sudo apt-get install libgmp-dev
+   sudo apt-get install libmpfr-dev
+   sudo apt-get install libmpc-dev
+   sudo apt-get install diffutils
+   sudo apt-get install automake
+   sudo apt-get install zlib1g-dev
+```
+
 ---
 ## RL78 開発環境構築
 
@@ -167,7 +182,7 @@ UTF-8 を標準で使います。
    cd binutils-2.25.1
    mkdir rl78_build
    cd rl78_build
-   ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf --disable-nls
+   ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf --disable-nls --with-system-zlib
    make
    make install     OS-X,Linux: (sudo make install)
 ```
@@ -193,7 +208,7 @@ UTF-8 を標準で使います。
     cd gcc-4.9.4
     mkdir rl78_build
 	cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --enable-multilib --enable-lto
+    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --enable-multilib --enable-lto --with-system-zlib
     make
     make install     OS-X,Linux: (sudo make install)
 ```
@@ -209,13 +224,21 @@ UTF-8 を標準で使います。
 	make
     make install     OS-X,Linux: (sudo make install)
 ```
+ - Linux 環境では、sudo コマンドで、ローカルで設定した binutils のパスを認識しないので、
+「make install」が失敗する、その為、以下のようなスクリプトを書いて実行する。
+```
+#!/bin/sh
+
+PATH=${PATH}:/usr/local/rl78-elf/bin
+make install
+```
   
 #### C++ コンパイラをビルド
 ``` sh
     cd
     cd gcc-4.9.4
     cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --enable-multilib --enable-lto
+    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --enable-multilib --enable-lto --with-system-zlib
     make
     make install     OS-X,Linux: (sudo make install)
 ```
@@ -225,7 +248,7 @@ UTF-8 を標準で使います。
 ## RL78 プロジェクトのソースコードを取得
 
 ```
-   git clone git@github.com:hirakuni45/RL78.git
+   git clone git://github.com/hirakuni45/RL78.git
 ```
    
 --- 
