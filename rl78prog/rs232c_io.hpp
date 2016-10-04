@@ -34,9 +34,9 @@ namespace utils {
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		enum class parity {
-			none,
-			even,
-			odd
+			none,	///< パリティー無し
+			even,	///< 偶数パリティ
+			odd		///< 奇数パリティ
 		};
 
 
@@ -46,10 +46,20 @@ namespace utils {
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		enum class char_len {
-			bits7,
-			bits8
+			bits7,	///< ７ビット
+			bits8	///< ８ビット
 		};
 
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief	ストップ・ビット長
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class stop_len {
+			one,	///< １ビット
+			two		///< ２ビット
+		};
 
 	private:
 		int    fd_;
@@ -78,26 +88,19 @@ namespace utils {
 			@param[in]	path	シリアルポートパス
 			@param[in]	brate	接続ボーレート
 			@param[in]	clen	キャラクター長
+			@param[in]	slen	ストップ・ビット長
 			@param[in]	par		パリティ・ビット
 			@param[in]	hc		ハードウェアー制御を有効にする場合「true」
 			@return 正常なら「true」
 		*/
 		//-----------------------------------------------------------------//
-		bool open(const std::string& path, speed_t brate, char_len clen = char_len::bits8, parity par = parity::none, bool hc = false) {
-			fd_ = ::open(path.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
-			if(fd_ < 0) {
-				return false;
-			}
-
-			if(tcgetattr(fd_, &attr_back_) == -1) {
-				::close(fd_);
-				fd_ = -1;
-			}
+		bool open(const std::string& path, speed_t brate,
+			char_len clen = char_len::bits8, stop_len slen = stop_len::one,
+			parity par = parity::none, bool hc = false) {
 
 			int cpar = 0;
 			int ipar = IGNPAR;
 			switch(par) {
-			default:
 			case parity::none:
 				cpar = 0;
 				ipar = IGNPAR;
@@ -110,27 +113,40 @@ namespace utils {
 				cpar = (PARENB | PARODD);
 				ipar = INPCK;
 				break;
+			default:
+				return false;
 			}
 
 			int bstop = 0;
-#if 0
-			switch(mode[2]) {
-			case '1': bstop = 0;
+			switch(slen) {
+			case stop_len::one: bstop = 0;
 				break;
-			case '2': bstop = CSTOPB;
+			case stop_len::two: bstop = CSTOPB;
 				break;
+			default:
+				return false;
 			}
-#endif
 
 			int cbits;
 			switch(clen) {
-			default:
 			case char_len::bits8:
 				cbits = CS8;
 				break;
 			case char_len::bits7:
 				cbits = CS7;
 				break;
+			default:
+				return false;
+			}
+
+			fd_ = ::open(path.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+			if(fd_ < 0) {
+				return false;
+			}
+
+			if(tcgetattr(fd_, &attr_back_) == -1) {
+				::close(fd_);
+				fd_ = -1;
 			}
 
 			memset(&attr_, 0, sizeof(attr_));
@@ -330,6 +346,18 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	破棄
+			@return 成功なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool flush()
+		{
+			return tcflush(fd_, TCIOFLUSH) == 0;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	DCD 信号の状態を取得
 			@return DCD 信号
 		*/
@@ -385,6 +413,27 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	TXD 端子のレベルを設定
+			@param[in]	level	設定レベル
+			@return 正常なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool set_TXD(bool level)
+		{
+			if(fd_ < 0) return false;
+
+			int command;
+			if(level) {
+				command = TIOCCBRK;
+			} else {
+				command = TIOCSBRK;
+			}
+			return ioctl(fd_, command) != -1; 
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	DTR 信号の状態を設定
 			@param[in]	ena 「flase」なら「０」
 			@return 成功なら「true」
@@ -430,10 +479,8 @@ namespace utils {
 			if(ioctl(fd_, TIOCMSET, &status) == -1) {
 				return false;
 			}
-
 			return true;
 		}
-
 	};
 }
 

@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 
 namespace rl78 {
+
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief	rl78_prog クラス
@@ -36,242 +37,37 @@ namespace rl78 {
 			@brief	接続速度を変更する
 			@param[in]	path	シリアル・デバイス・パス
 			@param[in]	brate	ボーレート
-			@param[in]	t		CPU 設定
+			@param[in]	voltage	動作電圧
 			@return エラー無ければ「true」
 		*/
 		//-------------------------------------------------------------//
-		bool start(const std::string& path, uint32_t brate, const rl78::protocol::rl78_t& t) {
-#if 0
-			// 開始
-			if(!proto_.start(path)) {
-				std::cerr << "Can't open path: '" << path << "'" << std::endl;
+		bool start(const std::string& path, uint32_t brate, uint32_t voltage) {
+			speed_t spt;
+			switch(brate) {
+			case 115200:
+				spt = B115200;
+				break;
+//			case 250000:
+//				spt = B250000;
+//				break;
+			case 500000:
+				spt = B500000;
+				break;
+			case 1000000:
+				spt = B1000000;
+				break;
+			default:
+				std::cerr << boost::format("False speed range: %d") % brate << std::endl;
 				return false;
 			}
 
-			// コネクション
-			{
-				if(!proto_.connection()) {
-					proto_.end();
-					std::cerr << "Can't connection." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto sect = out_section_(1, 1);
-					std::cout << sect << "Connection OK." << std::endl;
-				}
+			if(!proto_.start(path, spt, voltage)) {
+				std::cerr << boost::format("RL78 connection error: '%s'") % path << std::endl;
+				return false;
 			}
 
-			// サポート・デバイス問い合わせ
-			{
-				if(!proto_.inquiry_device()) {
-					proto_.end();
-					std::cerr << "Inquiry device error." << std::endl;
-					return false;
-				}
-				auto as = proto_.get_device();
-				if(verbose_) {
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						a.info(out_section_(i, as.size()));
-					}
-				}
-				// デバイス選択
-				if(!proto_.select_device(as[0].code_)) {
-					proto_.end();
-					std::cerr << "Select device error." << std::endl;
-					return false;
-				}
-			}
+//			proto_.reset();
 
-			// クロック・モード問い合わせ
-			{
-				if(!proto_.inquiry_clock_mode()) {
-					proto_.end();
-					std::cerr << "Inquiry clock-mode error." << std::endl;
-					return false;
-				}
-				auto as = proto_.get_clock_mode();
-				if(verbose_) {
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						a.info(out_section_(i, as.size()));
-					}				
-				}
-				// クロック・モード選択
-				if(!proto_.select_clock_mode(as[0])) {
-					proto_.end();
-					std::cerr << "Select clock-mode error." << std::endl;
-					return false;
-				}
-			}
-
-			// 逓倍比問い合わせ
-			{
-				if(!proto_.inquiry_multiplier()) {
-					proto_.end();
-					std::cerr << "Inquiry multiplier error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto as = proto_.get_multiplier();
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						a.info(out_section_(i, as.size()));
-					}				
-				}
-			}
-
-			// 動作周波数問い合わせ
-			{
-				if(!proto_.inquiry_frequency()) {
-					proto_.end();
-					std::cerr << "Inquiry frequency error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto as = proto_.get_frequency();
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						a.info(out_section_(i, as.size()));
-					}				
-				}
-			}
-
-			// ボーレート変更
-			{
-				if(!proto_.change_speed(ins, brate)) {
-					std::cerr << "Can't change speed." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto sect = out_section_(1, 1);
-					std::cout << sect << "Change baud rate: " << std::endl;
-				}
-			}
-
-			// ユーザー・ブート領域問い合わせ
-			{
-				if(!proto_.inquiry_boot_area()) {
-					proto_.end();
-					std::cerr << "Inquiry boot-area error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto as = proto_.get_boot_area();
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						
-						a.info(out_section_(i, as.size()) + "Boot ");
-					}				
-				}
-			}
-
-			// ユーザー領域問い合わせ
-			{
-				if(!proto_.inquiry_area()) {
-					proto_.end();
-					std::cerr << "Inquiry area error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto as = proto_.get_area();
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						a.info(out_section_(i, as.size()));
-					}				
-				}
-			}
-
-			// ブロック情報問い合わせ
-			{
-				if(!proto_.inquiry_block()) {
-					proto_.end();
-					std::cerr << "Inquiry block error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto as = proto_.get_block();
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						a.info(out_section_(i, as.size()));
-					}				
-				}
-			}
-
-			// プログラム・サイズ問い合わせ
-			{
-				if(!proto_.inquiry_prog_size()) {
-					proto_.end();
-					std::cerr << "Inquiry prog-size error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto sz = proto_.get_prog_size();
-					auto sect = out_section_(1, 1);
-					std::cout << sect << (boost::format("Program size: %04X") % sz) << std::endl;
-				}
-			}
-
-			// データ量域の有無問い合わせ
-			{
-				if(!proto_.inquiry_data()) {
-					proto_.end();
-					std::cerr << "Inquiry data error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto sect = out_section_(1, 1);
-					std::cout << sect << "Data area: ";
-					if(proto_.get_data()) {
-						std::cout << "true" << std::endl;
-					} else {
-						std::cout << "false" << std::endl;
-					}
-				}
-			}
-
-			// データ量域情報問い合わせ
-			{
-				if(!proto_.inquiry_data_area()) {
-					proto_.end();
-					std::cerr << "Inquiry data-area error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto as = proto_.get_data_area();
-					int i = 0;
-					for(auto a : as) {
-						++i;
-						a.info(out_section_(i, as.size()) + "Data ");
-					}				
-				}
-			}
-
-			// P/E ステータスに移行
-			{
-				if(!proto_.turn_pe_status()) {
-					proto_.end();
-					std::cerr << "P/E status error." << std::endl;
-					return false;
-				}
-				if(verbose_) {
-					auto sect = out_section_(1, 1);
-					std::cout << sect << "ID Protect: ";
-					if(proto_.get_protect()) {
-						std::cout << "true" << std::endl;
-					} else {
-						std::cout << "false" << std::endl;
-					}					
-				}
-			}
-#endif
 			return true;
 		}
 
@@ -286,11 +82,13 @@ namespace rl78 {
 		*/
 		//-------------------------------------------------------------//
 		bool read(uint32_t adr, uint8_t* dst, uint32_t len) {
+#if 0
 			if(!proto_.read(adr, len, dst)) {
 				proto_.end();
 				std::cerr << "Read error." << std::endl;
 				return false;
 			}
+#endif
 			return true;
 		}
 
@@ -305,6 +103,7 @@ namespace rl78 {
 		*/
 		//-------------------------------------------------------------//
 		bool verify(uint32_t adr, const uint8_t* src, uint32_t len) {
+#if 0
 			std::vector<uint8_t> dev;
 			dev.resize(len);
 			if(!read(adr, &dev[0], len)) {
@@ -326,6 +125,7 @@ namespace rl78 {
 				std::cerr << "Verify error: " << errcnt << std::endl;
 				return false;
 			}
+#endif
 			return true;
 		}
 
@@ -338,11 +138,13 @@ namespace rl78 {
 		*/
 		//-------------------------------------------------------------//
 		bool start_write(bool data) {
+#if 0
 			if(!proto_.select_write_area(data)) {
 				proto_.end();
 				std::cerr << "Write start error.(first)" << std::endl;
 				return false;
 			}
+#endif
 			return true;
 		}
 
@@ -356,11 +158,13 @@ namespace rl78 {
 		*/
 		//-------------------------------------------------------------//
 		bool write(uint32_t adr, const uint8_t* src) {
+#if 0
 			if(!proto_.write_page(adr, src)) {
 				proto_.end();
 				std::cerr << "Write body error." << std::endl;
 				return false;
 			}
+#endif
 			return true;
 		}
 
@@ -372,11 +176,13 @@ namespace rl78 {
 		*/
 		//-------------------------------------------------------------//
 		bool final_write() {
+#if 0
 			if(!proto_.write_page(0xffffffff, nullptr)) {
 				proto_.end();
 				std::cerr << "Write final error. (fin)" << std::endl;
 				return false;
 			}
+#endif
 			return true;
 		}
 

@@ -60,6 +60,7 @@ namespace utils {
 			std::string port_;
 			std::string speed_;
 			std::string id_;
+			std::string voltage_;
 
 			bool analize(const std::string& s) {
 				bool ok = true;
@@ -70,6 +71,7 @@ namespace utils {
 					else if(ss[0] == "port") port_ = ss[1];
 					else if(ss[0] == "speed") speed_ = ss[1];
 					else if(ss[0] == "id") id_ = ss[1];
+					else if(ss[0] == "voltage") voltage_ = ss[1];
 					else ok = false;
 				} else {
 					ok = false;

@@ -11,7 +11,7 @@
 #include "string_utils.hpp"
 #include "area.hpp"
 
-static const std::string version_ = "0.01b";
+static const std::string version_ = "0.10b";
 static const std::string conf_file_ = "rl78_prog.conf";
 static const uint32_t progress_num_ = 50;
 static const char progress_cha_ = '#';
@@ -103,6 +103,9 @@ struct options {
 	std::string id_val;
 	bool	id = false;
 
+	std::string voltage;
+	bool	vt = false;
+
 	utils::areas area_val;
 	bool	area = false;
 
@@ -155,6 +158,9 @@ struct options {
 		} else if(id) {
 			id_val = t;
 			id = false;
+		} else if(vt) {
+			voltage = t;
+			vt = false;
 		} else if(area) {
 			if(!set_area_(t)) {
 				ok = false;
@@ -180,22 +186,23 @@ static void help_(const std::string& cmd)
 	cout << c << " [options] [mot file] ..." << endl;
 	cout << endl;
 	cout << "Options :" << endl;
-	cout << "    -P PORT,   --port=PORT     Specify serial port" << endl;
-	cout << "    -s SPEED,  --speed=SPEED   Specify serial speed" << endl;
-	cout << "    -d DEVICE, --device=DEVICE Specify device name" << endl;
-	cout << "    -e, --erase                Perform a device erase to a minimum" << endl;
+	cout << "    -P PORT,   --port=PORT        Specify serial port" << endl;
+	cout << "    -s SPEED,  --speed=SPEED      Specify serial speed" << endl;
+	cout << "    -d DEVICE, --device=DEVICE    Specify device name" << endl;
+	cout << "    -V VOLTAGE, --voltage=VOLTAGE Specify device name" << endl;
+	cout << "    -e, --erase                   Perform a device erase to a minimum" << endl;
 ///	cout << "    --erase-all, --erase-chip\tPerform rom and data flash erase" << endl;
 ///	cout << "    --erase-rom\t\t\tPerform rom flash erase" << endl;
 ///	cout << "    --erase-data\t\tPerform data flash erase" << endl;
-	cout << "    --id=ID[:,]ID[;,] ...      Specify protect ID (16bytes)" << endl;
-///	cout << "    -r, --read                 Perform data read" << endl;
-///	cout << "    --area=ORG[:,]END          Specify read area" << endl;
-	cout << "    -v, --verify               Perform data verify" << endl;
-	cout << "    -w, --write                Perform data write" << endl;
-	cout << "    --progress                 display Progress output" << endl;
-	cout << "    --device-list              Display device list" << endl;
-	cout << "    --verbose                  Verbose output" << endl;
-	cout << "    -h, --help                 Display this" << endl;
+	cout << "    --id=ID[:,]ID[;,] ...         Specify protect ID (16bytes)" << endl;
+///	cout << "    -r, --read                    Perform data read" << endl;
+///	cout << "    --area=ORG[:,]END             Specify read area" << endl;
+	cout << "    -v, --verify                  Perform data verify" << endl;
+	cout << "    -w, --write                   Perform data write" << endl;
+	cout << "    --progress                    display Progress output" << endl;
+	cout << "    --device-list                 Display device list" << endl;
+	cout << "    --verbose                     Verbose output" << endl;
+	cout << "    -h, --help                    Display this" << endl;
 }
 
 
@@ -221,6 +228,7 @@ int main(int argc, char* argv[])
 		opts.com_path = defa.port_;
 		opts.com_speed = defa.speed_;
 		opts.id_val = defa.id_;
+		opts.voltage = defa.voltage_;
 	} else {
 		std::cerr << "Configuration file can't load: '" << conf_path << '\'' << std::endl;
 		return -1;
@@ -231,16 +239,24 @@ int main(int argc, char* argv[])
 	for(int i = 1; i < argc; ++i) {
 		const std::string p = argv[i];
 		if(p[0] == '-') {
-			if(p == "--verbose") opts.verbose = true;
-			else if(p == "-s") opts.br = true;
-			else if(p.find("--speed=") == 0) {
+			if(p == "--verbose") {
+				opts.verbose = true;
+			} else if(p == "-s") {
+				opts.br = true;
+			} else if(p.find("--speed=") == 0) {
 				opts.com_speed = &p[std::strlen("--speed=")];
-			} else if(p == "-d") opts.dv = true;
-			else if(p.find("--device=") == 0) {
+			} else if(p == "-d") {
+				opts.dv = true;
+			} else if(p.find("--device=") == 0) {
 				opts.device = &p[std::strlen("--device=")];
-			} else if(p == "-P") opts.dp = true;
-			else if(p.find("--port=") == 0) {
+			} else if(p == "-P") {
+				opts.dp = true;
+			} else if(p.find("--port=") == 0) {
 				opts.com_path = &p[std::strlen("--port=")];
+			} else if(p == "-V") {
+				opts.vt = true;
+			} else if(p.find("--voltage=") == 0) {
+				opts.voltage = &p[std::strlen("--voltage=")];
 ///			} else if(p == "-a") {
 ///				opts.area = true;
 ///			} else if(p.find("--area=") == 0) {
@@ -342,37 +358,22 @@ int main(int argc, char* argv[])
 		return -1;		
 	}
 
-
-#if 0
-	rx::protocol::rx_t rx;
-	{
-		// rx.master_ = 1200;  // 12.00MHz
-		// rx.sys_div_ = 8;    // x8 (96MHz)
-		// rx.ext_div_ = 4;    // x4 (48MHz)
-		auto devt = conf_in_.get_device();
-		int32_t val = 0;;
-		if(!utils::string_to_int(devt.clock_, val)) {
-			std::cerr << "DEVICE 'clock' tag conversion error: '" << devt.clock_ << '\'' << std::endl;
-			return -1;
-		}
-		rx.master_ = val;
-
-		if(!utils::string_to_int(devt.divide_sys_, val)) {
-			std::cerr << "DEVICE 'divide_sys' tag conversion error: '" << devt.divide_sys_ << '\'' << std::endl;
-			return -1;
-		}
-		rx.sys_div_ = val;
-
-		if(!utils::string_to_int(devt.divide_ext_, val)) {
-			std::cerr << "DEVICE 'divide_ext' tag conversion error: '" << devt.divide_ext_ << '\'' << std::endl;
-			return -1;
-		}
-		rx.ext_div_ = val;
+	// CPU 電圧設定の変換
+	int voltage = 0;
+	if(!utils::string_to_int(opts.voltage, voltage)) {
+		std::cerr << "CPU Operation voltage conversion error: '" << opts.voltage << '\'' << std::endl;
+		return -1;		
+	}
+	if(voltage >= 16 && voltage <= 55) ;
+	else {
+		std::cerr << "CPU Operation voltage range error: "
+			<< (voltage / 10) << '.' << (voltage % 10) << " [V]" << std::endl;
+		return -1;		
 	}
 
-	rx::prog prog_(opts.verbose);
-	if(!prog_.start(opts.com_path, com_speed, rx)) {
-		prog_.end();
+	rl78::prog prog_(opts.verbose);
+	//=====================================
+	if(!prog_.start(opts.com_path, com_speed, voltage)) {
 		return -1;
 	}
 
@@ -388,10 +389,10 @@ int main(int argc, char* argv[])
 	if(opts.write) {  // write
 		auto areas = motsx_.create_area_map();
 		if(!areas.empty()) {
-			if(!prog_.start_write(true)) {
-				prog_.end();
-				return -1;
-			}
+//			if(!prog_.start_write(true)) {
+//				prog_.end();
+//				return -1;
+//			}
 		}
 		
 		if(opts.progress) {
@@ -407,10 +408,10 @@ int main(int argc, char* argv[])
 				}
 				/// std::cout << boost::format("%08X to %08X") % adr % (adr + 255) << std::endl;
 				auto mem = motsx_.get_memory(adr);
-				if(!prog_.write(adr, &mem[0])) {
-					prog_.end();
-					return -1;
-				}
+//				if(!prog_.write(adr, &mem[0])) {
+//					prog_.end();
+//					return -1;
+//				}
 				adr += 256;
 				len += 256;
 				++page.n;
@@ -419,10 +420,10 @@ int main(int argc, char* argv[])
 		if(opts.progress) {
 			std::cout << std::endl << std::flush;
 		}
-		if(!prog_.final_write()) {
-			prog_.end();
-			return -1;
-		}
+//		if(!prog_.final_write()) {
+//			prog_.end();
+//			return -1;
+//		}
 	}
 
 	//=====================================
@@ -441,10 +442,10 @@ int main(int argc, char* argv[])
 				}
 				/// std::cout << boost::format("%08X to %08X") % adr % (adr + 255) << std::endl;
 				auto mem = motsx_.get_memory(adr);
-				if(!prog_.verify(adr, &mem[0], 256)) {
-					prog_.end();
-					return -1;
-				}
+//				if(!prog_.verify(adr, &mem[0], 256)) {
+//					prog_.end();
+//					return -1;
+//				}
 				adr += 256;
 				len += 256;
 				++page.n;
@@ -456,5 +457,4 @@ int main(int argc, char* argv[])
 	}
 
 	prog_.end();
-#endif
 }
