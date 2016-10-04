@@ -223,17 +223,22 @@ Linux 環境は、複数あるので、ここでは「Ubuntu 16.04 LTS」環境�
     cd rl78_build
     ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf
 	make
-    make install     OS-X,Linux: (sudo make install)
+    make install     OS-X: (sudo make install)
 ```
  - Linux 環境では、sudo コマンドで、ローカルで設定した binutils のパスを認識しないので、
 「make install」が失敗する、その為、以下のようなスクリプトを書いて実行する。
 ```
 #!/bin/sh
+# file: rl78_install.sh
 
 PATH=${PATH}:/usr/local/rl78-elf/bin
 make install
 ```
-  
+   
+```
+    sudo rl78_install.sh
+```
+---  
 #### C++ コンパイラをビルド
 ``` sh
     cd
