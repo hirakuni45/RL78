@@ -100,16 +100,12 @@ struct options {
 	std::string com_name;
 	bool	dp = false;
 
-	std::string id_val;
-	bool	id = false;
-
 	std::string voltage;
 	bool	vt = false;
 
 	utils::areas area_val;
 	bool	area = false;
 
-	bool	read = false;
 	bool	erase = false;
 	bool	write = false;
 	bool	verify = false;
@@ -155,9 +151,6 @@ struct options {
 		} else if(dp) {
 			com_path = t;
 			dp = false;
-		} else if(id) {
-			id_val = t;
-			id = false;
 		} else if(vt) {
 			voltage = t;
 			vt = false;
@@ -189,14 +182,11 @@ static void help_(const std::string& cmd)
 	cout << "    -P PORT,   --port=PORT        Specify serial port" << endl;
 	cout << "    -s SPEED,  --speed=SPEED      Specify serial speed" << endl;
 	cout << "    -d DEVICE, --device=DEVICE    Specify device name" << endl;
-	cout << "    -V VOLTAGE, --voltage=VOLTAGE Specify device name" << endl;
+	cout << "    -V VOLTAGE, --voltage=VOLTAGE Specify CPU voltage" << endl;
 	cout << "    -e, --erase                   Perform a device erase to a minimum" << endl;
 ///	cout << "    --erase-all, --erase-chip\tPerform rom and data flash erase" << endl;
 ///	cout << "    --erase-rom\t\t\tPerform rom flash erase" << endl;
 ///	cout << "    --erase-data\t\tPerform data flash erase" << endl;
-	cout << "    --id=ID[:,]ID[;,] ...         Specify protect ID (16bytes)" << endl;
-///	cout << "    -r, --read                    Perform data read" << endl;
-///	cout << "    --area=ORG[:,]END             Specify read area" << endl;
 	cout << "    -v, --verify                  Perform data verify" << endl;
 	cout << "    -w, --write                   Perform data write" << endl;
 	cout << "    --progress                    display Progress output" << endl;
@@ -227,7 +217,6 @@ int main(int argc, char* argv[])
 		opts.device = defa.device_;
 		opts.com_path = defa.port_;
 		opts.com_speed = defa.speed_;
-		opts.id_val = defa.id_;
 		opts.voltage = defa.voltage_;
 	} else {
 		std::cerr << "Configuration file can't load: '" << conf_path << '\'' << std::endl;
@@ -263,12 +252,6 @@ int main(int argc, char* argv[])
 ///				if(!opts.set_area_(&p[7])) {
 ///					opterr = true;
 ///				}
-			} else if(p == "-r" || p == "--read") {
-				opts.read = true;
-			} else if(p == "-i") {
-				opts.id = true;
-			} else if(p.find("--id=") == 0) {
-				opts.id_val = &p[std::strlen("--id=")];
 			} else if(p == "-w" || p == "--write") {
 				opts.write = true;
 			} else if(p == "-v" || p == "--verify") {
@@ -377,8 +360,9 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	//=====================================
-	if(opts.read) {  // read
+	if(opts.verbose) {
+		const auto& sig = prog_.get_protocol().get_signature();
+		sig.info("# ");
 	}
 
 	//=====================================

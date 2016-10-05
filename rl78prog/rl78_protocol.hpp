@@ -27,18 +27,33 @@ namespace rl78 {
 			VERIFY = 0x13,
 			BLOCK_BLANK_CHECH = 0x32,
 			BAUD_RATE_SET = 0x9A,
-			SILLICON_SIGNATURE = 0xc0,
+			SILICON_SIGNATURE = 0xc0,
 			SECURITY_SET = 0xA0,
 			SECURITY_GET = 0xA1,
 			SECURITY_RELEASE = 0xA2,
 			CHECK_SUM = 0xB0
 		};
 
+		static uint32_t hex3_(const uint8_t* ptr) {
+			uint32_t v;
+			v  = static_cast<uint32_t>(ptr[2]) << 16;
+			v |= static_cast<uint32_t>(ptr[1]) << 8;
+			v |= static_cast<uint32_t>(ptr[0]);
+			return v;
+		}
+
+		static void strnout_(const void* ptr, uint32_t len) {
+			char str[len + 1];
+			std::memcpy(str, ptr, len);
+			str[len] = 0;
+			std::cout << str;
+		}
+
 	public:
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
-			@brief	ステータス・構造体
+			@brief	ステータス構造体
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		struct status_t {
@@ -46,11 +61,53 @@ namespace rl78 {
 			uint8_t	D01;
 			uint8_t	D02;
 
+			status_t() : ST1(0), D01(0), D02(0) { }
+
 			void info(const std::string& head = "") const {
 				std::cout << head << (boost::format("Sync: %02X, Frq: %02X, Mode: %02X")
 					% static_cast<uint32_t>(ST1)
 					% static_cast<uint32_t>(D01)
 					% static_cast<uint32_t>(D02)) << std::endl;
+			}
+		};
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief	シグネチュア構造体
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		struct signature_t {
+			uint8_t	DEC[3];
+			uint8_t	DEV[10];
+			uint8_t	CEN[3];
+			uint8_t	DEN[3];
+			uint8_t	VER[3];
+
+			signature_t() {
+				std::memset(DEC, 0, 3);
+				std::memset(DEV, 0, 10);
+				std::memset(CEN, 0, 3);
+				std::memset(DEN, 0, 3);
+				std::memset(VER, 0, 3);
+			}
+
+			void copy(const uint8_t* src) {
+				std::memcpy(DEC, src, 3);  src += 3;
+				std::memcpy(DEV, src, 10); src += 10;
+				std::memcpy(CEN, src, 3);  src += 3;
+				std::memcpy(DEN, src, 3);  src += 3;
+				std::memcpy(VER, src, 3);
+			}
+
+			void info(const std::string& head = "") const {
+				std::cout << head << boost::format("Device code: %06X") % hex3_(DEC) << std::endl;
+				std::cout << head;
+				strnout_(DEV, 10);
+				std::cout << std::endl;
+				std::cout << head << boost::format("Flash end: %06X") % hex3_(CEN) << std::endl;
+				std::cout << head << boost::format("Data  end: %06X") % hex3_(DEN) << std::endl;
+				std::cout << head << boost::format("Version:   %06X") % hex3_(VER) << std::endl;
 			}
 		};
 
@@ -84,6 +141,8 @@ namespace rl78 {
 		rs232c	rs232c_;
 
 		status_t	status_;
+
+		signature_t	sig_;
 
 		static uint8_t checksum_(const void *src, uint8_t len)
 		{
@@ -193,16 +252,15 @@ namespace rl78 {
 				return false;
 			}
 
-			int len = 0;
 			uint8_t state[1];
 			if(!recv_status_(state, 1)) {
 				std::cerr << "RESET recv error" << std::endl;
 				return false;
 			}
 
-			if(state[1] != 0x06) {
+			if(state[0] != 0x06) {
 				std::cerr << boost::format("RESET status error: %02X")
-					% static_cast<uint32_t>(state[1]) << std::endl;
+					% static_cast<uint32_t>(state[0]) << std::endl;
 				return false;
 			}
 
@@ -279,11 +337,57 @@ namespace rl78 {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	シリコン・シグネチュア
+			@return 成功なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool silicon_signature()
+		{
+			if(!send_cmd_(CMD::SILICON_SIGNATURE, nullptr, 0)) {
+				std::cerr << "SILICON_SIGNATURE send error" << std::endl;
+				return false;
+			}
+
+			uint8_t state[1];
+			if(!recv_status_(state, 1)) {
+				std::cerr << "SILICON_SIGNATURE recv error" << std::endl;
+				return false;
+			}
+
+			if(state[0] != 0x06) {
+				std::cerr << boost::format("SILICON_SIGNATURE status error: %02X")
+					% static_cast<uint32_t>(state[0]) << std::endl;
+				return false;
+			}
+
+			uint8_t data[3+10+3+3+3];
+			if(!recv_status_(data, sizeof(data))) {
+				std::cerr << "SILICON_SIGNATURE frame error" << std::endl;
+				return false;
+			}
+
+			sig_.copy(data);
+
+			return true;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	ステータスの取得
 			@return ステータス
 		*/
 		//-----------------------------------------------------------------//
 		const status_t& get_status() const { return status_; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	シグネチュアの取得
+			@return シグネチュア
+		*/
+		//-----------------------------------------------------------------//
+		const signature_t& get_signature() const { return sig_; }
 
 
 		//-----------------------------------------------------------------//

@@ -34,6 +34,15 @@ namespace rl78 {
 
 		//-------------------------------------------------------------//
 		/*!
+			@brief	プロトコル・インスタンスを取得
+			@return プロトコル・インスタンス
+		*/
+		//-------------------------------------------------------------//
+		const protocol& get_protocol() const { return proto_; }
+
+
+		//-------------------------------------------------------------//
+		/*!
 			@brief	接続速度を変更する
 			@param[in]	path	シリアル・デバイス・パス
 			@param[in]	brate	ボーレート
@@ -66,29 +75,14 @@ namespace rl78 {
 				return false;
 			}
 
-//			proto_.reset();
-
-			return true;
-		}
-
-
-		//-------------------------------------------------------------//
-		/*!
-			@brief	リード
-			@param[in]	adr	開始アドレス
-			@param[out]	dst	書き込みアドレス
-			@param[in]	len	読み出しサイズ
-			@return 成功なら「true」
-		*/
-		//-------------------------------------------------------------//
-		bool read(uint32_t adr, uint8_t* dst, uint32_t len) {
-#if 0
-			if(!proto_.read(adr, len, dst)) {
-				proto_.end();
-				std::cerr << "Read error." << std::endl;
+			if(!proto_.reset()) {
 				return false;
 			}
-#endif
+
+			if(!proto_.silicon_signature()) {
+				return false;
+			}
+
 			return true;
 		}
 
