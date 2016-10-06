@@ -111,8 +111,6 @@ struct options {
 	bool	verify = false;
 	bool	device_list = false;
 	bool	progress = false;
-	bool	erase_data = false;
-	bool	erase_rom = false;
 	bool	help = false;
 
 
@@ -184,9 +182,6 @@ static void help_(const std::string& cmd)
 	cout << "    -d DEVICE, --device=DEVICE    Specify device name" << endl;
 	cout << "    -V VOLTAGE, --voltage=VOLTAGE Specify CPU voltage" << endl;
 	cout << "    -e, --erase                   Perform a device erase to a minimum" << endl;
-///	cout << "    --erase-all, --erase-chip\tPerform rom and data flash erase" << endl;
-///	cout << "    --erase-rom\t\t\tPerform rom flash erase" << endl;
-///	cout << "    --erase-data\t\tPerform data flash erase" << endl;
 	cout << "    -v, --verify                  Perform data verify" << endl;
 	cout << "    -w, --write                   Perform data write" << endl;
 	cout << "    --progress                    display Progress output" << endl;
@@ -260,13 +255,8 @@ int main(int argc, char* argv[])
 				opts.progress = true;
 			} else if(p == "--device-list") {
 				opts.device_list = true;
-///			} else if(p == "-e" || p == "--erase") {
-///				opts.erase = true;
-///			} else if(p == "--erase-rom") opts.erase_rom = true;
-///			} else if(p == "--erase-data") opts.erase_data = true;
-///			} else if(p == "--erase-all" || p == "--erase-chip") {
-//				opts.erase_rom = true;
-//				opts.erase_data = true;
+			} else if(p == "-e" || p == "--erase") {
+				opts.erase = true;
 			} else if(p == "-h" || p == "--help") {
 				opts.help = true;
 			} else {
@@ -367,35 +357,29 @@ int main(int argc, char* argv[])
 
 	//=====================================
 	if(opts.erase) {  // erase
-	}
-
-	//=====================================
-	if(opts.write) {  // write
 		auto areas = motsx_.create_area_map();
-		if(!areas.empty()) {
-//			if(!prog_.start_write(true)) {
-//				prog_.end();
-//				return -1;
-//			}
-		}
-		
+
 		if(opts.progress) {
-			std::cout << "Write:  " << std::flush;
+			std::cout << "Erase:  " << std::flush;
 		}
+
+		// ブロック：1024 バイト
 		page_t page;
 		for(const auto& a : areas) {
 			uint32_t adr = a.min_ & 0xffffff00;
 			uint32_t len = 0;
+			uint32_t block = 0xffffffff;
 			while(len < (a.max_ - a.min_ + 1)) {
 				if(opts.progress) {
 					progress_(pageall, page);
 				}
-				/// std::cout << boost::format("%08X to %08X") % adr % (adr + 255) << std::endl;
-				auto mem = motsx_.get_memory(adr);
-//				if(!prog_.write(adr, &mem[0])) {
-//					prog_.end();
-//					return -1;
-//				}
+				if((block & 0xfffffc00) != (adr & 0xfffffc00)) {
+					if(!prog_.block_erase(adr)) {
+						prog_.end();
+						return -1;
+					}
+					block = adr;
+				}
 				adr += 256;
 				len += 256;
 				++page.n;
@@ -404,10 +388,55 @@ int main(int argc, char* argv[])
 		if(opts.progress) {
 			std::cout << std::endl << std::flush;
 		}
-//		if(!prog_.final_write()) {
-//			prog_.end();
-//			return -1;
-//		}
+	}
+
+	//=====================================
+	if(opts.write) {  // write
+		auto areas = motsx_.create_area_map();
+		if(opts.progress) {
+			std::cout << "Write:  " << std::flush;
+		}
+		page_t page;
+		for(const auto& a : areas) {
+			uint32_t adr = a.min_ & 0xffffff00;
+			uint32_t len = 0;
+			uint32_t block = 0xffffffff;
+			uint32_t block_len = 0;
+			while(len < (a.max_ - a.min_ + 1)) {
+				if(opts.progress) {
+					progress_(pageall, page);
+				}
+				if((block & 0xfffffc00) != (adr & 0xfffffc00)) {
+					uint32_t ln = a.max_ - adr + 1;
+					if(ln > 1024) ln = 1024;
+					else if(ln < 1024) { ln |= 0xff; ++ln; }
+/// std::cout << boost::format("Start: %06X, %d") % adr % ln << std::endl << std::flush;
+					if(!prog_.write_start(adr, adr + ln - 1)) {
+						prog_.end();
+						return -1;
+					}
+					block = adr;
+					block_len = ln;
+				}
+				{
+					auto mem = motsx_.get_memory(adr);
+					bool last = false;
+					if(block_len <= 256) last = true;
+/// std::cout << boost::format("Write: %06X - %d") % adr % len << std::endl << std::flush;
+					if(!prog_.write_page(&mem[0], 256, last)) {
+						prog_.end();
+						return -1;
+					}
+				}
+				adr += 256;
+				len += 256;
+				block_len -= 256;
+				++page.n;
+			}
+		}
+		if(opts.progress) {
+			std::cout << std::endl << std::flush;
+		}
 	}
 
 	//=====================================
