@@ -286,7 +286,7 @@ namespace utils {
 				if(ret == -1) {  // for error..
 					break;
 				} else if(ret > 0) {
-					size_t rl = ::read(fd_, p, len);
+					size_t rl = ::read(fd_, p, len - total);
 					total += rl;
 					p += rl;
 				} else {
@@ -301,7 +301,7 @@ namespace utils {
 		/*!
 			@brief	１バイト受信（タイムアウト）
 			@param[in]	tv	タイムアウト指定
-			@return 受信した長さ
+			@return 受信データ
 		*/
 		//-----------------------------------------------------------------//
 		int recv(const timeval& tv) {
