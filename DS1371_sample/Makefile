@@ -159,9 +159,6 @@ bin_zip:
 	zip $(subst .exe,,$(TARGET))_$(shell date +%Y%m%d%H)_bin.zip *.exe *.dll res/*.*
 
 run:
-	r78prog -P COM11 -e -w -v $(TARGET).mot
-
-verify:
-	r78prog -P COM11 -v $(TARGET).mot
+	rl78_prog --progress --erase --write $(TARGET).mot
 
 -include $(DEPENDS)
