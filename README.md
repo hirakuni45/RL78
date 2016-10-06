@@ -291,29 +291,26 @@ make install
    
 ## RL78 フラッシュプログラマーの構築
 
- - 以下は、まだ未完、実装中です・・・・・
- - ※ Renesas Flash Programmer の最新版を使って下さい。
- - rl78prog のビルドには「boost_1_60_0」が必要です。
+ - 現在のバージョン「0.10b」では、「--write」、「--erase」のみ対応しています。
+ - rl78prog のビルドには「boost_1_60_0」が必要です。（MSYS2 環境の場合）
+ - Windows 以外の環境では、「port」、「apt-get」を使ってインストールして下さい。
  - boost はヘッダーのみ利用なので、ビルドの必要はありません、boost_1_60_0.zip を展開するだけです。
- - 又は、mingw64 環境などに pacman を使い boost をインストールして、そのパスを設定しても良いでしょう。
-
 ``` 
     cd /usr/local
     unzip boost_1_60_0.zip
 ```
 
  - rl78prog のビルド（MSYS2）
- - ビルドした実行ファイルは、~/bin に配置します。
+ - ビルドした実行ファイルは、/usr/local/bin に配置します。
 
 ``` sh
     cd rl78prog
     make
-    mkdir ~/bin
-    cp rl78_prog.exe ~/bin/.
-    cp rl78_prog.conf ~/bin/.
-　　※~/bin にパスを通しておく。
+    make install
+　　※ /usr/local/bin にパスを通しておく。
 ```
  - rl78_prog.conf を編集して、接続する COM ポート、ボーレートの設定をする。
+ - ボーレートは、RL78 の仕様と termios の制限から「115200」、「500000」、「1000000」のみ対応しています。
  - /dev/ttyS10 -> COM11 に相当します。（数字に＋１する）
  - rl78prog/KiCAD/ に、RL78 プログラマー（書き込み機）の参考回路などが含まれます。
   
