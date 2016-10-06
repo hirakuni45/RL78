@@ -11,13 +11,15 @@
 #include "string_utils.hpp"
 #include "area.hpp"
 
-static const std::string version_ = "0.10b";
-static const std::string conf_file_ = "rl78_prog.conf";
-static const uint32_t progress_num_ = 50;
-static const char progress_cha_ = '#';
+namespace {
+	const std::string version_ = "0.10b";
+	const std::string conf_file_ = "rl78_prog.conf";
+	const uint32_t progress_num_ = 50;
+	const char progress_cha_ = '#';
 
-static utils::conf_in conf_in_;
-static utils::motsx_io motsx_;
+	utils::conf_in conf_in_;
+	utils::motsx_io motsx_;
+}
 
 void memory_dump_()
 {
@@ -280,10 +282,20 @@ int main(int argc, char* argv[])
 	}
 
 	// HELP 表示
-	if(opts.help || opts.inp_file.empty() || opts.com_path.empty() || opts.com_speed.empty() || opts.device.empty()) {
+	if(opts.help || (opts.inp_file.empty() && !opts.device_list) || opts.com_path.empty()
+		|| opts.com_speed.empty() || opts.device.empty()) {
 		help_(argv[0]);
 		return 0;
 	}
+
+	// デバイス・リスト表示
+	if(opts.device_list) {
+		for(const auto& s : conf_in_.get_device_list()) {
+			std::cout << s << std::endl;
+		}
+	}
+
+	if(opts.inp_file.empty()) return 0;
 
 	// 入力ファイルの読み込み
 	uint32_t pageall = 0;
@@ -347,7 +359,21 @@ int main(int argc, char* argv[])
 	rl78::prog prog_(opts.verbose);
 	//=====================================
 	if(!prog_.start(opts.com_path, com_speed, voltage)) {
+		prog_.end();
 		return -1;
+	}
+
+	// デバイスの確認
+	//=====================================
+	{
+		const auto& sig = prog_.get_protocol().get_signature();
+		char tmp[sizeof(sig.DEV) + 1];
+		std::strcpy(tmp, reinterpret_cast<const char*>(sig.DEV));
+		if(std::strncmp(opts.device.c_str(), tmp, std::strlen(tmp)) == 0) {
+			std::cerr << "Device no match: '" << tmp << "'" << std::endl;
+			prog_.end();
+			return -1;
+		}
 	}
 
 	if(opts.verbose) {
