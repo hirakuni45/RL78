@@ -212,9 +212,12 @@ namespace rl78 {
 			if(rs232c_.send(buf, sizeof(buf)) != sizeof(buf)) {
 				return false;
 			}
+//			rs232c_.sync_send();
 			timeval tv;
 			tv.tv_sec  = 0;
-			tv.tv_usec = (sizeof(buf) * 1000000 * (10 + 5) / baud_) + 100000;
+			// (base: 100ms) + (((1 / baud) * 10) * 1.5) * n bytes
+//			tv.tv_usec = (sizeof(buf) * 1000000 * (10 + 5) / baud_) + 500000;
+			tv.tv_usec = 950000;
 			return rs232c_.recv(buf, sizeof(buf), tv) == sizeof(buf);
 		}
 
@@ -228,22 +231,22 @@ namespace rl78 {
 			case CMD::RESET:
 				break;
 			case CMD::BLOCK_ERASE:
-				tv.tv_usec += 350000;
+				tv.tv_usec += 500000;
 				break;
 			case CMD::PROGRAMMING:
-				tv.tv_usec += 5000;
+				tv.tv_usec += 10000;
 				break;
 			case CMD::send_feed_:
-				tv.tv_usec += 300000;
+				tv.tv_usec += 500000;
 				break;
 			case CMD::VERIFY:
 				tv.tv_usec += 50000;
 				break;
 			case CMD::BLOCK_BLANK_CHECK:
-				tv.tv_usec += 5000;
+				tv.tv_usec += 10000;
 				break;
 			case CMD::BAUD_RATE_SET:
-				tv.tv_usec += 5000;
+				tv.tv_usec += 10000;
 				break;
 			case CMD::SILICON_SIGNATURE:
 				break;
@@ -257,7 +260,7 @@ namespace rl78 {
 			default:
 				break;
 			}
-			if(rs232c_.recv(buf, sizeof(buf)) != sizeof(buf)) {
+			if(rs232c_.recv(buf, sizeof(buf), tv) != sizeof(buf)) {
 				return false;
 			}
 
