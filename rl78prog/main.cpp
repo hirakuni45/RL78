@@ -12,7 +12,7 @@
 #include "area.hpp"
 
 namespace {
-	const std::string version_ = "0.10b";
+	const std::string version_ = "0.75b";
 	const std::string conf_file_ = "rl78_prog.conf";
 	const uint32_t progress_num_ = 50;
 	const char progress_cha_ = '#';
