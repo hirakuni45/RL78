@@ -12,17 +12,16 @@
 #include "area.hpp"
 
 namespace {
-	const std::string version_ = "0.75b";
+	const std::string version_ = "0.85b";
 	const std::string conf_file_ = "rl78_prog.conf";
 	const uint32_t progress_num_ = 50;
 	const char progress_cha_ = '#';
 
 	utils::conf_in conf_in_;
 	utils::motsx_io motsx_;
-}
 
-void memory_dump_()
-{
+	void memory_dump_()
+	{
 #if 0
 		int i = 0;
 		for(auto v : mem) {
@@ -34,164 +33,163 @@ void memory_dump_()
 			} 
 		}
 #endif
-}
+	}
 
-static const std::string get_current_path_(const std::string& exec)
-{
-	std::string exec_path;
-#ifdef WIN32
+	const std::string get_current_path_(const std::string& exec)
 	{
-		auto tmp = utils::sjis_to_utf8(exec);
-		exec_path = utils::convert_delimiter(tmp, '\\', '/');
-	}
-#else
-	exec_path = exec;
-#endif
-	std::string spch;
-	std::string env;
-	{
+		std::string exec_path;
 #ifdef WIN32
-		auto tmp = sjis_to_utf8(getenv("PATH"));
-		env = utils::convert_delimiter(tmp, '\\', '/');
-		spch = ';';
+		{
+			auto tmp = utils::sjis_to_utf8(exec);
+			exec_path = utils::convert_delimiter(tmp, '\\', '/');
+		}
 #else
-		env = getenv("PATH");
-		spch = ':';
+		exec_path = exec;
 #endif
-	}
-	utils::strings ss = utils::split_text(env, spch);
-	for(const auto& s : ss) {
-		std::string path = s + '/' + utils::get_file_name(exec_path);
-		if(utils::probe_file(path)) {
-			return s;
+		std::string spch;
+		std::string env;
+		{
+#ifdef WIN32
+			auto tmp = sjis_to_utf8(getenv("PATH"));
+			env = utils::convert_delimiter(tmp, '\\', '/');
+			spch = ';';
+#else
+			env = getenv("PATH");
+			spch = ':';
+#endif
 		}
-	}
-
-	return std::string("");
-}
-
-
-struct page_t {
-	uint32_t	n = 0;
-	uint32_t	c = 0;
-};
-
-
-static void progress_(uint32_t pageall, page_t& page)
-{
-	uint32_t pos = progress_num_ * page.n / pageall;
-	for(uint32_t i = 0; i < (pos - page.c); ++i) {
-		std::cout << progress_cha_ << std::flush;
-	}
-	page.c = pos;
-}
-
-
-struct options {
-	bool verbose = false;
-
-	std::string	inp_file;
-
-	std::string	device;
-	bool	dv = false;
-
-	std::string	com_speed;
-	bool	br = false;
-
-	std::string com_path;
-	std::string com_name;
-	bool	dp = false;
-
-	std::string voltage;
-	bool	vt = false;
-
-	utils::areas area_val;
-	bool	area = false;
-
-	bool	erase = false;
-	bool	write = false;
-	bool	verify = false;
-	bool	device_list = false;
-	bool	progress = false;
-	bool	help = false;
-
-
-	bool set_area_(const std::string& s) {
-		utils::strings ss = utils::split_text(s, ",");
-		std::string t;
-		if(ss.empty()) t = s;
-		else if(ss.size() >= 1) t = ss[0];
-		uint32_t org = 0;
-		bool err = false;
-		if(!utils::string_to_hex(t, org)) {
-			err = true;
+		utils::strings ss = utils::split_text(env, spch);
+		for(const auto& s : ss) {
+			std::string path = s + '/' + utils::get_file_name(exec_path);
+			if(utils::probe_file(path)) {
+				return s;
+			}
 		}
-		uint32_t end = org + 256;
-		if(ss.size() >= 2) {
-			if(!utils::string_to_hex(ss[1], end)) {
+
+		return std::string("");
+	}
+
+
+	struct page_t {
+		uint32_t	n = 0;
+		uint32_t	c = 0;
+	};
+
+
+	void progress_(uint32_t pageall, page_t& page)
+	{
+		uint32_t pos = progress_num_ * page.n / pageall;
+		for(uint32_t i = 0; i < (pos - page.c); ++i) {
+			std::cout << progress_cha_ << std::flush;
+		}
+		page.c = pos;
+	}
+
+
+	struct options {
+		bool verbose = false;
+
+		std::string	inp_file;
+
+		std::string	device;
+		bool	dv = false;
+
+		std::string	com_speed;
+		bool	br = false;
+
+		std::string com_path;
+		std::string com_name;
+		bool	dp = false;
+
+		std::string voltage;
+		bool	vt = false;
+
+		utils::areas area_val;
+		bool	area = false;
+
+		bool	erase = false;
+		bool	write = false;
+		bool	verify = false;
+		bool	device_list = false;
+		bool	progress = false;
+		bool	help = false;
+
+
+		bool set_area_(const std::string& s) {
+			utils::strings ss = utils::split_text(s, ",");
+			std::string t;
+			if(ss.empty()) t = s;
+			else if(ss.size() >= 1) t = ss[0];
+			uint32_t org = 0;
+			bool err = false;
+			if(!utils::string_to_hex(t, org)) {
 				err = true;
 			}
-		}
-		if(err) {
-			return false;
-		}
-		area_val.emplace_back(org, end);
-		return true;
-	}
-
-
-	bool set_str(const std::string& t) {
-		bool ok = true;
-		if(br) {
-			com_speed = t;
-			br = false;
-		} else if(dv) {
-			device = t;
-			dv = false;
-		} else if(dp) {
-			com_path = t;
-			dp = false;
-		} else if(vt) {
-			voltage = t;
-			vt = false;
-		} else if(area) {
-			if(!set_area_(t)) {
-				ok = false;
+			uint32_t end = org + 256;
+			if(ss.size() >= 2) {
+				if(!utils::string_to_hex(ss[1], end)) {
+					err = true;
+				}
 			}
-			area = false;
-		} else {
-			inp_file = t;
+			if(err) {
+				return false;
+			}
+			area_val.emplace_back(org, end);
+			return true;
 		}
-		return ok;
+
+
+		bool set_str(const std::string& t) {
+			bool ok = true;
+			if(br) {
+				com_speed = t;
+				br = false;
+			} else if(dv) {
+				device = t;
+				dv = false;
+			} else if(dp) {
+				com_path = t;
+				dp = false;
+			} else if(vt) {
+				voltage = t;
+				vt = false;
+			} else if(area) {
+				if(!set_area_(t)) {
+					ok = false;
+				}
+				area = false;
+			} else {
+				inp_file = t;
+			}
+			return ok;
+		}
+	};
+
+	void help_(const std::string& cmd)
+	{
+		using namespace std;
+
+		std::string c = utils::get_file_base(cmd);
+
+		cout << "Renesas RL78 Series Programmer Version " << version_ << endl;
+		cout << "Copyright (C) 2016, Hiramatsu Kunihito (hira@rvf-rc45.net)" << endl;
+		cout << "usage:" << endl;
+		cout << c << " [options] [mot file] ..." << endl;
+		cout << endl;
+		cout << "Options :" << endl;
+		cout << "    -P PORT,   --port=PORT        Specify serial port" << endl;
+		cout << "    -s SPEED,  --speed=SPEED      Specify serial speed" << endl;
+		cout << "    -d DEVICE, --device=DEVICE    Specify device name" << endl;
+		cout << "    -V VOLTAGE, --voltage=VOLTAGE Specify CPU voltage" << endl;
+		cout << "    -e, --erase                   Perform a device erase to a minimum" << endl;
+		cout << "    -v, --verify                  Perform data verify" << endl;
+		cout << "    -w, --write                   Perform data write" << endl;
+		cout << "    --progress                    display Progress output" << endl;
+		cout << "    --device-list                 Display device list" << endl;
+		cout << "    --verbose                     Verbose output" << endl;
+		cout << "    -h, --help                    Display this" << endl;
 	}
-};
-
-
-static void help_(const std::string& cmd)
-{
-	using namespace std;
-
-	std::string c = utils::get_file_base(cmd);
-
-	cout << "Renesas RL78 Series Programmer Version " << version_ << endl;
-	cout << "Copyright (C) 2016, Hiramatsu Kunihito (hira@rvf-rc45.net)" << endl;
-	cout << "usage:" << endl;
-	cout << c << " [options] [mot file] ..." << endl;
-	cout << endl;
-	cout << "Options :" << endl;
-	cout << "    -P PORT,   --port=PORT        Specify serial port" << endl;
-	cout << "    -s SPEED,  --speed=SPEED      Specify serial speed" << endl;
-	cout << "    -d DEVICE, --device=DEVICE    Specify device name" << endl;
-	cout << "    -V VOLTAGE, --voltage=VOLTAGE Specify CPU voltage" << endl;
-	cout << "    -e, --erase                   Perform a device erase to a minimum" << endl;
-	cout << "    -v, --verify                  Perform data verify" << endl;
-	cout << "    -w, --write                   Perform data write" << endl;
-	cout << "    --progress                    display Progress output" << endl;
-	cout << "    --device-list                 Display device list" << endl;
-	cout << "    --verbose                     Verbose output" << endl;
-	cout << "    -h, --help                    Display this" << endl;
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -301,7 +299,7 @@ int main(int argc, char* argv[])
 	uint32_t pageall = 0;
 	if(!opts.inp_file.empty()) {
 		if(opts.verbose) {
-			std::cout << "Input file path: '" << opts.inp_file << '\'' << std::endl;
+			std::cout << "# Input file path: '" << opts.inp_file << '\'' << std::endl;
 		}
 		if(!motsx_.load(opts.inp_file)) {
 			std::cerr << "Can't open input file: '" << opts.inp_file << "'" << std::endl;
@@ -309,7 +307,7 @@ int main(int argc, char* argv[])
 		}
 		pageall = motsx_.get_total_page();
 		if(opts.verbose) {
-			motsx_.list_area_map();
+			motsx_.list_area_map("# ");
 		}
 	}
 
@@ -327,7 +325,7 @@ int main(int argc, char* argv[])
             }
         }
 		if(opts.verbose) {
-			std::cout << "Serial port alias: " << opts.com_name << " ---> " << opts.com_path << std::endl;
+			std::cout << "# Serial port alias: " << opts.com_name << " ---> " << opts.com_path << std::endl;
 		}
     }
 	if(opts.com_path.empty()) {
@@ -335,7 +333,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	if(opts.verbose) {
-		std::cout << "Serial port path: '" << opts.com_path << '\'' << std::endl;
+		std::cout << "# Serial port path: '" << opts.com_path << '\'' << std::endl;
 	}
 	int com_speed = 0;
 	if(!utils::string_to_int(opts.com_speed, com_speed)) {
@@ -366,7 +364,7 @@ int main(int argc, char* argv[])
 	// デバイスの確認
 	//=====================================
 	{
-		const auto& sig = prog_.get_protocol().get_signature();
+		const auto& sig = prog_.get_signature();
 		char tmp[sizeof(sig.DEV) + 1];
 		std::strcpy(tmp, reinterpret_cast<const char*>(sig.DEV));
 		if(std::strncmp(opts.device.c_str(), tmp, std::strlen(tmp)) == 0) {
@@ -377,7 +375,7 @@ int main(int argc, char* argv[])
 	}
 
 	if(opts.verbose) {
-		const auto& sig = prog_.get_protocol().get_signature();
+		const auto& sig = prog_.get_signature();
 		sig.info("# ");
 	}
 

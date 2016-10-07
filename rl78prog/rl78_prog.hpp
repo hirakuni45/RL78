@@ -19,6 +19,8 @@ namespace rl78 {
 		bool		verbose_;
 		protocol	proto_;
 
+		protocol::signature_t	sig_;
+
 		std::string out_section_(uint32_t n, uint32_t num) const {
 			return (boost::format("#%02d/%02d: ") % n % num).str();
 		}
@@ -34,11 +36,11 @@ namespace rl78 {
 
 		//-------------------------------------------------------------//
 		/*!
-			@brief	プロトコル・インスタンスを取得
-			@return プロトコル・インスタンス
+			@brief	シグネチュアを取得
+			@return シグナチュア
 		*/
 		//-------------------------------------------------------------//
-		const protocol& get_protocol() const { return proto_; }
+		const protocol::signature_t& get_signature() const { return sig_; }
 
 
 		//-------------------------------------------------------------//
@@ -80,7 +82,7 @@ namespace rl78 {
 				return false;
 			}
 
-			if(!proto_.silicon_signature()) {
+			if(!proto_.silicon_signature(sig_)) {
 				return false;
 			}
 
@@ -170,6 +172,53 @@ namespace rl78 {
 		//-------------------------------------------------------------//
 		bool verify_page(const void* src, uint32_t len, bool last) {
 			if(!proto_.send_verify_data(src, len, last)) {
+				proto_.end();
+				return false;
+			}
+			return true;
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief	セキリティ登録
+			@param[in]	src	セキリティ・ソース
+			@return 成功なら「true」
+		*/
+		//-------------------------------------------------------------//
+		bool set_security(const protocol::security_t& src) {
+			if(!proto_.security_set(src)) {
+				proto_.end();
+				return false;
+			}
+			return true;
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief	セキリティ取得
+			@param[out]	dst	セキリティ保存先
+			@return 成功なら「true」
+		*/
+		//-------------------------------------------------------------//
+		bool get_security(protocol::security_t& dst) {
+			if(!proto_.security_get(dst)) {
+				proto_.end();
+				return false;
+			}
+			return true;
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief	セキリティ・リリース
+			@return 成功なら「true」
+		*/
+		//-------------------------------------------------------------//
+		bool security_release() {
+			if(!proto_.security_release()) {
 				proto_.end();
 				return false;
 			}

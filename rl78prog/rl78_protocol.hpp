@@ -121,7 +121,7 @@ namespace rl78 {
 
 			void info(const std::string& head = "") const {
 				std::cout << head << boost::format("Device code: %06X") % hex3_(DEC) << std::endl;
-				std::cout << head;
+				std::cout << head << "Device: ";
 				strnout_(DEV, 10);
 				std::cout << std::endl;
 				std::cout << head << boost::format("Flash end: %06X") % hex3_(CEN) << std::endl;
@@ -169,8 +169,6 @@ namespace rl78 {
 		bool		entry_verify_ = false;
 
 		state_t		state_;
-		signature_t	sig_;
-		security_t	security_;
 		bool		blank_ = false;
 		uint16_t	checksum_ = 0;
 
@@ -218,7 +216,7 @@ namespace rl78 {
 			tv.tv_sec  = 0;
 			// (base: 100ms) + (((1 / baud) * 10) * 1.5) * n bytes
 //			tv.tv_usec = (sizeof(buf) * 1000000 * (10 + 5) / baud_) + 500000;
-			tv.tv_usec = 950000;
+			tv.tv_usec = 500000;
 			return rs232c_.recv(buf, sizeof(buf), tv) == sizeof(buf);
 		}
 
@@ -457,8 +455,13 @@ namespace rl78 {
 			status_ = static_cast<status>(state[0]);
 
 			if(status_ != status::ACK) {
-				std::cerr << boost::format("BLOCK_ERASE status error: %02X")
-					% static_cast<uint32_t>(status_) << std::endl;
+				if(status_ == status::BLANK) {
+					std::cerr << std::endl;
+					std::cerr << boost::format("Erase fail at: %06X") % org << std::endl << std::flush;
+				} else {
+					std::cerr << boost::format("BLOCK_ERASE status error: %02X")
+						% static_cast<uint32_t>(status_) << std::endl;
+				}
 				return false;
 			}
 
@@ -547,8 +550,14 @@ namespace rl78 {
 				entry_program_ = false;
 				return false;
 			}
+			auto st1 = static_cast<status>(ds[0]);
+			auto st2 = static_cast<status>(ds[1]);
 
-			if(ds[0] != static_cast<uint8_t>(status::ACK) || ds[1] != static_cast<uint8_t>(status::ACK)) {
+			if(st1 != status::ACK || st2 != status::ACK) {
+//				if(st1 == status::BLANK) {
+//					std::cerr << std::endl;
+//					std::cerr << boost::format("Erase fail at: %06X") % org << std::endl << std::flush;
+//				}
 				std::cerr << boost::format("PROGRAMMING (data) status error: %02X, %02X")
 					% static_cast<uint32_t>(ds[0]) % static_cast<uint32_t>(ds[1]) << std::endl;
 				entry_program_ = false;
@@ -726,10 +735,11 @@ namespace rl78 {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	シリコン・シグネチュア
+			@param[out]	dst	所得先
 			@return 成功なら「true」
 		*/
 		//-----------------------------------------------------------------//
-		bool silicon_signature()
+		bool silicon_signature(signature_t& dst)
 		{
 			status_ = status::NONE;
 
@@ -753,11 +763,11 @@ namespace rl78 {
 
 			uint8_t data[3+10+3+3+3];
 			if(!recv_status_(CMD::none_, data, sizeof(data))) {
-				std::cerr << "SILICON_SIGNATURE frame error" << std::endl;
+				std::cerr << "SILICON_SIGNATURE data error" << std::endl;
 				return false;
 			}
 
-			sig_.copy(data);
+			dst.copy(data);
 
 			return true;
 		}
@@ -812,7 +822,104 @@ namespace rl78 {
 		}
 
 
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	セキリティー・セット
+			@param[in]	sec	セキリティー設定データ
+			@return 成功なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool security_set(const security_t& sec)
+		{
+			status_ = status::NONE;
 
+			if(!send_cmd_(CMD::SECURITY_SET, nullptr, 0)) {
+				std::cerr << "SECURITY_SET send error" << std::endl;
+				return false;
+			}
+
+			uint8_t state[1];
+			if(!recv_status_(CMD::SECURITY_SET, state, 1)) {
+				std::cerr << "SECURITY_SET recv error" << std::endl;
+				return false;
+			}
+			status_ = static_cast<status>(state[0]);
+
+			if(status_ != status::ACK) {
+				std::cerr << boost::format("SECURITY_SET status error: %02X")
+					% static_cast<uint32_t>(status_) << std::endl;
+				return false;
+			}
+
+			uint8_t data[8];
+			data[0] = sec.FLG;
+			data[1] = sec.BOT;
+			data[2] = sec.SS & 0xff;
+			data[3] = sec.SS >> 8;
+			data[4] = sec.SE & 0xff;
+			data[5] = sec.SE >> 8;
+			data[6] = 0;
+			data[7] = 0;
+			if(!send_data_(data, sizeof(data), true)) {
+				std::cerr << "SECURITY_SET data send error" << std::endl;
+				return false;
+			}
+
+			if(!recv_status_(CMD::SECURITY_SET, state, 1)) {
+				std::cerr << "SECURITY_SET data recv error" << std::endl;
+				return false;
+			}
+			status_ = static_cast<status>(state[0]);
+
+			if(status_ != status::ACK) {
+				std::cerr << boost::format("SECURITY_SET data status error: %02X")
+					% static_cast<uint32_t>(status_) << std::endl;
+				return false;
+			}
+
+			return true;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	セキリティー・ゲット
+			@param[out]	dst	取得先
+			@return 成功なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool security_get(security_t& dst)
+		{
+			status_ = status::NONE;
+
+			if(!send_cmd_(CMD::SECURITY_GET, nullptr, 0)) {
+				std::cerr << "SECURITY_GET send error" << std::endl;
+				return false;
+			}
+
+			uint8_t state[1];
+			if(!recv_status_(CMD::SECURITY_GET, state, 1)) {
+				std::cerr << "SECURITY_GET recv error" << std::endl;
+				return false;
+			}
+			status_ = static_cast<status>(state[0]);
+
+			if(status_ != status::ACK) {
+				std::cerr << boost::format("SECURITY_GET status error: %02X")
+					% static_cast<uint32_t>(status_) << std::endl;
+				return false;
+			}
+
+			uint8_t data[1 + 1 + 2 + 2 + 2];
+			if(!recv_status_(CMD::none_, data, sizeof(data))) {
+				std::cerr << "SECURITY_GET data error" << std::endl;
+				return false;
+			}
+
+			dst.copy(data);
+
+			return true;
+		}
 
 
 		//-----------------------------------------------------------------//
@@ -863,15 +970,6 @@ namespace rl78 {
 		*/
 		//-----------------------------------------------------------------//
 		const state_t& get_state() const { return state_; }
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief	シグネチュアの取得
-			@return シグネチュア
-		*/
-		//-----------------------------------------------------------------//
-		const signature_t& get_signature() const { return sig_; }
 
 
 		//-----------------------------------------------------------------//
