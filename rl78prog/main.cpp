@@ -437,7 +437,7 @@ int main(int argc, char* argv[])
 					if(ln > 1024) ln = 1024;
 					else if(ln < 1024) { ln |= 0xff; ++ln; }
 /// std::cout << boost::format("Start: %06X, %d") % adr % ln << std::endl << std::flush;
-					if(!prog_.write_start(adr, adr + ln - 1)) {
+					if(!prog_.start_write(adr, adr + ln - 1)) {
 						prog_.end();
 						return -1;
 					}
@@ -475,18 +475,37 @@ int main(int argc, char* argv[])
 		for(const auto& a : areas) {
 			uint32_t adr = a.min_ & 0xffffff00;
 			uint32_t len = 0;
+			uint32_t block = 0xffffffff;
+			uint32_t block_len = 0;
 			while(len < (a.max_ - a.min_ + 1)) {
 				if(opts.progress) {
 					progress_(pageall, page);
 				}
-				/// std::cout << boost::format("%08X to %08X") % adr % (adr + 255) << std::endl;
-				auto mem = motsx_.get_memory(adr);
-//				if(!prog_.verify(adr, &mem[0], 256)) {
-//					prog_.end();
-//					return -1;
-//				}
+				if((block & 0xfffffc00) != (adr & 0xfffffc00)) {
+					uint32_t ln = a.max_ - adr + 1;
+					if(ln > 1024) ln = 1024;
+					else if(ln < 1024) { ln |= 0xff; ++ln; }
+/// std::cout << boost::format("Start: %06X, %d") % adr % ln << std::endl << std::flush;
+					if(!prog_.start_verify(adr, adr + ln - 1)) {
+						prog_.end();
+						return -1;
+					}
+					block = adr;
+					block_len = ln;
+				}
+				{
+					auto mem = motsx_.get_memory(adr);
+					bool last = false;
+					if(block_len <= 256) last = true;
+/// std::cout << boost::format("Write: %06X - %d") % adr % len << std::endl << std::flush;
+					if(!prog_.verify_page(&mem[0], 256, last)) {
+						prog_.end();
+						return -1;
+					}
+				}
 				adr += 256;
 				len += 256;
+				block_len -= 256;
 				++page.n;
 			}
 		}

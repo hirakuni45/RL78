@@ -166,6 +166,7 @@ namespace rl78 {
 		uint32_t	baud_ = 0;
 		status		status_ = status::NONE;
 		bool		entry_program_ = false;
+		bool		entry_verify_ = false;
 
 		state_t		state_;
 		signature_t	sig_;
@@ -525,8 +526,10 @@ namespace rl78 {
 		//-----------------------------------------------------------------//
 		bool send_program_data(const void* src, uint32_t len, bool last)
 		{
-			if(!entry_program_) return false;
-
+			if(!entry_program_) {
+				std::cerr << "PROGRAMMING (data) start error" << std::endl;
+				return false;
+			}
 			status_ = status::NONE;
 
 // std::cerr << boost::format("Len: %d") % len << std::endl << std::flush;
@@ -572,6 +575,103 @@ namespace rl78 {
 			}
 
 			entry_program_ = false;
+			return true;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	ベリファイ（比較）
+			@param[in]	org	開始アドレス
+			@param[in]	end 終了アドレス
+			@return 成功なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool verify(uint32_t org, uint32_t end)
+		{
+			if(entry_verify_) return false;
+
+			entry_verify_ = false;
+
+			status_ = status::NONE;
+
+			uint8_t buf[6];
+			buf[0] = org & 0xff;
+			buf[1] = (org >> 8) & 0xff;
+			buf[2] = (org >> 16) & 0xff;
+			buf[3] = end & 0xff;
+			buf[4] = (end >> 8) & 0xff;
+			buf[5] = (end >> 16) & 0xff;
+			if(!send_cmd_(CMD::VERIFY, buf, 6)) {
+				std::cerr << "VERIFY send error" << std::endl;
+				return false;
+			}
+
+			uint8_t state[1];
+			if(!recv_status_(CMD::VERIFY, state, 1)) {
+				std::cerr << "VERIFY recv error" << std::endl;
+				return false;
+			}
+			status_ = static_cast<status>(state[0]);
+
+			if(status_ != status::ACK) {
+				std::cerr << boost::format("VERIFY status error: %02X")
+					% static_cast<uint32_t>(status_) << std::endl;
+				return false;
+			}
+
+			entry_verify_ = true;
+
+/// std::cerr << boost::format("Adr: %06X, %06X") % org % end << std::endl << std::flush;
+
+			return true;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	ベリファイ・データ転送
+			@param[in]	src	ソースデータ
+			@param[in]	len	全体の長さ（最大２５６）
+			@param[in]	last	ベリファイ終了の場合「true」
+			@return 成功なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool send_verify_data(const void* src, uint32_t len, bool last)
+		{
+			if(!entry_verify_) {
+				std::cerr << "VERIFY (data) start error" << std::endl;
+				return false;
+			}
+
+			status_ = status::NONE;
+
+// std::cerr << boost::format("Len: %d") % len << std::endl << std::flush;
+// if(last) std::cerr << "Last..." << std::endl << std::flush;
+
+			if(!send_data_(src, len, last)) {
+				std::cerr << "VERIFY (data) send error" << std::endl;
+				entry_verify_ = false;
+				return false;
+			}
+
+			uint8_t ds[2];
+			if(!recv_status_(CMD::send_feed_, ds, 2)) {
+				std::cerr << "VERIFY (data) recv2 error" << std::endl;
+				entry_verify_ = false;
+				return false;
+			}
+
+			if(ds[0] != static_cast<uint8_t>(status::ACK) || ds[1] != static_cast<uint8_t>(status::ACK)) {
+				std::cerr << boost::format("VERIFY (data) status error: %02X, %02X")
+					% static_cast<uint32_t>(ds[0]) % static_cast<uint32_t>(ds[1]) << std::endl;
+				entry_verify_ = false;
+				return false;
+			}
+
+			if(last) {
+				entry_verify_ = false;
+			}
 			return true;
 		}
 

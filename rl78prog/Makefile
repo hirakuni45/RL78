@@ -126,7 +126,9 @@ $(BUILD)/%.d : %.cpp
 
 run:
 	./$(TARGET) --verbose --progress --erase --write uart_sample.mot
-#	./$(TARGET) --port=/dev/ttyS8 --erase --write --verify chager.mot
+
+verify:
+	./$(TARGET) --verbose --progress --verify uart_sample.mot
 
 clean:
 	rm -rf $(BUILD) $(TARGET)
