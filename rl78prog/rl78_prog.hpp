@@ -54,26 +54,21 @@ namespace rl78 {
 		//-------------------------------------------------------------//
 		bool start(const std::string& path, uint32_t brate, uint32_t voltage)
 		{
-			speed_t spt;
 			switch(brate) {
 			case 115200:
-				spt = B115200;
 				break;
 //			case 250000:
 //				spt = B250000;
 //				break;
 			case 500000:
-				spt = B500000;
 				break;
 			case 1000000:
-				spt = B1000000;
 				break;
 			default:
-				std::cerr << boost::format("False speed range: %d") % brate << std::endl;
 				return false;
 			}
 
-			if(!proto_.start(path, spt, voltage)) {
+			if(!proto_.start(path, brate, voltage)) {
 //				std::cerr << boost::format("RL78 connection error: '%s'") % path << std::endl;
 				return false;
 			}
