@@ -382,7 +382,7 @@ namespace rl78 {
 				spd = B115200;
 				break;
 #ifdef __APPLE__
-			case B250000:
+			case 250000:
 				bt = 1;
 				spd = 250000;
 				break;
@@ -394,13 +394,8 @@ namespace rl78 {
 				bt = 3;
 				spd = 1000000;
 				break;
+
 #else
-#if defined(__linux__) || defined(WIN32)
-			case B250000:
-				bt = 1;
-				spd = B250000;
-				break;
-#endif
 			case 500000:
 				bt = 2;
 				spd =  B500000;
@@ -409,6 +404,9 @@ namespace rl78 {
 				bt = 3;
 				spd = B1000000;
 				break;
+			case 250000:
+				bt = 1;
+//				spd = B250000;
 #endif
 			default:
 				std::cerr << boost::format("False speed range: %d") % baud << std::endl;
