@@ -395,7 +395,7 @@ namespace rl78 {
 				spd = 1000000;
 				break;
 #else
-#ifdef __linux__
+#if defined(__linux__) || defined(WIN32)
 			case B250000:
 				bt = 1;
 				spd = B250000;
