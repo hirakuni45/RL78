@@ -65,9 +65,11 @@ namespace rl78 {
 			ACK = 0x06,			///< 正常終了
 			PARAM = 0x05,		///< パラメーター・エラー
 			CHECKSUM = 0x07,	///< チェック・サム・エラー
+			VERIFY = 0x0F,		///< べりファイ・エラー
 			PROTECT = 0x10,		///< プロテクト・エラー
 			NACK = 0x15,		///< 否定応答
 			BLANK = 0x1B,		///< ブランク・エラー
+			W_VERIFY = 0x1B,	///< ライト時、べりファイ・エラー
 			WRITE = 0x1C,		///< ライト・エラー
 		};
 
@@ -171,6 +173,9 @@ namespace rl78 {
 		state_t		state_;
 		bool		blank_ = false;
 		uint16_t	checksum_ = 0;
+
+		uint32_t	block_org_ = 0;
+		uint32_t	block_end_ = 0;
 
 		static uint8_t gen_checksum_(const void *src, uint32_t len)
 		{
@@ -511,7 +516,8 @@ namespace rl78 {
 			}
 
 			entry_program_ = true;
-
+			block_org_ = org;
+			block_end_ = end;
 /// std::cerr << boost::format("Adr: %06X, %06X") % org % end << std::endl << std::flush;
 
 			return true;
@@ -554,17 +560,24 @@ namespace rl78 {
 			auto st2 = static_cast<status>(ds[1]);
 
 			if(st1 != status::ACK || st2 != status::ACK) {
-//				if(st1 == status::BLANK) {
-//					std::cerr << std::endl;
-//					std::cerr << boost::format("Erase fail at: %06X") % org << std::endl << std::flush;
-//				}
-				std::cerr << boost::format("PROGRAMMING (data) status error: %02X, %02X")
-					% static_cast<uint32_t>(ds[0]) % static_cast<uint32_t>(ds[1]) << std::endl;
+				if(st2 == status::WRITE) {
+					std::cerr << std::endl;
+					std::cerr << boost::format("Write fail at: %06X to %06X") % block_org_ % block_end_
+						<< std::endl << std::flush;
+				} else if(st2 == status::W_VERIFY) {
+					std::cerr << std::endl;
+					std::cerr << boost::format("Verify fail at: %06X to %06X") % block_org_ % block_end_
+						<< std::endl << std::flush;
+				} else {
+					std::cerr << boost::format("PROGRAMMING (data) status error: %02X, %02X")
+						% static_cast<uint32_t>(ds[0]) % static_cast<uint32_t>(ds[1]) << std::endl;
+				}
 				entry_program_ = false;
 				return false;
 			}
 
 			if(!last) {
+				block_org_ += len;
 				return true;
 			}
 
@@ -630,7 +643,8 @@ namespace rl78 {
 			}
 
 			entry_verify_ = true;
-
+			block_org_ = org;
+			block_end_ = end;
 /// std::cerr << boost::format("Adr: %06X, %06X") % org % end << std::endl << std::flush;
 
 			return true;
@@ -670,16 +684,26 @@ namespace rl78 {
 				entry_verify_ = false;
 				return false;
 			}
+			auto st1 = static_cast<status>(ds[0]);
+			auto st2 = static_cast<status>(ds[1]);
 
-			if(ds[0] != static_cast<uint8_t>(status::ACK) || ds[1] != static_cast<uint8_t>(status::ACK)) {
-				std::cerr << boost::format("VERIFY (data) status error: %02X, %02X")
-					% static_cast<uint32_t>(ds[0]) % static_cast<uint32_t>(ds[1]) << std::endl;
+			if(st1 != status::ACK || st2 != status::ACK) {
+				if(st2 == status::VERIFY) {
+					std::cerr << std::endl;
+					std::cerr << boost::format("Verify fail: %06X to %06X") % block_org_ % block_end_
+						<< std::endl << std::flush;
+				} else {
+					std::cerr << boost::format("VERIFY (data) status error: %02X, %02X")
+						% static_cast<uint32_t>(ds[0]) % static_cast<uint32_t>(ds[1]) << std::endl;
+				}
 				entry_verify_ = false;
 				return false;
 			}
 
 			if(last) {
 				entry_verify_ = false;
+			} else {
+				block_org_ += len;
 			}
 			return true;
 		}
