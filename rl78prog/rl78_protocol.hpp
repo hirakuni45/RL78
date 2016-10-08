@@ -166,6 +166,7 @@ namespace rl78 {
 		rs232c		rs232c_;
 
 		uint32_t	baud_ = 0;
+
 		status		status_ = status::NONE;
 		bool		entry_program_ = false;
 		bool		entry_verify_ = false;
@@ -283,15 +284,17 @@ namespace rl78 {
 		/*!
 			@brief	開始
 			@param[in]	path	シリアルデバイスパス
-			@param[in]	brate	接続する速度
+			@param[in]	baud	接続する速度
 			@param[in]	voltage	動作電圧
 			@return エラー無ければ「true」
 		*/
 		//-----------------------------------------------------------------//
-		bool start(const std::string& path, speed_t brate, uint8_t voltage)
+		bool start(const std::string& path, uint32_t baud, uint8_t voltage)
 		{
-			// 8 bits, 2 stop
-			if(!rs232c_.open(path, brate, rs232c::char_len::bits8, rs232c::stop_len::two)) {
+			baud_ = baud;
+
+			// 8 bits, 2 stop, B115200 で接続
+			if(!rs232c_.open(path, B115200, rs232c::char_len::bits8, rs232c::stop_len::two)) {
 				std::cerr << boost::format("Can't open serial port: '%s'") % path << std::endl;
 				return false;
 			}
@@ -324,7 +327,8 @@ namespace rl78 {
 			}
 			usleep(1000);
 			status_ = status::NONE;
-			return baud_rate_set(brate, voltage);
+
+			return baud_rate_set(baud, voltage);
 		}
 
 
@@ -368,33 +372,54 @@ namespace rl78 {
 			@return 成功なら「true」
 		*/
 		//-----------------------------------------------------------------//
-		bool baud_rate_set(speed_t baud, uint32_t voltage)
+		bool baud_rate_set(uint32_t baud, uint32_t voltage)
 		{
-			status_ = status::NONE;
-
-			uint8_t bc;
+			uint8_t bt;
+			speed_t spd;
 			switch(baud) {
-			case B115200:
-				bc = 0;
-				baud_ = 115200;
+			case 115200:
+				bt = 0;
+				spd = B115200;
 				break;
-//			case B250000:
-//				bc = 1;
-//				baud_ = 250000;
-//				break;
-			case B500000:
-				bc = 2;
-				baud_ = 500000;
+#ifdef __APPLE__
+			case B250000:
+				bt = 1;
+				spd = 250000;
 				break;
-			case B1000000:
-				bc = 3;
-				baud_ = 1000000;
+			case 500000:
+				bt = 2;
+				spd =  500000;
 				break;
+			case 1000000:
+				bt = 3;
+				spd = 1000000;
+				break;
+#else
+#ifdef __linux__
+			case B250000:
+				bt = 1;
+				spd = B250000;
+				break;
+#endif
+			case 500000:
+				bt = 2;
+				spd =  B500000;
+				break;
+			case 1000000:
+				bt = 3;
+				spd = B1000000;
+				break;
+#endif
 			default:
+				std::cerr << boost::format("False speed range: %d") % baud << std::endl;
 				return false;
 			}
+			baud_ = baud;
+
+			status_ = status::NONE;
+
 			uint8_t buf[2];
-    		buf[0] = bc;
+    		buf[0] = bt;
     		buf[1] = voltage;
 
     		if(!send_cmd_(CMD::BAUD_RATE_SET, buf, 2)) {
@@ -424,11 +449,11 @@ namespace rl78 {
 					% (state[2] == 0 ? "full-speed mode" : "wide-voltage mode") << std::endl;
 			}
 
-			if(baud == B115200) {
+			if(baud == 115200) {
 				return true;
 			}
 
-			return rs232c_.change_speed(baud);
+			return rs232c_.change_speed(spd);
 		}
 
 
