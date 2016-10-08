@@ -57,9 +57,8 @@ namespace rl78 {
 			switch(brate) {
 			case 115200:
 				break;
-//			case 250000:
-//				spt = B250000;
-//				break;
+			case 250000:
+				break;
 			case 500000:
 				break;
 			case 1000000:
