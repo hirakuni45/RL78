@@ -210,7 +210,18 @@ int main(int argc, char* argv[])
 	if(conf_in_.load(conf_path)) {
 		auto defa = conf_in_.get_default();
 		opts.device = defa.device_;
-		opts.com_path = defa.port_;
+#ifdef __CYGWIN__
+		opts.com_path = defa.port_win_;
+#endif
+#ifdef __APPLE__
+		opts.com_path = defa.port_osx_;
+#endif
+#ifdef __linux__
+		opts.com_path = defa.port_linux_;
+#endif
+		if(opts.com_path.empty()) {
+			opts.com_path = defa.port_;
+		}
 		opts.com_speed = defa.speed_;
 		opts.voltage = defa.voltage_;
 	} else {
