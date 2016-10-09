@@ -99,7 +99,7 @@ namespace utils {
 			parity par = parity::none, bool hc = false) {
 
 			int cpar = 0;
-			int ipar = IGNPAR;
+			int ipar = IGNBRK;
 			switch(par) {
 			case parity::none:
 				cpar = 0;
@@ -127,7 +127,7 @@ namespace utils {
 				return false;
 			}
 
-			int cbits;
+			int cbits = 0;
 			switch(clen) {
 			case char_len::bits8:
 				cbits = CS8;
@@ -158,8 +158,8 @@ namespace utils {
 			attr_.c_iflag = ipar;
 			attr_.c_oflag = 0;
 			attr_.c_lflag = 0;
-			attr_.c_cc[VMIN]  = 1;     // block untill n bytes are received
-			attr_.c_cc[VTIME] = 0;     // block untill a timer expires (n * 100 mSec.)
+			attr_.c_cc[VMIN]  = 0;     // block untill n bytes are received
+			attr_.c_cc[VTIME] = 1;     // block untill a timer expires (n * 100 mSec.)
 
 			if(cfsetspeed(&attr_, brate) == -1) {
 				close_();
