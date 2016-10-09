@@ -40,7 +40,7 @@ INTERRUPT_FUNC void null_task_(void)
 {
 }
 
-
+#pragma GCC optimize ("O0")
 //-----------------------------------------------------------------//
 /*!
 	@brief  リセットベクター設定

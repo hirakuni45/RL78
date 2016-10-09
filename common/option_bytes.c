@@ -20,6 +20,7 @@
 // #define START_FREQ	0xEC	///<  2MHz
 // #define START_FREQ	0xED	///<  1MHz
 
+#pragma GCC optimize ("O0")
 //-----------------------------------------------------------------//
 /*!
 	@brief  オプション・バイト設定
