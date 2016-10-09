@@ -113,7 +113,7 @@ namespace device {
 			}
 		}
 
-
+#pragma GCC optimize ("-fno-lto")
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  送信割り込み
@@ -149,7 +149,7 @@ namespace device {
 		static __attribute__ ((interrupt)) void error_task()
 		{
 		}
-
+#pragma GCC optimize ("-flto")
 
 		//-----------------------------------------------------------------//
 		/*!

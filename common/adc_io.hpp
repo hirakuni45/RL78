@@ -56,6 +56,7 @@ namespace device {
 		static inline void sleep_() { asm("nop"); }
 
 	public:
+#pragma GCC optimize ("-fno-lto")
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  インターバル・タイマー割り込みタスク
@@ -70,7 +71,7 @@ namespace device {
 			}
 			task_();
 		}
-
+#pragma GCC optimize ("-flto")
 
 		//-----------------------------------------------------------------//
 		/*!
