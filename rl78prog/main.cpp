@@ -89,6 +89,8 @@ namespace {
 	struct options {
 		bool verbose = false;
 
+		std::string platform;
+
 		std::string	inp_file;
 
 		std::string	device;
@@ -212,12 +214,15 @@ int main(int argc, char* argv[])
 		opts.device = defa.device_;
 #ifdef __CYGWIN__
 		opts.com_path = defa.port_win_;
+		opts.platform = "Cygwin";
 #endif
 #ifdef __APPLE__
 		opts.com_path = defa.port_osx_;
+		opts.platform = "OS-X";
 #endif
 #ifdef __linux__
 		opts.com_path = defa.port_linux_;
+		opts.platform = "Linux";
 #endif
 		if(opts.com_path.empty()) {
 			opts.com_path = defa.port_;
@@ -284,6 +289,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	if(opts.verbose) {
+		std::cout << "# Platform: '" << opts.platform << '\'' << std::endl;
 		std::cout << "# Configuration file path: '" << conf_path << '\'' << std::endl;
 		std::cout << "# Device: '" << opts.device << '\'' << std::endl;
 		std::cout << "# Serial port path: '" << opts.com_path << '\'' << std::endl;
