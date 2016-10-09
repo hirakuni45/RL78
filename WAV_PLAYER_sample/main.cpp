@@ -220,7 +220,7 @@ namespace {
 
 }
 
-
+#pragma GCC optimize ("O0")
 const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/*  0 WDTI            */  nullptr,
 	/*  1 LVI             */  nullptr,
@@ -277,7 +277,7 @@ const void* ivec_[] __attribute__ ((section (".ivec"))) = {
 	/* 52 TM16            */  nullptr,
 	/* 53 TM17            */  nullptr,
 };
-
+#pragma GCC optimize ("Os")
 
 extern "C" {
 
