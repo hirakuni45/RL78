@@ -12,7 +12,7 @@
 #include "area.hpp"
 
 namespace {
-	const std::string version_ = "0.95b";
+	const std::string version_ = "0.98b";
 	const std::string conf_file_ = "rl78_prog.conf";
 	const uint32_t progress_num_ = 50;
 	const char progress_cha_ = '#';
@@ -253,7 +253,7 @@ namespace {
 	}
 
 	void list_sequrity_(const std::string& head, const rl78::protocol::security_t& seq) {
-		std::cout << head << boost::format("BOT:%02X, FLG:%02X, SS:%04X, SE:%04X")
+		std::cout << head << boost::format("FLG:%02X, BOT:%02X, SS:%04X, SE:%04X")
 			% static_cast<uint32_t>(seq.FLG)
 			% static_cast<uint32_t>(seq.BOT)
 			% static_cast<uint32_t>(seq.SS)
@@ -367,7 +367,9 @@ int main(int argc, char* argv[])
 	}
 
 	// HELP 表示
-	if(opts.help || (opts.inp_file.empty() && !opts.device_list) || opts.com_path.empty()
+	if(opts.help || opts.com_path.empty()
+		|| (opts.inp_file.empty() && !opts.device_list
+			&& opts.sequrity_set.empty() && !opts.sequrity_get && !opts.sequrity_release)
 		|| opts.com_speed.empty() || opts.device.empty()) {
 		help_(argv[0]);
 		return 0;
@@ -380,7 +382,8 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if(opts.inp_file.empty()) return 0;
+	if(!opts.sequrity_set.empty() || opts.sequrity_get || opts.sequrity_release) ;
+	else if(opts.inp_file.empty()) return 0;
 
 	// 入力ファイルの読み込み
 	uint32_t pageall = 0;
