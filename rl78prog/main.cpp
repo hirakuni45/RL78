@@ -12,7 +12,7 @@
 #include "area.hpp"
 
 namespace {
-	const std::string version_ = "0.85b";
+	const std::string version_ = "0.95b";
 	const std::string conf_file_ = "rl78_prog.conf";
 	const uint32_t progress_num_ = 50;
 	const char progress_cha_ = '#';
@@ -112,10 +112,14 @@ namespace {
 		bool	erase = false;
 		bool	write = false;
 		bool	verify = false;
+
+		std::string	sequrity_set;
+		bool	sequrity_get = false;
+		bool	sequrity_release = false;
+
 		bool	device_list = false;
 		bool	progress = false;
 		bool	help = false;
-
 
 		bool set_area_(const std::string& s) {
 			utils::strings ss = utils::split_text(s, ",");
@@ -184,13 +188,79 @@ namespace {
 		cout << "    -d DEVICE, --device=DEVICE    Specify device name" << endl;
 		cout << "    -V VOLTAGE, --voltage=VOLTAGE Specify CPU voltage" << endl;
 		cout << "    -e, --erase                   Perform a device erase to a minimum" << endl;
-		cout << "    -v, --verify                  Perform data verify" << endl;
-		cout << "    -w, --write                   Perform data write" << endl;
+		cout << "    -v, --verify                  Perform flash verify" << endl;
+		cout << "    -w, --write                   Perform flash write" << endl;
+		cout << "    --security-set=FLG,BOT,SS,SE  Security set" << endl;
+		cout << "    --security-get                Security get (read)" << endl;
+		cout << "    --security-release            Security release" << endl;
 		cout << "    --progress                    display Progress output" << endl;
 		cout << "    --device-list                 Display device list" << endl;
 		cout << "    --verbose                     Verbose output" << endl;
 		cout << "    -h, --help                    Display this" << endl;
 	}
+
+	bool conversion_security_param_(const std::string& param, rl78::protocol::security_t& seq) {
+		seq.FLG = 0xff;
+		seq.BOT = 0;
+		seq.SS = 0;
+		seq.SE = 0;
+		utils::strings ss = utils::split_text(param, ",");
+		if(ss.size() != 4) {
+			return false;
+		}
+
+		uint32_t v;
+		if(!utils::string_to_hex(ss[0], v)) {
+			return false;
+		}
+		if(v >= 0 && v <= 255) {
+			if((v & 0b11101000) != 0b11101000) {
+				return false;
+			}
+			seq.FLG = v;
+		} else {
+			return false;
+		}
+
+		if(!utils::string_to_hex(ss[1], v)) {
+			return false;
+		}
+		if(v >= 0 && v <= 255) {
+			seq.BOT = v;
+		} else {
+			return false;
+		}
+
+		if(!utils::string_to_hex(ss[2], v)) {
+			return false;
+		}
+		if(v >= 0 && v <= 65535) {
+			seq.SS = v;
+		} else {
+			return false;
+		}
+
+		if(!utils::string_to_hex(ss[3], v)) {
+			return false;
+		}
+		if(v >= 0 && v <= 65535) {
+			seq.SE = v;
+		} else {
+			return false;
+		}
+
+		return true;
+	}
+
+	void list_sequrity_(const std::string& head, const rl78::protocol::security_t& seq) {
+		std::cout << head << boost::format("BOT:%02X, FLG:%02X, SS:%04X, SE:%04X")
+			% static_cast<uint32_t>(seq.FLG)
+			% static_cast<uint32_t>(seq.BOT)
+			% static_cast<uint32_t>(seq.SS)
+			% static_cast<uint32_t>(seq.SE) << std::endl;
+	}
+
+	rl78::protocol::security_t sequrity_;
 }
 
 int main(int argc, char* argv[])
@@ -257,22 +327,22 @@ int main(int argc, char* argv[])
 				opts.vt = true;
 			} else if(p.find("--voltage=") == 0) {
 				opts.voltage = &p[std::strlen("--voltage=")];
-///			} else if(p == "-a") {
-///				opts.area = true;
-///			} else if(p.find("--area=") == 0) {
-///				if(!opts.set_area_(&p[7])) {
-///					opterr = true;
-///				}
+			} else if(p == "-e" || p == "--erase") {
+				opts.erase = true;
 			} else if(p == "-w" || p == "--write") {
 				opts.write = true;
 			} else if(p == "-v" || p == "--verify") {
 				opts.verify = true;
+			} else if(p.find("--security-set=") == 0) {
+				opts.sequrity_set = &p[std::strlen("--security-set=")];
+			} else if(p == "--security-get") {
+				opts.sequrity_get = true;
+			} else if(p == "--security-release") {
+				opts.sequrity_release = true;
 			} else if(p == "--progress") {
 				opts.progress = true;
 			} else if(p == "--device-list") {
 				opts.device_list = true;
-			} else if(p == "-e" || p == "--erase") {
-				opts.erase = true;
 			} else if(p == "-h" || p == "--help") {
 				opts.help = true;
 			} else {
@@ -360,16 +430,52 @@ int main(int argc, char* argv[])
 
 	// CPU 電圧設定の変換
 	int voltage = 0;
-	if(!utils::string_to_int(opts.voltage, voltage)) {
-		std::cerr << "CPU Operation voltage conversion error: '" << opts.voltage << '\'' << std::endl;
-		return -1;		
+	{
+		bool cnvf = false;
+		auto vp = opts.voltage.find('.');
+		if(vp != std::string::npos) {  // 小数点がある場合
+			int dec = 0;
+			cnvf = utils::string_to_int(opts.voltage.substr(0, vp), dec);
+			if(cnvf) {
+				int fpn = 0;
+				cnvf = utils::string_to_int(opts.voltage.substr(vp + 1), fpn);
+				if(cnvf) {
+					voltage = dec * 10 + fpn;
+				}
+			}
+		} else {
+			cnvf = utils::string_to_int(opts.voltage, voltage);
+		}
+		if(!cnvf) {
+			std::cerr << "CPU Operation voltage conversion error: '" << opts.voltage << '\'' << std::endl;
+			return -1;		
+		}
 	}
-	if(voltage >= 16 && voltage <= 55) ;
-	else {
-		std::cerr << "CPU Operation voltage range error: "
+	if(voltage >= 16 && voltage <= 55) {
+		if(opts.verbose) {
+			std::cout << "# Operations voltage: "
+				<< (voltage / 10) << '.' << (voltage % 10) << " [V]" << std::endl;
+		}
+	} else {
+		std::cerr << "CPU Operations voltage range error: "
 			<< (voltage / 10) << '.' << (voltage % 10) << " [V]" << std::endl;
 		return -1;		
 	}
+
+	// セキリティ、パラメーター変換
+	if(!opts.sequrity_set.empty()) {
+		if(!conversion_security_param_(opts.sequrity_set, sequrity_)) {
+			std::cerr << "Sequrity param conversion error: " << opts.sequrity_set << std::endl;
+			return -1;
+		} else {
+			if(opts.verbose) {
+				list_sequrity_("# Sequrity frame: ", sequrity_);
+			}
+		}
+	}
+
+	if(!opts.erase && !opts.write && !opts.verify
+		&& opts.sequrity_set.empty() && !opts.sequrity_get && !opts.sequrity_release) return 0;
 
 	rl78::prog prog_(opts.verbose);
 	//=====================================
@@ -394,6 +500,37 @@ int main(int argc, char* argv[])
 	if(opts.verbose) {
 		const auto& sig = prog_.get_signature();
 		sig.info("# ");
+	}
+
+	//=====================================
+	if(!opts.sequrity_set.empty()) {  // sequrity_set
+		if(!opts.erase && !opts.write && !opts.verify && !opts.sequrity_get && !opts.sequrity_release) {	
+//			if(!prog_.set_security(sequrity_)) {
+//				prog_.end();
+//				return -1;
+//			}
+		} else {
+			std::cerr << "Sequrity-set is exclusive command" << std::endl;
+		}
+		return 0;
+	}
+
+	//=====================================
+	if(opts.sequrity_get) {  // sequrity_get
+		rl78::protocol::security_t seq;
+		if(!prog_.get_security(seq)) {
+			prog_.end();
+			return -1;
+		}
+		list_sequrity_("Sequrity frame: ", seq);
+	}
+
+	//=====================================
+	if(opts.sequrity_release) {  // sequrity_release
+		if(!prog_.release_security()) {
+			prog_.end();
+			return -1;
+		}
 	}
 
 	//=====================================

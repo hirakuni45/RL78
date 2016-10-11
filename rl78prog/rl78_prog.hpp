@@ -211,7 +211,7 @@ namespace rl78 {
 			@return 成功なら「true」
 		*/
 		//-------------------------------------------------------------//
-		bool security_release() {
+		bool release_security() {
 			if(!proto_.security_release()) {
 				proto_.end();
 				return false;
