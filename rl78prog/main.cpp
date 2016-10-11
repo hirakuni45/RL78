@@ -508,10 +508,10 @@ int main(int argc, char* argv[])
 	//=====================================
 	if(!opts.sequrity_set.empty()) {  // sequrity_set
 		if(!opts.erase && !opts.write && !opts.verify && !opts.sequrity_get && !opts.sequrity_release) {	
-//			if(!prog_.set_security(sequrity_)) {
-//				prog_.end();
-//				return -1;
-//			}
+			if(!prog_.set_security(sequrity_)) {
+				prog_.end();
+				return -1;
+			}
 		} else {
 			std::cerr << "Sequrity-set is exclusive command" << std::endl;
 		}
