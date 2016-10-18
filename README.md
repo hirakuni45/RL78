@@ -209,7 +209,7 @@ Linux 環境は、複数あるので、ここでは「Ubuntu 16.04 LTS」環境�
     cd gcc-4.9.4
     mkdir rl78_build
 	cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --enable-multilib --enable-lto --with-system-zlib
+    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto --with-system-zlib
     make
     make install     OS-X,Linux: (sudo make install)
 ```
@@ -244,7 +244,7 @@ make install
     cd
     cd gcc-4.9.4
     cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --enable-multilib --enable-lto --with-system-zlib
+    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto --with-system-zlib
     make
     make install     OS-X,Linux: (sudo make install)
 ```
