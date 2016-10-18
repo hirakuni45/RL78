@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	sci_puts("Start RL78/G13 BMP180(I2C) sample\n");
+	sci_puts("Start RL78/G13 MPU6050(I2C) sample\n");
 
 	// MPU6050 の開始
 	if(!mpu6050_.start()) {

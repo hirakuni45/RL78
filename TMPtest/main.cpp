@@ -8,8 +8,14 @@
 #include "G13/port.hpp"
 #include "common/delay.hpp"
 #include "common/itimer.hpp"
+#include "chip/EEPROM.hpp"
 
 namespace {
+
+	typedef device::iica_io<device::IICA0> IICA;
+	IICA iica_;
+
+	chip::EEPROM<IICA> eeprom_(iica_);
 
 }
 
