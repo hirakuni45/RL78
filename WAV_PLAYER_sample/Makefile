@@ -5,7 +5,7 @@
 #=======================================================#
 TARGET		=	wav_play_sample
 
-DEVICE		=	R5F100LGAFB
+DEVICE		=	R5F100LG
 
 FATFS_VER	=	ff12a
 
@@ -29,7 +29,7 @@ USER_LIBS	=	stdc++
 
 LDSCRIPT	=	../G13/$(DEVICE).ld
 
-USER_DEFS	=	F_CLK=32000000 DEVICE_SIG=$(DEVICE)
+USER_DEFS	=	SIG_G13 F_CLK=32000000
 
 MCU_TARGET	=	-mmul=g13
 
@@ -37,7 +37,8 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-OPTIMIZE	=	-Os -flto
+#OPTIMIZE	=	-Os -flto
+OPTIMIZE	=	-Os
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
