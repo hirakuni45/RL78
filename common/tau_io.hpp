@@ -234,7 +234,7 @@ namespace device {
 		}
 
 	public:
-#pragma GCC optimize ("-fno-lto")
+/// #pragma GCC optimize ("-fno-lto")
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	割り込みタスク
@@ -244,7 +244,7 @@ namespace device {
 		{
 			task_();
 		}
-#pragma GCC optimize ("-flto")
+/// #pragma GCC optimize ("-flto")
 
 		//-----------------------------------------------------------------//
 		/*!
