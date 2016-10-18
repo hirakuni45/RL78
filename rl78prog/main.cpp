@@ -213,7 +213,7 @@ namespace {
 		if(!utils::string_to_hex(ss[0], v)) {
 			return false;
 		}
-		if(v >= 0 && v <= 255) {
+		if(v <= 255) {
 			if((v & 0b11101000) != 0b11101000) {
 				return false;
 			}
@@ -225,7 +225,7 @@ namespace {
 		if(!utils::string_to_hex(ss[1], v)) {
 			return false;
 		}
-		if(v >= 0 && v <= 255) {
+		if(v <= 255) {
 			seq.BOT = v;
 		} else {
 			return false;
@@ -234,7 +234,7 @@ namespace {
 		if(!utils::string_to_hex(ss[2], v)) {
 			return false;
 		}
-		if(v >= 0 && v <= 65535) {
+		if(v <= 65535) {
 			seq.SS = v;
 		} else {
 			return false;
@@ -243,7 +243,7 @@ namespace {
 		if(!utils::string_to_hex(ss[3], v)) {
 			return false;
 		}
-		if(v >= 0 && v <= 65535) {
+		if(v <= 65535) {
 			seq.SE = v;
 		} else {
 			return false;
