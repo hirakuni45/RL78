@@ -5,7 +5,7 @@
 #=======================================================#
 TARGET		=	sdc_sample
 
-DEVICE		=	R5F100LGAFB
+DEVICE		=	R5F100LG
 
 FATFS_VER	=	ff12a
 
@@ -28,7 +28,7 @@ USER_LIBS	=	stdc++
 
 LDSCRIPT	=	../G13/$(DEVICE).ld
 
-USER_DEFS	=	F_CLK=32000000 DEVICE_SIG=$(DEVICE)
+USER_DEFS	=	SIG_G13 F_CLK=32000000
 
 MCU_TARGET	=	-mmul=g13
 
@@ -36,7 +36,7 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-OPTIMIZE	=	-Os -flto
+OPTIMIZE	=	-Os
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
@@ -66,6 +66,7 @@ AR			=	rl78-elf-ar
 LD			=	rl78-elf-ld
 OBJCOPY		=	rl78-elf-objcopy
 OBJDUMP		=	rl78-elf-objdump
+SIZE		=	rl78-elf-size
 
 # AFLAGS        = -Wa,-adhlns=$(<:.s=.lst),-gstabs
 # AFLAGS        =	-Wa,-adhlns=$(<:.s=.lst)
@@ -100,6 +101,7 @@ all: $(BUILD) $(TARGET).elf text
 
 $(TARGET).elf: $(OBJECTS) $(LDSCRIPT) Makefile
 	$(CC) $(LDFLAGS) $(LIBINCS) -o $@ $(OBJECTS) $(LIBS)
+	$(SIZE) $@
 
 $(BUILD)/%.o: %.s
 	mkdir -p $(dir $@); \
