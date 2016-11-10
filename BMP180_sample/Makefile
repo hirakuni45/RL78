@@ -20,7 +20,7 @@ CSOURCES	=	common/init.c \
 
 PSOURCES	=	main.cpp
 
-USER_LIBS	=	stdc++
+USER_LIBS	=	stdc++ m
 
 LDSCRIPT	=	../G13/$(DEVICE).ld
 
