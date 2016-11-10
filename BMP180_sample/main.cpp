@@ -1,6 +1,6 @@
 //=====================================================================//
 /*!	@file
-	@brief	BMP180 温度、圧力センサのサンプル
+	@brief	BMP180/BMP280 温度、圧力センサのサンプル
 	@author	平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
@@ -17,13 +17,18 @@
 #include "common/command.hpp"
 #include "common/time.h"
 #include "chip/BMP180.hpp"
+#include "chip/BMP280.hpp"
 
 namespace {
 
 	typedef device::iica_io<device::IICA0> IICA;
 	IICA iica_;
 
-	chip::BMP180<IICA> bmp180_(iica_);
+// どちらかを有効にする
+// ※I2C アドレスは、通常同一なので、両方を同時に使う事は出来ない。
+// ※BMP280 は、ピン設定で、I2C アドレスを変更可能
+//	chip::BMP180<IICA> bmpx_(iica_);
+	chip::BMP280<IICA> bmpx_(iica_);
 
 	typedef utils::fifo<uint8_t, 64> buffer;
 
@@ -124,11 +129,11 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	sci_puts("Start RL78/G13 BMP180(I2C) sample\n");
+	sci_puts("Start RL78/G13 BMP180/BMP280(I2C) sample\n");
 
-	// BMP180 の開始
-	if(!bmp180_.start()) {
-		utils::format("Stall BMP180 start (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+	// BMP180/BMP280 の開始
+	if(!bmpx_.start()) {
+		utils::format("Stall BMP180/BMP280 start (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 	}
 
 	command_.set_prompt("# ");
@@ -148,11 +153,14 @@ int main(int argc, char* argv[])
 		++n;
 		if(n >= 60) {
 			n = 0;
-			auto t = bmp180_.get_temperature();
-			utils::format("Temperature: %d.%d C\n") % (t / 10) % (t % 10);
+			auto t = bmpx_.get_temperature();
+			utils::format("Temperature: %d.%d C\n") % (t / 100) % (t % 100);
 
-			auto p = bmp180_.get_pressure();
-			utils::format("Pressure: %d.%02d hPa\n") % (p / 100) % (p % 100);
+			auto p = bmpx_.get_pressure();
+			utils::format("Pressure: %5.2f hPa\n") % p;
+
+			auto a = bmpx_.get_altitude();
+			utils::format("Altitude: %3.2f\n") % a;
 		}
 
 		// コマンド入力と、コマンド解析
