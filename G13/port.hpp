@@ -600,16 +600,14 @@ namespace device {
 		/// プルアップ抵抗オプション・レジスタ
 		static bit_rw_t<rw8_t<0xF0030 + static_cast<uint8_t>(port)>, bpos> PU;
 
-		/// ポート入力モード・レジスタ
-		static bit_rw_t<rw8_t<0xF0040 + static_cast<uint8_t>(port)>, bpos> PIM;
-
-		/// ポート出力モード・レジスタ
+		/// ポート出力モード・レジスタ（オープンドレイン出力）
+		static bit_rw_t<rw8_t<0xF0050 + static_cast<uint8_t>(port)>, bpos> OD;
 		static bit_rw_t<rw8_t<0xF0050 + static_cast<uint8_t>(port)>, bpos> POM;
+
+		/// ポート入力モード・レジスタ
+		static bit_rw_t<rw8_t<0xF0040 + static_cast<uint8_t>(port)>, bpos> PIM;	
 
 		/// ポート・モード・コントロール・レジスタ
 		static bit_rw_t<rw8_t<0xF0060 + static_cast<uint8_t>(port)>, bpos> PMC;
-
-		void operator = (bool v) const { P = v; }
-		bool operator () () const { return P(); }
 	};
 }
