@@ -329,7 +329,7 @@ namespace chip {
 			@param[in]	fill	埋めるデータ
 		 */
 		//-----------------------------------------------------------------//
-		uint8_t shift_begin(uint8_t fill = 0) {
+		uint8_t shift_top(uint8_t fill = 0) {
 			uint8_t full = data_[0];
 			std::memmove(&data_[1], &data_[0], 7);
 			data_[0] = fill;
@@ -339,11 +339,11 @@ namespace chip {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief シフト、バッファ
+			@brief シフト、バッファ終端
 			@param[in]	fill	埋めるデータ
 		 */
 		//-----------------------------------------------------------------//
-		void shift_last(uint8_t fill = 0) {
+		uint8_t shift_end(uint8_t fill = 0) {
 			uint8_t full = data_[7];
 			std::memmove(&data_[0], &data_[1], 7);
 			data_[7] = fill;
