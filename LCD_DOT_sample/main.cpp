@@ -18,6 +18,7 @@
 #include "common/itimer.hpp"
 #include "common/format.hpp"
 #include "common/delay.hpp"
+#include "common/csi_io.hpp"
 #include "common/monograph.hpp"
 
 // ターゲットＬＣＤのタイプを選択
