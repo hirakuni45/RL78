@@ -106,11 +106,8 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		void start(uint8_t contrast, bool comrvs)
 		{
-			CS::PMC = 0;  // (/CS) output
-			CS::PM = 0;
-
-			A0::PMC = 0;  // (A0) output
-			A0::PM = 0;
+			CS::DIR = 1;  // (/CS) output
+			A0::DIR = 1;  // (A0) output
 
 			reg_select_(0);
 			chip_enable_(false);

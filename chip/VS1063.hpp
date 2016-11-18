@@ -144,13 +144,13 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		void start()
 		{
-			SEL::PM = 0;
+			SEL::DIR = 1;
 			SEL::PU = 0;
 
-			DCS::PM = 0;
+			DCS::DIR = 1;
 			DCS::PU = 0;
 
-			REQ::PM = 1;
+			REQ::DIR = 0;
 			REQ::PU = 0;
 	
 			SEL::P = 1;  // /xCS = H
