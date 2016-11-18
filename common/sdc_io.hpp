@@ -140,14 +140,14 @@ namespace utils {
 		void initialize()
 		{
 			SELECT::PMC = 0;
-			SELECT::PM = 0;
+			SELECT::DIR = 1;
 			SELECT::P = 0;  // 電源ＯＦＦ時、「０」にしておかないと電流が回り込む
 
 			POWER::PMC = 0;
-			POWER::PM = 0;
+			POWER::DIR = 1;
 			POWER::P = 1; 
 
-			DETECT::PM = 1;  // input
+			DETECT::DIR = 0;  // input
 			DETECT::POM = 0;
 			DETECT::PU = 1;  // pull-up
 
