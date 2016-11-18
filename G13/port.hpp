@@ -591,11 +591,23 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <port_no port, bitpos bpos>
 	struct PORT {
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  ポート方向レジスタ
+		*/
+		//-----------------------------------------------------------------//
+		struct dir_t {
+			/// ポート・モード・レジスタ
+			static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, bpos> PM;
+
+			void operator = (bool val) { PM = !val; }
+			bool operator () () { return !PM(); }
+		};
+		static dir_t DIR;
+
 		/// ポート・レジスタ
 		static bit_rw_t<rw8_t<0xFFF00 + static_cast<uint8_t>(port)>, bpos> P;
-
-		/// ポート・モード・レジスタ
-		static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, bpos> PM;
 
 		/// プルアップ抵抗オプション・レジスタ
 		static bit_rw_t<rw8_t<0xF0030 + static_cast<uint8_t>(port)>, bpos> PU;
