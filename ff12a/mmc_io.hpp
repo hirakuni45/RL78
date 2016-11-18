@@ -227,7 +227,7 @@ namespace fatfs {
 
 			utils::delay::milli_second(10);  // 10ms
 
-			PORT::PM = 0;  // output
+			PORT::DIR = 1;  // output
 
 			PORT::P = 1;
 #if 0
