@@ -6,6 +6,7 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include "common/delay.hpp"
 
 namespace chip {
 
@@ -180,25 +181,22 @@ namespace chip {
 		/*!
 			@brief  コピー
 			@param[in]	src	フレームバッファソース
-			@param[in]	num	転送ページ数（標準:128x64）
+			@param[in]	num	転送ページ数
+			@param[in]	ofs	転送オフセット
 		*/
 		//-----------------------------------------------------------------//
-		void copy(const uint8_t* src, uint8_t num = 8) {
+		void copy(const uint8_t* src, uint8_t num, uint8_t ofs = 0) {
 			chip_enable_();
-			uint8_t ofs = 0x00;
-			for(uint8_t page = 0; page < num; ++page) {
+			uint8_t o = 0x00;
+			for(uint8_t page = ofs; page < (ofs + num); ++page) {
 				reg_select_(0);
 				write_(CMD::SET_PAGE, page);
-				write_(CMD::SET_COLUMN_LOWER, ofs & 0x0f);
-				write_(CMD::SET_COLUMN_UPPER, ofs >> 4);
-    			write_(CMD::RMW);
+				write_(CMD::SET_COLUMN_LOWER, o & 0x0f);
+				write_(CMD::SET_COLUMN_UPPER, o >> 4);
+///    			write_(CMD::RMW);
 				reg_select_(1);
-//				csi_.send(src, 128);
-//				src += 128;
-				for(uint8_t i = 0; i < 128; ++i) {
-					csi_.xchg(*src);
-					++src;
-				}
+				csi_.send(src, 128);
+				src += 128;
 			}
 			reg_select_(0);
 			chip_enable_(false);
