@@ -157,8 +157,6 @@ Wire Wire Line
 Wire Wire Line
 	9900 4900 8050 4900
 Wire Wire Line
-	9900 2300 9900 4900
-Wire Wire Line
 	9900 3400 10100 3400
 Wire Wire Line
 	9600 3300 10100 3300
@@ -193,7 +191,6 @@ F 3 "" H 9900 2150 50  0000 C CNN
 	1    9900 2150
 	1    0    0    -1  
 $EndComp
-Connection ~ 9900 3400
 Connection ~ 8050 3200
 Wire Wire Line
 	9500 1400 9500 3200
@@ -545,4 +542,9 @@ Wire Wire Line
 Wire Wire Line
 	1150 3600 1150 3650
 Connection ~ 1300 3600
+Wire Wire Line
+	9900 3400 9900 4900
+Wire Wire Line
+	9900 2300 9900 2900
+Connection ~ 9900 2900
 $EndSCHEMATC
