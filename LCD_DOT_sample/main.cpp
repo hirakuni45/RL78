@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
 		itm_.sync();
 
 		if(nn >= 4) {
-			lcd_.copy(bitmap_.fb());
+			lcd_.copy(bitmap_.fb(), bitmap_.page_num());
 			nn = 0;
 		}
 		++nn;
