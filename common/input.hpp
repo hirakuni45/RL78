@@ -7,7 +7,7 @@
     @author 平松邦仁 (hira@rvf-rc45.net)
 */
 //=====================================================================//
-#include <cstdint>
+#include <type_traits>
 
 extern "C" {
 
@@ -122,7 +122,7 @@ namespace utils {
 		mode	mode_;
 		bool	err_;
 
-		static uint16_t	cnvcnt_;
+		int		num_;
 
 		enum class fmm : uint8_t {
 			none,
@@ -171,46 +171,17 @@ namespace utils {
 					return;
 				}
 			}
-		}
-
-	public:
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  コンストラクター
-			@param[in]	form	入力形式
-			@param[in]	inp		変換文字列（nullptrの場合、sci_getch で取得）
-		*/
-		//-----------------------------------------------------------------//
-		basic_input(const char* form, const char* inp = nullptr) : form_(form), inp_(inp),
-			mode_(mode::NONE), err_(false)
-		{
-			cnvcnt_ = 0;
-			next_();
+			if(ch == 0 && inp_() == 0) ;
+			else {
+				err_ = true;
+			}
 		}
 
 
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  正常変換数を取得
-			@return 正常変換数
-		*/
-		//-----------------------------------------------------------------//
-		static uint16_t get_conversion() { return cnvcnt_; }
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  オペレーター「%」（int32_t）
-			@param[in]	val	整数値
-			@return	自分の参照
-		*/
-		//-----------------------------------------------------------------//
-		basic_input& operator % (int32_t& val)
+		int32_t nb_(bool sign = true)
 		{
-			if(err_) return *this;
-
 			bool neg = false;
-			{
+			if(sign) {
 				auto s = inp_();
 				if(s == '-') { neg = true; }
 				else if(s == '+') { neg = false; }
@@ -234,57 +205,62 @@ namespace utils {
 				err_ = true;
 				break;
 			}
-			if(neg) val = -static_cast<int32_t>(v);
-			else val = static_cast<int32_t>(v);
 			if(!err_) {
-				++cnvcnt_;
 				inp_.unget();
 				next_();
+				if(!err_) ++num_;
 			}
+			if(neg) return -static_cast<int32_t>(v);
+			else return static_cast<int32_t>(v);
+		}
+
+	public:
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  コンストラクター
+			@param[in]	form	入力形式
+			@param[in]	inp		変換文字列（nullptrの場合、sci_getch で取得）
+		*/
+		//-----------------------------------------------------------------//
+		basic_input(const char* form, const char* inp = nullptr) : form_(form), inp_(inp),
+			mode_(mode::NONE), err_(false), num_(0)
+		{
+			next_();
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  正常変換数を取得
+			@return 正常変換数
+		*/
+		//-----------------------------------------------------------------//
+		int num() const { return num_; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  テンプレート・オペレーター「%」
+			@param[in]	val	整数型
+			@return	自分の参照
+		*/
+		//-----------------------------------------------------------------//
+		template <typename T>
+		basic_input& operator % (T& val)
+		{
+			if(err_) return *this;
+			val = nb_(!std::is_signed<T>::value);
 			return *this;
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  オペレーター「%」（uint32_t）
-			@param[in]	val	整数値
-			@return	自分の参照
+			@brief  オペレーター「=」
 		*/
 		//-----------------------------------------------------------------//
-		basic_input& operator % (uint32_t& val)
-		{
-			if(err_) return *this;
-
-			uint32_t v = 0;
-			switch(mode_) {
-			case mode::BIN:
-				v = bin_();
-				break;
-			case mode::OCT:
-				v = oct_();
-				break;
-			case mode::DEC:
-				v = dec_();
-				break;
-			case mode::HEX:
-				v = hex_();
-				break;
-			default:
-				err_ = true;
-				break;
-			}
-			if(!err_) {
-				++cnvcnt_;
-				inp_.unget();
-				next_();
-				val = v;
-			}
-			return *this;
-		}
+		basic_input& operator = (const basic_input& in) { return *this; }
 	};
-
-	template<class INP> uint16_t basic_input<INP>::cnvcnt_;
 
 	typedef basic_input<def_chainp> input;
 
