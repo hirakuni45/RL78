@@ -27,12 +27,31 @@ namespace utils {
 		char		last_;
 		bool		unget_;
 	public:
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  コンストラクター
+			@param[in]	str		入力文字列（省力された場合「sci_getch」を使う）
+		*/
+		//-----------------------------------------------------------------//
 		def_chainp(const char* str = nullptr) : str_(str), last_(0), unget_(false) { }
 
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  １文字戻す
+		*/
+		//-----------------------------------------------------------------//
 		void unget() {
 			unget_ = true;
 		}
 
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  ファンクタ（文字取得）
+			@return 文字
+		*/
+		//-----------------------------------------------------------------//
 		char operator() () {
 			if(unget_) {
 				unget_ = false;
@@ -52,7 +71,7 @@ namespace utils {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  汎用入力クラス
-		@param[in]	INP	入力クラス
+		@param[in]	INP	文字入力クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class INP>
@@ -61,6 +80,19 @@ namespace utils {
 		const char*	form_;
 
 		INP			inp_;
+
+		enum class mode : uint8_t {
+			NONE,
+			BIN,
+			OCT,
+			DEC,
+			HEX,
+			FLOAT,
+		};
+		mode	mode_;
+		bool	err_;
+
+		int		num_;
 
 		uint32_t bin_() {
 			uint32_t a = 0;
@@ -112,27 +144,42 @@ namespace utils {
 			return a;
 		}
 
-		enum class mode : uint8_t {
-			NONE,
-			BIN,
-			OCT,
-			DEC,
-			HEX,
-		};
-		mode	mode_;
-		bool	err_;
 
-		int		num_;
-
-		enum class fmm : uint8_t {
-			none,
-			type,
-
-		};
+		float real_() {
+			uint32_t a = 0;
+			uint32_t b = 0;
+			uint32_t c = 1;
+			char ch;
+			bool p = false;
+			while((ch = inp_()) != 0) {
+				if(ch >= '0' && ch <= '9') {
+					a *= 10;
+					a += ch - '0';
+					c *= 10;
+				} else if(ch == '.') {
+					b = a;
+					a = 0;
+					c = 1;
+					p = true;
+				} else {
+					break;
+				}
+			}
+			if(p) {
+				return static_cast<float>(b) + static_cast<float>(a) / static_cast<float>(c);
+			} else {
+				return static_cast<float>(a); 
+			}
+		}
 
 		void next_()
 		{
+			enum class fmm : uint8_t {
+				none,
+				type,
+			};
 			fmm cm = fmm::none;
+
 			char ch;
 			while((ch = *form_++) != 0) {
 				switch(cm) {
@@ -156,15 +203,19 @@ namespace utils {
 						return;
 					}
 					break;
+
 				case fmm::type:
-					if(ch == 'b' || ch == 'B') {
+					if(ch >= 0x60) ch -= 0x20;
+					if(ch == 'B') {
 						mode_ = mode::BIN;
-					} else if(ch == 'o' || ch == 'O') {
+					} else if(ch == 'O') {
 						mode_ = mode::OCT;
-					} else if(ch == 'd' || ch == 'D') {
+					} else if(ch == 'D') {
 						mode_ = mode::DEC;
-					} else if(ch == 'x' || ch == 'X') {
+					} else if(ch == 'X') {
 						mode_ = mode::HEX;
+					} else if(ch == 'F') {
+						mode_ = mode::FLOAT;
 					} else {
 						err_ = true;
 					}
@@ -178,15 +229,20 @@ namespace utils {
 		}
 
 
-		int32_t nb_(bool sign = true)
-		{
+		bool neg_() {
 			bool neg = false;
-			if(sign) {
-				auto s = inp_();
-				if(s == '-') { neg = true; }
-				else if(s == '+') { neg = false; }
-				else inp_.unget();
-			}
+			auto s = inp_();
+			if(s == '-') { neg = true; }
+			else if(s == '+') { neg = false; }
+			else inp_.unget();
+			return neg;
+		}
+
+
+		int32_t nb_int_(bool sign = true)
+		{
+			auto neg = neg_();
+
 			uint32_t v = 0;
 			switch(mode_) {
 			case mode::BIN:
@@ -210,8 +266,31 @@ namespace utils {
 				next_();
 				if(!err_) ++num_;
 			}
-			if(neg) return -static_cast<int32_t>(v);
+			if(sign && neg) return -static_cast<int32_t>(v);
 			else return static_cast<int32_t>(v);
+		}
+
+
+		float nb_real_()
+		{
+			bool neg = neg_();
+
+			float v = 0.0f;
+			switch(mode_) {
+			case mode::FLOAT:
+				v = real_();
+				break;
+			default:
+				err_ = true;
+				break;
+			}
+			if(!err_) {
+				inp_.unget();
+				next_();
+				if(!err_) ++num_;
+			}
+			if(neg) return -v;
+			else return v;			
 		}
 
 	public:
@@ -240,6 +319,15 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief  変換ステータスを返す
+			@return 変換が全て正常なら「true」
+		*/
+		//-----------------------------------------------------------------//
+		bool status() const { return !err_; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief  テンプレート・オペレーター「%」
 			@param[in]	val	整数型
 			@return	自分の参照
@@ -249,19 +337,15 @@ namespace utils {
 		basic_input& operator % (T& val)
 		{
 			if(err_) return *this;
-			val = nb_(!std::is_signed<T>::value);
+
+			if(std::is_floating_point<T>::value) {
+				val = nb_real_();
+			} else {
+				val = nb_int_(std::is_signed<T>::value);
+			}
 			return *this;
 		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
-			@brief  オペレーター「=」
-		*/
-		//-----------------------------------------------------------------//
-		basic_input& operator = (const basic_input& in) { return *this; }
 	};
 
 	typedef basic_input<def_chainp> input;
-
 }
