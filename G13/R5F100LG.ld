@@ -184,6 +184,7 @@ SECTIONS
   {
     PROVIDE (_start = .);
     *(.text P .stub .text.* .gnu.linkonce.t.*)
+    *(PFDL_COD)
     KEEP (*(.text.*personality*))
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
