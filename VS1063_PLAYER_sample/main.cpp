@@ -8,7 +8,10 @@
 			・P53      (36) ---> VS1063:/xDCS  (13) @n 
 			・P54      (37) ---> VS1063:/DREQ  ( 8) @n 
 			・/RESET   ( 6) ---> VS1063:/xRESET( 3)
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
