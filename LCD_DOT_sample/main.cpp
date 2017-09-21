@@ -7,7 +7,10 @@
 			SD   ---> P13/SO20  (43) @n
 			SCL  ---> P15/SCK20 (41) @n 
 			/RES ---> /RESET    ( 6)
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
