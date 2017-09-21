@@ -7,7 +7,10 @@
 				・3.3V: 赤色 LED(VF: 1.7V)、1mA、1.5K @n
 				・5.0V: 赤色 LED(VF: 1.7V)、1mA、3.3K @n
 				・5.0V: 赤色 LED(VF: 1.7V)、3mA、1.1K
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
