@@ -3,7 +3,10 @@
 	@brief	SD カードの WAV 形式のファイルを再生するサンプル @n
 			P16/TO01(40) から、左チャネル @n
 			P17/TO02(39) から、右チャネル
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
