@@ -2,7 +2,10 @@
 /*!	@file
 	@brief	A/D 変換のサンプル @n
 			P22/ANI2(54)、P23/ANI3(53) を変換して表示
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
