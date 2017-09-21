@@ -1,7 +1,10 @@
 //=====================================================================//
 /*!	@file
 	@brief	DS3231 RTC のテスト
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
@@ -11,6 +14,7 @@
 #include "common/uart_io.hpp"
 #include "common/fifo.hpp"
 #include "common/format.hpp"
+#include "common/input.hpp"
 #include "common/iica_io.hpp"
 #include "common/delay.hpp"
 #include "common/itimer.hpp"
