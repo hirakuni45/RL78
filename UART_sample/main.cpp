@@ -4,7 +4,10 @@
 			「P11/RxD0 (45)」から入力した値を「P12/TxD0 (44)」@n
 			「P03/RxD1 (59)」から入力した値を「P02/TxD1 (60)」@n
 			ボーレートは、「115200 b.p.s.」を設定
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
@@ -13,6 +16,8 @@
 #include "common/uart_io.hpp"
 #include "common/format.hpp"
 #include "common/fifo.hpp"
+
+#include <cstdio>
 
 // どれか一つだけ有効にする。
 // #define UART0
@@ -69,6 +74,11 @@ extern "C" {
 	{
 		uart_.puts(str);
 	}
+
+	char sci_getch(void)
+	{
+		return uart_.getch();
+	}
 };
 
 
@@ -88,7 +98,9 @@ int main(int argc, char* argv[])
 	utils::format("Start RL78/G13 UART%d sample\n") % static_cast<uint32_t>(uart_.get_chanel_no());
 
 	float a = 1000.0005f;
-	utils::format("%4.4f\n") % a;
+	utils::format("Float: %4.4f\n") % a;
+	int b = 1234;
+	printf("Float: %d\n", b);
 
 	bool f = false;
 	uint32_t n = 0;
