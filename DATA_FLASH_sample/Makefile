@@ -5,7 +5,6 @@
 #	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
 #				Released under the MIT license @n
 #				https://github.com/hirakuni45/RL78/blob/master/LICENSE
-#
 #=======================================================================
 TARGET		=	data_flash_sample
 
@@ -20,6 +19,7 @@ ASOURCES	=	common/start.s
 CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
+				common/syscalls.c \
 				data_flash_lib/data_flash_util.c
 
 PSOURCES	=	main.cpp
@@ -59,7 +59,7 @@ CINCS		=	$(SYSINCS) $(APPINCS)
 PINCS		=	$(SYSINCS) $(APPINCS)
 LIBINCS		=	$(addprefix -L, $(LIB_ROOT))
 DEFS		=	$(addprefix -D, $(USER_DEFS))
-LIBS		=	$(addprefix -l, $(USER_LIBS)) $(ADD_LIBS)
+LIBS		=	$(ADD_LIBS) $(addprefix -l, $(USER_LIBS))
 
 # You should not have to change anything below here.
 AS			=	rl78-elf-as
