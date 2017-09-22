@@ -8,43 +8,23 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
-#include "common/delay.hpp"
 #include "common/itimer.hpp"
 
 namespace {
+
 	device::itimer<uint8_t> itm_;
+
 }
 
-// 割り込みベクターの設定
-const void* ivec_[] __attribute__ ((section (".ivec"))) = {
-	/*  0 */  nullptr,
-	/*  1 */  nullptr,
-	/*  2 */  nullptr,
-	/*  3 */  nullptr,
-	/*  4 */  nullptr,
-	/*  5 */  nullptr,
-	/*  6 */  nullptr,
-	/*  7 */  nullptr,
-	/*  8 */  nullptr,
-	/*  9 */  nullptr,
-	/* 10 */  nullptr,
-	/* 11 */  nullptr,
-	/* 12 */  nullptr,
-	/* 13 */  nullptr,
-	/* 14 */  nullptr,
-	/* 15 */  nullptr,
-	/* 16 */  nullptr,
-	/* 17 */  nullptr,
-	/* 18 */  nullptr,
-	/* 19 */  nullptr,
-	/* 20 */  nullptr,
-	/* 21 */  nullptr,
-	/* 22 */  nullptr,
-	/* 23 */  nullptr,
-	/* 24 */  nullptr,
-	/* 25 */  nullptr,
-	/* 26 */  reinterpret_cast<void*>(itm_.task),
+
+extern "C" {
+
+	void ITM_intr(void)
+	{
+		itm_.task();
+	}
 };
 
 
