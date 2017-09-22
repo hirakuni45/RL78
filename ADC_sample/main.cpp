@@ -9,7 +9,7 @@
 */
 //=====================================================================//
 #include <cstdint>
-#include "common/vect.h"
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
