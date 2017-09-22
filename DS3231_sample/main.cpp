@@ -9,14 +9,13 @@
 //=====================================================================//
 #include <cstdint>
 #include<cstring>
-#include "G13/system.hpp"
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/uart_io.hpp"
 #include "common/fifo.hpp"
 #include "common/format.hpp"
 #include "common/input.hpp"
 #include "common/iica_io.hpp"
-#include "common/delay.hpp"
 #include "common/itimer.hpp"
 #include "common/command.hpp"
 #include "common/time.h"
@@ -50,68 +49,75 @@ namespace {
 }
 
 
-const void* ivec_[] __attribute__ ((section (".ivec"))) = {
-	/*  0 */  nullptr,
-	/*  1 */  nullptr,
-	/*  2 */  nullptr,
-	/*  3 */  nullptr,
-	/*  4 */  nullptr,
-	/*  5 */  nullptr,
-	/*  6 */  nullptr,
-	/*  7 */  nullptr,
-	/*  8 */  nullptr,
-	/*  9 */  nullptr,
-	/* 10 */  nullptr,
-	/* 11 */  nullptr,
-	/* 12 */  nullptr,
-#ifdef UART0
-	/* 13 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
-	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
-	/* 15 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
-#else
-	/* 13 */  nullptr,
-	/* 14 */  nullptr,
-	/* 15 */  nullptr,
-#endif
-#ifdef UART1
-	/* 16 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
-	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
-	/* 18 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
-#else
-	/* 16 */  nullptr,
-	/* 17 */  nullptr,
-	/* 18 */  nullptr,
-#endif
-	/* 19 */  nullptr,
-	/* 20 */  nullptr,
-	/* 21 */  nullptr,
-	/* 22 */  nullptr,
-	/* 23 */  nullptr,
-	/* 24 */  nullptr,
-	/* 25 */  nullptr,
-	/* 26 */  reinterpret_cast<void*>(itm_.task),
-};
-
-
 extern "C" {
+
 	void sci_putch(char ch)
 	{
 		uart_.putch(ch);
 	}
+
 
 	void sci_puts(const char* str)
 	{
 		uart_.puts(str);
 	}
 
+
 	char sci_getch(void)
 	{
 		return uart_.getch();
 	}
 
+
 	uint16_t sci_length()
 	{
 		return uart_.recv_length();
+	}
+
+
+#ifdef UART0
+	void UART0_TX_intr(void)
+	{
+		uart_.send_task();
+	}
+
+
+	void UART0_RX_intr(void)
+	{
+		uart_.recv_task();
+	}
+
+
+	void UART0_ER_intr(void)
+	{
+		uart_.error_task();
+	}
+#endif
+
+
+#ifdef UART1
+	void UART1_TX_intr(void)
+	{
+		uart_.send_task();
+	}
+
+
+	void UART1_RX_intr(void)
+	{
+		uart_.recv_task();
+	}
+
+
+	void UART1_ER_intr(void)
+	{
+		uart_.error_task();
+	}
+#endif
+
+
+	void ITM_intr(void)
+	{
+		itm_.task();
 	}
 };
 
