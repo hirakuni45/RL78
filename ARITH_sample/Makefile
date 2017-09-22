@@ -1,8 +1,10 @@
-#=======================================================#
-#														#
-#	RL78 Makefile 				        				#
-#														#
-#=======================================================#
+#=======================================================================
+#   @brief  RL78 Makefile 
+#   @author 平松邦仁 (hira@rvf-rc45.net)
+#   @copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+#				Released under the MIT license @n
+#				https://github.com/hirakuni45/RL78/blob/master/LICENSE
+#=======================================================================
 TARGET		=	arith_sample
 
 DEVICE		=	R5F100LG
@@ -16,7 +18,7 @@ ASOURCES	=	common/start.s
 CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
-				common/time.c
+				common/syscalls.c
 
 PSOURCES	=	main.cpp
 

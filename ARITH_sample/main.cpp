@@ -1,22 +1,23 @@
 //=====================================================================//
 /*!	@file
 	@brief	arith テンプレートのサンプル
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
-#include<cstring>
-#include "G13/system.hpp"
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/uart_io.hpp"
 #include "common/fifo.hpp"
 #include "common/format.hpp"
 #include "common/iica_io.hpp"
-#include "common/delay.hpp"
 #include "common/itimer.hpp"
 #include "common/command.hpp"
-#include "common/time.h"
 #include "common/basic_arith.hpp"
+#include <cstdint>
+#include<cstring>
 
 namespace {
 
@@ -33,38 +34,8 @@ namespace {
 }
 
 
-const void* ivec_[] __attribute__ ((section (".ivec"))) = {
-	/*  0 */  nullptr,
-	/*  1 */  nullptr,
-	/*  2 */  nullptr,
-	/*  3 */  nullptr,
-	/*  4 */  nullptr,
-	/*  5 */  nullptr,
-	/*  6 */  nullptr,
-	/*  7 */  nullptr,
-	/*  8 */  nullptr,
-	/*  9 */  nullptr,
-	/* 10 */  nullptr,
-	/* 11 */  nullptr,
-	/* 12 */  nullptr,
-	/* 13 */  nullptr,
-	/* 14 */  nullptr,
-	/* 15 */  nullptr,
-	/* 16 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
-	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
-	/* 18 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
-	/* 19 */  nullptr,
-	/* 20 */  nullptr,
-	/* 21 */  nullptr,
-	/* 22 */  nullptr,
-	/* 23 */  nullptr,
-	/* 24 */  nullptr,
-	/* 25 */  nullptr,
-	/* 26 */  reinterpret_cast<void*>(itm_.task),
-};
-
-
 extern "C" {
+
 	void sci_putch(char ch)
 	{
 		uart_.putch(ch);
@@ -83,6 +54,30 @@ extern "C" {
 	uint16_t sci_length()
 	{
 		return uart_.recv_length();
+	}
+
+
+	void UART1_TX_intr(void)
+	{
+		uart_.send_task();
+	}
+
+
+	void UART1_RX_intr(void)
+	{
+		uart_.recv_task();
+	}
+
+
+	void UART1_ER_intr(void)
+	{
+		uart_.error_task();
+	}
+
+
+	void ITM_intr(void)
+	{
+		itm_.task();
 	}
 };
 
