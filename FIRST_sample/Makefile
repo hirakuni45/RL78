@@ -17,8 +17,7 @@ ASOURCES	=	common/start.s
 
 CSOURCES	=	common/init.c \
 				common/vect.c \
-				common/option_bytes.c \
-				common/systemcalls.c
+				common/option_bytes.c
 
 PSOURCES	=	main.cpp
 

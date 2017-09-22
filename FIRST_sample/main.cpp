@@ -14,14 +14,18 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 
 namespace {
+
 	void wait_()
 	{
 		asm("nop");
 	}
+
 }
+
 
 int main(int argc, char* argv[])
 {
