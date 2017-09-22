@@ -7,7 +7,7 @@
 #=======================================================================
 TARGET		=	dmic_sample
 
-DEVICE		=	R5F100LG
+DEVICE		=	R5F100LC
 
 BUILD		=	release
 
@@ -18,15 +18,15 @@ ASOURCES	=	common/start.s
 CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
-				common/time.c
+				common/syscalls.c
 
 PSOURCES	=	main.cpp
 
-USER_LIBS	=	stdc++ m
+USER_LIBS	=	stdc++
 
 LDSCRIPT	=	../G13/$(DEVICE).ld
 
-USER_DEFS	=	F_CLK=32000000 DEVICE_SIG=$(DEVICE)
+USER_DEFS	=	SIG_G13 F_CLK=32000000 DEVICE_SIG=$(DEVICE)
 
 MCU_TARGET	=	-mmul=g13
 
@@ -34,7 +34,8 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-OPTIMIZE	=	-Os -flto
+# OPTIMIZE	=	-Os -flto
+OPTIMIZE	=	-Os
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
