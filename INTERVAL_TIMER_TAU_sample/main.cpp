@@ -9,10 +9,12 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/tau_io.hpp"
 
 namespace {
+
 	void wait_()
 	{
 		asm("nop");
@@ -20,6 +22,7 @@ namespace {
 
 	device::tau_io<device::TAU01> tau_;
 }
+
 
 int main(int argc, char* argv[])
 {
