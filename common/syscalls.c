@@ -1,8 +1,8 @@
 //=====================================================================//
 /*!	@file
 	@brief	標準ライブラリーハード依存「syscalls」モジュール@n
-			通常は libc.a にアーカイブされているモジュールを、@n
-			置き換える。（オリジナルは、除去する必要あり）
+			通常は libc.a にアーカイブされているモジュールを、
+			置き換える。
     @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
 				Released under the MIT license @n
@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// 標準入出力の呼び出し先
 void sci_putch(char ch);
 char sci_getch(void);
 void utf8_to_sjis(const char* src, char* dst);
@@ -94,12 +95,12 @@ int open(const char *path, int flags, ...)
 		errno = 0;
 #ifdef SYSCALLS_DEBUG
 //		sprintf(g_text, "syscalls: _open ok.(%d): '%s' at 0x%08X\n", file, path, mode);
-//		sh72620_uart_puts(STDIO_SIO_CHANEL, g_text);
+//		sci_puts(STDIO_SIO_CHANEL, g_text);
 #endif
 	} else {
 #ifdef SYSCALLS_DEBUG
 //		sprintf(g_text, "(%d)f_open error: (%d) at 0x%08X\n", file, (int)res, mode);
-//		sh72620_uart_puts(STDIO_SIO_CHANEL, g_text);
+//		sci_puts(STDIO_SIO_CHANEL, g_text);
 #endif
 		errno = EIO;
 		file = -1;
