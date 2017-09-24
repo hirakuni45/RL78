@@ -150,7 +150,7 @@ namespace device {
 				return false;
    			}
 
-			return pfdl_erase_block(org / data_flash_block);
+			return pfdl_erase_block(org / data_flash_block) == PFDL_OK;
 		}
 
 
