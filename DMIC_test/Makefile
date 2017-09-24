@@ -19,7 +19,7 @@ CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
 				common/syscalls.c \
-				../data_flash_lib/data_flash_util.c
+				data_flash_lib/data_flash_util.c
 
 PSOURCES	=	main.cpp
 
