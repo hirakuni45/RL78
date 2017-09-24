@@ -10,6 +10,11 @@
 //=====================================================================//
 #include "data_flash_lib/data_flash_util.h"
 
+/// DEVICE_SIG はデータ・フラッシュ・メモリーの容量定義に必要で、設定が無ければエラーとする
+#ifndef DEVICE_SIG
+#  error "flash_io.hpp requires DEVICE_SIG to be defined"
+#endif
+
 namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -22,13 +27,21 @@ namespace device {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  データ・フラッシュ構成 @n
-					（全体８Ｋバイト、ブロック８個、バンク１０２４個）
+					R5F100LC, R5F100LE: 4K, 4 x 1024 @n
+					R5F100LG, R5F100LJ: 8K, 8 x 1024
 		*/
 		//-----------------------------------------------------------------//
 		static const uint16_t data_flash_block = 1024;	///< データ・フラッシュのブロックサイズ
+#if (DEVICE_SIG == R5F100LC) || (DEVICE_SIG == R5F100LE)
+		static const uint16_t data_flash_size  = 4096;	///< データ・フラッシュの容量
+		static const uint16_t data_flash_bank  = 4;		///< データ・フラッシュのバンク数
+#elif (DEVICE_SIG == R5F100LG) || (DEVICE_SIG == R5F100LJ)
 		static const uint16_t data_flash_size  = 8192;	///< データ・フラッシュの容量
 		static const uint16_t data_flash_bank  = 8;		///< データ・フラッシュのバンク数
-
+#else
+		static const uint16_t data_flash_size  = 0;	    ///< データ・フラッシュの容量
+		static const uint16_t data_flash_bank  = 0;		///< データ・フラッシュのバンク数
+#endif
 
 		//-----------------------------------------------------------------//
 		/*!
@@ -61,6 +74,8 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool start()
 		{
+			if(data_flash_size == 0) return false;
+
 			error_ = error::NONE;
 			return pfdl_open() == PFDL_OK;
 		}
