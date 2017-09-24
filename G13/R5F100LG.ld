@@ -37,16 +37,18 @@ ENTRY(_start)
 /* Do we need any of these for elf?
    __DYNAMIC = 0;    */
 
-/* This is for an RL78/G13, 128k flash, 12k ram */
+/* This is for an RL78/G13, 128K Flash, 12K RAM, 8K DataFlash */
 /* R5F100LGAFB: 128K (0x00000 - 0x1FFFF) / 12K (0xFCF00 - 0xFFEFF) / 8K (0xF1000 - 0xF2FFF) */
 MEMORY {
 	VEC (r)   : ORIGIN = 0x00000, LENGTH = 0x00002
-	IVEC (r)  : ORIGIN = 0x00004, LENGTH = 0x0007c
-	OPT (r)   : ORIGIN = 0x000c0, LENGTH = 0x00004
-	ROM (r)   : ORIGIN = 0x000d8, LENGTH = 0x1ff28
-	RAM (w)   : ORIGIN = 0xfcf00, LENGTH = 0x02fe0
-	STACK (w) : ORIGIN = 0xffee0, LENGTH = 0x00002
+	IVEC (r)  : ORIGIN = 0x00004, LENGTH = 0x0007C
+	OPT (r)   : ORIGIN = 0x000C0, LENGTH = 0x00004
+	SEC_ID (r): ORIGIN = 0x000C4, LENGTH = 0x0000A
+	ROM (r)   : ORIGIN = 0x000D8, LENGTH = 0x1FF28
+	RAM (w)   : ORIGIN = 0xFCF00, LENGTH = 0x02F20
+	STACK (w) : ORIGIN = 0xFFE20, LENGTH = 0x00002
 }
+
 
 SECTIONS
 {
@@ -67,6 +69,11 @@ SECTIONS
   {
     KEEP(*(.opt))
   } > OPT
+
+  .sec_id :
+  {
+    KEEP(*(.sec_id))
+  } > SEC_ID
 
   /* CubeSuite always starts at 0xd8.  */
   .csstart : {

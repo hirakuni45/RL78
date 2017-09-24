@@ -37,15 +37,17 @@ ENTRY(_start)
 /* Do we need any of these for elf?
    __DYNAMIC = 0;    */
 
-/* This is for an RL78/G13, 64k flash, 4k ram */
+/* This is for an RL78/G13, 64K Flash, 4K RAM, 4K DataFlash */
 /* R5F100LEAFB:  64K (0x00000 - 0x0FFFF) /  4K (0xFEF00 - 0xFFEFF) / 4K (0xF1000 - 0xF1FFF) */
+/* DataFlash Library(FDL T04) used self-ram: 0xFEF00 to 0xFEF87 (136 bytes) */
 MEMORY {
 	VEC (r)   : ORIGIN = 0x00000, LENGTH = 0x00002
-	IVEC (r)  : ORIGIN = 0x00004, LENGTH = 0x0007c
-	OPT (r)   : ORIGIN = 0x000c0, LENGTH = 0x00004
-	ROM (r)   : ORIGIN = 0x000d8, LENGTH = 0x0ff28
-	RAM (w)   : ORIGIN = 0xfef00, LENGTH = 0x00fe0
-	STACK (w) : ORIGIN = 0xffee0, LENGTH = 0x00002
+	IVEC (r)  : ORIGIN = 0x00004, LENGTH = 0x0007C
+	OPT (r)   : ORIGIN = 0x000C0, LENGTH = 0x00004
+	SEC_ID (r): ORIGIN = 0x000C4, LENGTH = 0x0000A
+	ROM (r)   : ORIGIN = 0x000D8, LENGTH = 0x0FF28
+	RAM (w)   : ORIGIN = 0xFEF88, LENGTH = 0x00E98
+	STACK (w) : ORIGIN = 0xFFE20, LENGTH = 0x00002
 }
 
 SECTIONS
@@ -54,14 +56,21 @@ SECTIONS
   {
     KEEP(*(.vec))
   } > VEC
+
   .ivec :
   {
     KEEP(*(.ivec))
   } > IVEC
+
   .opt :
   {
     KEEP(*(.opt))
   } > OPT
+
+  .sec_id :
+  {
+    KEEP(*(.sec_id))
+  } > SEC_ID
 
   /* CubeSuite always starts at 0xd8.  */
   .csstart : {
