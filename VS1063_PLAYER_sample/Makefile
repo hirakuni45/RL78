@@ -20,6 +20,7 @@ ASOURCES	=	common/start.s
 CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
+				common/syscalls.c \
 				$(FATFS_VER)/src/ff.c \
 				$(FATFS_VER)/src/option/unicode.c \
 				common/time.c
