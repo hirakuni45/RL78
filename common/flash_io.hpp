@@ -21,22 +21,29 @@ namespace device {
 	public:
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  データ・バンク定義
+			@brief  データ・フラッシュ構成 @n
+					（全体８Ｋバイト、ブロック８個、バンク１０２４個）
 		*/
 		//-----------------------------------------------------------------//
-		enum class area : uint8_t {
-			bank0,	///< 0xF1000 to 0xF13FF (1024)
-			bank1,	///< 0xF1400 to 0xF17FF (1024)
-			bank2,	///< 0xF1800 to 0xF1BFF (1024)
-			bank3,	///< 0xF1C00 to 0xF1FFF (1024)
-			bank4,	///< 0xF2000 to 0xF23FF (1024)
-			bank5,	///< 0xF2400 to 0xF27FF (1024)
-			bank6,	///< 0xF2800 to 0xF2BFF (1024)
-			bank7,	///< 0xF2C00 to 0xF2FFF (1024)
+		static const uint16_t data_flash_block = 1024;	///< データ・フラッシュのブロックサイズ
+		static const uint16_t data_flash_size  = 8192;	///< データ・フラッシュの容量
+		static const uint16_t data_flash_bank  = 8;		///< データ・フラッシュのバンク数
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  エラー型
+		*/
+		//-----------------------------------------------------------------//
+		enum class error : uint8_t {
+			NONE,		///< エラー無し
+			ADDRESS,	///< アドレス・エラー
+			TIMEOUT,	///< タイム・アウト・エラー
+			LOCK,		///< ロック・エラー
 		};
 
 	private:
-
+		error		error_;
 
 	public:
 		//-----------------------------------------------------------------//
@@ -44,7 +51,7 @@ namespace device {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		flash_io() { }
+		flash_io() : error_(error::NONE) { }
 
 
 		//-----------------------------------------------------------------//
@@ -54,6 +61,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool start()
 		{
+			error_ = error::NONE;
 			return pfdl_open() == PFDL_OK;
 		}
 
@@ -71,121 +79,135 @@ namespace device {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  消去
-			@param[in]	bank	バンク
-			@return エラーがあれば「false」
-		*/
-		//-----------------------------------------------------------------//
-		bool erase(area bank) const {
-
-			return true;
-		}
-
-
-		//-----------------------------------------------------------------//
-		/*!
 			@brief  読み出し
-			@param[in]	ofs	開始オフセット
-			@param[in]	len	バイト数
+			@param[in]	org	開始アドレス
 			@param[out]	dst	先
+			@param[in]	len	バイト数
+			@return エラー無ければ「true」
 		*/
 		//-----------------------------------------------------------------//
-		void read(uint16_t ofs, uint16_t len, void* dst) const {
-#if 0
-			if(ofs >= 0x0800 || (ofs + len) > 0x0800) {
-				return;
+		bool read(uint16_t org, void* dst, uint16_t len)
+		{
+			if(org >= data_flash_size) {
+				error_ = error::ADDRESS;
+				return false;
+			}
+			if((org + len) > data_flash_size) {
+				len = data_flash_size - org;
 			}
 
-			// ※リードアレイコマンド発行済みが前提
-			for(uint16_t i = 0; i < len; ++i) {
-				*dst = rd8_(0x3000 + ofs + i);
-				++dst;
-			}
-#endif
+			return pfdl_read(org, static_cast<uint8_t*>(dst), len) == PFDL_OK;
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  読み出し
-			@param[in]	ofs	開始オフセット
+			@param[in]	org	開始アドレス
 			@return データ
 		*/
 		//-----------------------------------------------------------------//
-		uint8_t read(uint16_t ofs) const {
-#if 0
-			if(ofs >= 0x0800) {
-				return 0;
+		uint8_t read(uint16_t org)
+		{
+			uint8_t tmp[1];
+			if(read(org, &tmp, 1)) {
+				return tmp[0];
 			}
-
-			return rd8_(0x3000 + ofs);
-#endif
 			return 0;
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  書き込み
-			@param[in]	ofs	開始オフセット
-			@param[in]	data	書き込みデータ
-			@return 
+			@brief  消去チェック
+			@param[in]	org		開始アドレス
+			@param[in]	len		検査長（バイト単位）
+			@return 消去されていれば「true」（エラーは「false」）
 		*/
 		//-----------------------------------------------------------------//
-		bool write(uint16_t ofs, uint8_t data) const {
-#if 0
-			if(ofs >= 0x0800) {
+		bool erase_check(uint16_t org, uint16_t len = data_flash_block)
+		{
+			if(org >= data_flash_size) {
+				error_ = error::ADDRESS;
 				return false;
 			}
 
-			di();
-			enable_(ofs);
+			return pfdl_blank_check(org, len) == PFDL_OK;
+		}
 
-			bool ret = write_(ofs, data);
 
-			wr8_(0x3000, 0xff);
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  消去
+			@param[in]	org		開始アドレス
+			@return エラーがあれば「false」
+		*/
+		//-----------------------------------------------------------------//
+		bool erase(uint16_t org)
+		{
+			if(org >= data_flash_size) {
+				error_ = error::ADDRESS;
+				return false;
+   			}
 
-			disable_(ofs);
-			ei();
+			return pfdl_erase_block(org / data_flash_block);
+		}
 
-			return ret;
-#endif
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  全消去
+			@return エラーがあれば「false」
+		*/
+		//-----------------------------------------------------------------//
+		bool erase_all()
+		{
+			for(uint16_t pos = 0; pos < data_flash_size; pos += data_flash_block) {
+				if(!erase_check(pos)) {
+					auto ret = erase(pos);
+					if(!ret) {
+						return false;
+					}
+				}
+			}
 			return true;
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief  書き込み
+			@brief  書き込み @n
+					※仕様上、４バイト単位で書き込まれる。@n
+					※４バイト未満の場合は、０ｘＦＦが書き込まれる
+			@param[in]	org	開始オフセット
 			@param[in]	src ソース
-			@param[in]	ofs	開始オフセット
 			@param[in]	len	バイト数
+			@return エラーがあれば「false」
 		*/
 		//-----------------------------------------------------------------//
-		bool write(const uint8_t* src, uint16_t ofs, uint16_t len) const {
-#if 0
-			if(ofs >= 0x0800 || (ofs + len) > 0x0800) {
+		bool write(uint16_t org, const void* src, uint16_t len)
+		{
+			if(org >= data_flash_size) {
+				error_ = error::ADDRESS;
 				return false;
 			}
 
-			di();
-			enable_(ofs);
+			return pfdl_write(org, static_cast<const uint8_t*>(src), len) == PFDL_OK;
+		}
 
-			bool ret;
-			for(uint16_t i = 0; i < len; ++i) {
-				ret = write_(ofs + i, *src);
-				if(!ret) break;
-				++src;
-			}
 
-			wr8_(0x3000, 0xff);
-
-			disable_(ofs);
-			ei();
-
-			return ret;
-#endif
-			return true;
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  書き込み
+			@param[in]	org	開始オフセット
+			@param[in]	data	書き込みデータ
+			@return エラーがあれば「false」
+		*/
+		//-----------------------------------------------------------------//
+		bool write(uint16_t org, uint8_t data)
+		{
+			uint8_t d = data;
+			return write(org, &d, 1);
 		}
 	};
 }

@@ -10,8 +10,10 @@
 			%f ---> 浮動小数点数（float、double） @n
 			%c ---> １文字のキャラクター @n
 			%% ---> '%' のキャラクター
-			Copyright 2017 Kunihito Hiramatsu
     @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RX/blob/master/LICENSE
 */
 //=====================================================================//
 #include <type_traits>
@@ -182,7 +184,7 @@ namespace utils {
 					a *= 10;
 					a += ch - '0';
 					c *= 10;
-				} else if(ch == '.') {
+				} else if(!p && ch == '.') {
 					b = a;
 					a = 0;
 					c = 1;
@@ -192,7 +194,7 @@ namespace utils {
 				}
 			}
 			if(p) {
-				return static_cast<T>(b) + static_cast<T>(a) / static_cast<T>(c);
+				return static_cast<T>(b) + (static_cast<T>(a) / static_cast<T>(c));
 			} else {
 				return static_cast<T>(a); 
 			}
@@ -275,8 +277,20 @@ namespace utils {
 		}
 
 
+		void skip_space_() {
+			while(1) {
+				char ch = inp_();
+				if(ch != ' ') {
+					inp_.unget();
+					return;
+				}
+			}
+		}
+
+
 		int32_t nb_int_(bool sign = true)
 		{
+			skip_space_();
 			auto neg = neg_();
 
 			uint32_t v = 0;
@@ -310,6 +324,7 @@ namespace utils {
 		template <typename T>
 		T nb_real_()
 		{
+			skip_space_();
 			bool neg = neg_();
 
 			T v = 0.0f;
