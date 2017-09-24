@@ -11,7 +11,7 @@
 */
 //=====================================================================//
 #include <cstdint>
-#include "G13/system.hpp"
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/uart_io.hpp"
 #include "common/format.hpp"
@@ -41,29 +41,6 @@ namespace {
 #endif
 }
 
-const void* ivec_[] __attribute__ ((section (".ivec"))) = {
-	/*  0 */  nullptr,
-	/*  1 */  nullptr,
-	/*  2 */  nullptr,
-	/*  3 */  nullptr,
-	/*  4 */  nullptr,
-	/*  5 */  nullptr,
-	/*  6 */  nullptr,
-	/*  7 */  nullptr,
-	/*  8 */  nullptr,
-	/*  9 */  nullptr,
-	/* 10 */  nullptr,
-	/* 11 */  nullptr,
-	/* 12 */  nullptr,
-	/* 13 */  reinterpret_cast<void*>(uart_.send_task),  // UART0-TX
-	/* 14 */  reinterpret_cast<void*>(uart_.recv_task),  // UART0-RX
-	/* 15 */  reinterpret_cast<void*>(uart_.error_task), // UART0-ER
-	/* 16 */  reinterpret_cast<void*>(uart_.send_task),  // UART1-TX
-	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),  // UART1-RX
-	/* 18 */  reinterpret_cast<void*>(uart_.error_task), // UART1-ER
-};
-
-
 extern "C" {
 	void sci_putch(char ch)
 	{
@@ -79,6 +56,44 @@ extern "C" {
 	{
 		return uart_.getch();
 	}
+
+#ifdef UART0
+	void UART0_TX_intr(void)
+	{
+		uart_.send_task();
+	}
+
+
+	void UART0_RX_intr(void)
+	{
+		uart_.recv_task();
+	}
+
+
+	void UART0_ER_intr(void)
+	{
+		uart_.error_task();
+	}
+#endif
+
+#ifdef UART1
+	void UART1_TX_intr(void)
+	{
+		uart_.send_task();
+	}
+
+
+	void UART1_RX_intr(void)
+	{
+		uart_.recv_task();
+	}
+
+
+	void UART1_ER_intr(void)
+	{
+		uart_.error_task();
+	}
+#endif
 };
 
 
@@ -95,12 +110,15 @@ int main(int argc, char* argv[])
 		uart_.start(115200, intr_level);
 	}
 
-	utils::format("Start RL78/G13 UART%d sample\n") % static_cast<uint32_t>(uart_.get_chanel_no());
+//	utils::format("Start RL78/G13 UART%d sample\n") % static_cast<uint32_t>(uart_.get_chanel_no());
+	utils::format("Start RL78/G13 UART sample\n");
 
+#if 0
 	float a = 1000.0005f;
 	utils::format("Float: %4.4f\n") % a;
 	int b = 1234;
 	printf("Float: %d\n", b);
+#endif
 
 	bool f = false;
 	uint32_t n = 0;
@@ -109,7 +127,7 @@ int main(int argc, char* argv[])
 			if(uart_.recv_length()) {
 				auto ch = uart_.getch();
 				if(ch == '\r') {
-					utils::format("%d\n") % n;
+///					utils::format("%d\n") % n;
 					++n;
 				} else {
 					uart_.putch(ch);
