@@ -58,13 +58,12 @@ namespace device {
 		static inline void sleep_() { asm("nop"); }
 
 	public:
-/// #pragma GCC optimize ("-fno-lto")
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  インターバル・タイマー割り込みタスク
 		*/
 		//-----------------------------------------------------------------//
-		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
+		static void task() __attribute__ ((section (".lowtext")))
 		{ 
 			value_[ADS()] = ADCR();
 			if(ADS() < NUM) {
@@ -73,7 +72,7 @@ namespace device {
 			}
 			task_();
 		}
-/// #pragma GCC optimize ("-flto")
+
 
 		//-----------------------------------------------------------------//
 		/*!

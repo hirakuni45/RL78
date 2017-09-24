@@ -115,13 +115,13 @@ namespace device {
 			}
 		}
 
-/// #pragma GCC optimize ("-fno-lto")
+
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  送信割り込み
 		*/
 		//-----------------------------------------------------------------//
-		static __attribute__ ((interrupt)) __attribute__ ((section (".lowtext"))) void send_task()
+		static void send_task() __attribute__ ((section (".lowtext")))
 		{
 			if(send_.length()) {
 				tx_.SDR_L = send_.get();
@@ -137,7 +137,7 @@ namespace device {
 			@brief  受信割り込み
 		*/
 		//-----------------------------------------------------------------//
-		static __attribute__ ((interrupt)) __attribute__ ((section (".lowtext"))) void recv_task()
+		static void recv_task() __attribute__ ((section (".lowtext")))
 		{
 			recv_.put(rx_.SDR_L());
 		}
@@ -148,10 +148,10 @@ namespace device {
 			@brief  エラー割り込み
 		*/
 		//-----------------------------------------------------------------//
-		static __attribute__ ((interrupt)) __attribute__ ((section (".lowtext"))) void error_task()
+		static void error_task() __attribute__ ((section (".lowtext")))
 		{
 		}
-/// #pragma GCC optimize ("-flto")
+
 
 		//-----------------------------------------------------------------//
 		/*!
