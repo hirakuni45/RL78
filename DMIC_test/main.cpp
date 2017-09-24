@@ -19,6 +19,7 @@
 #include "common/format.hpp"
 #include "common/iica_io.hpp"
 #include "common/itimer.hpp"
+#include "common/flash_io.hpp"
 #include "common/command.hpp"
 
 namespace {
@@ -30,12 +31,18 @@ namespace {
 	typedef utils::fifo<uint8_t, 64> BUFFER;
 	typedef device::uart_io<device::SAU00, device::SAU01, BUFFER, BUFFER> UART0;
 	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART1;
-	UART1	uart1_;
+	UART0	uart0_;
+//	UART1	uart1_;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
 
-	utils::command<64> command_;
+	typedef device::flash_io FLASH;
+	FLASH	flash_;
+
+//	utils::command<64> command_;
+
+
 }
 
 
@@ -43,43 +50,43 @@ extern "C" {
 
 	void sci_putch(char ch)
 	{
-		uart1_.putch(ch);
+		uart0_.putch(ch);
 	}
 
 
 	void sci_puts(const char* str)
 	{
-		uart1_.puts(str);
+		uart0_.puts(str);
 	}
 
 
 	char sci_getch(void)
 	{
-		return uart1_.getch();
+		return uart0_.getch();
 	}
 
 
 	uint16_t sci_length()
 	{
-		return uart1_.recv_length();
+		return uart0_.recv_length();
 	}
 
 
 	void UART1_TX_intr(void)
 	{
-		uart1_.send_task();
+		uart0_.send_task();
 	}
 
 
 	void UART1_RX_intr(void)
 	{
-		uart1_.recv_task();
+		uart0_.recv_task();
 	}
 
 
 	void UART1_ER_intr(void)
 	{
-		uart1_.error_task();
+		uart0_.error_task();
 	}
 
 
@@ -108,10 +115,10 @@ int main(int argc, char* argv[])
 		itm_.start(60, intr_level);
 	}
 
-	// UART1 の開始
+	// UART0 の開始
 	{
 		uint8_t intr_level = 1;
-		uart1_.start(115200, intr_level);
+		uart0_.start(115200, intr_level);
 	}
 
 	// IICA(I2C) の開始
@@ -123,12 +130,27 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	// data flash の開始
+	{
+
+	}
+
+
 	ADPC = 0x01; // A/D input All digital port
 	PM2.B3 = 0;  // POWER CTRL (OUTPUT)
 	P2.B3  = 1;  // Active high (ON)
 
-	PM1.B5 = 0;
-	PM1.B6 = 0;
+	PM1.B5 = 0;  // LED G output
+	PM1.B6 = 0;  // LED R output
+
+	PM12.B1 = 1;  // MIC Sel-SW2
+	PM12.B2 = 1;  // MIC Sel-SW1
+
+	PM12.B0 = 1;  // CH Sel-SW5
+	PM0.B0  = 1;  // CH Sel-SW4
+	PM0.B1  = 1;  // CH Sel-SW3
+	PM2.B0 = 1;  // CH Sel-SW2
+	PM2.B1 = 1;  // CH Sel-SW1
 
 	uint8_t cnt = 0;
 	while(1) {

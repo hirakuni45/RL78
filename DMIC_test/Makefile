@@ -18,7 +18,8 @@ ASOURCES	=	common/start.s
 CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
-				common/syscalls.c
+				common/syscalls.c \
+				../data_flash_lib/data_flash_util.c
 
 PSOURCES	=	main.cpp
 
@@ -37,6 +38,8 @@ INC_APP		=	. ../ ../G13
 # OPTIMIZE	=	-Os -flto
 OPTIMIZE	=	-Os
 
+ADD_LIBS	=	../data_flash_lib/pfdl.o
+
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
 				-Wno-exceptions \
@@ -54,7 +57,7 @@ CINCS		=	$(SYSINCS) $(APPINCS)
 PINCS		=	$(SYSINCS) $(APPINCS)
 LIBINCS		=	$(addprefix -L, $(LIB_ROOT))
 DEFS		=	$(addprefix -D, $(USER_DEFS))
-LIBS		=	$(addprefix -l, $(USER_LIBS))
+LIBS		=	$(ADD_LIBS) $(addprefix -l, $(USER_LIBS))
 
 # You should not have to change anything below here.
 AS			=	rl78-elf-as
