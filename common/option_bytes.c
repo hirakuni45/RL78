@@ -1,8 +1,10 @@
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ・オプション・バイト @n
-			Copyright 2016 Kunihito Hiramatsu
-	@author	平松邦仁 (hira@rvf-rc45.net)
+	@brief	RL78/G13 グループ・オプション・バイト
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <stdint.h>
@@ -27,10 +29,39 @@
 */
 //-----------------------------------------------------------------//
 const uint8_t opt_[] __attribute__ ((section (".opt"))) = {
+	0xef,		///< ウオッチドッグ関係
+	0xff,		///< LVD 設定
+	START_FREQ,	///< オンチップオシレーター
+	0x85,		///< デバッグ設定
+};
+
+//	0xef, 0xff, 0xe8, 0x85
+
+#if 0
 	0x60,		///< ウオッチドッグ関係
 	0xff,		///< LVD 設定
 	START_FREQ,	///< オンチップオシレーター
 	0x04,		///< デバッグ設定
+#endif
+
+#if 0
+//-----------------------------------------------------------------//
+/*!
+	@brief  セキリティーＩＤテーブル
+*/
+//-----------------------------------------------------------------//
+const unsigned char sec_id[]  __attribute__ ((section (".sec_id"))) = {
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00
 };
+#endif
 
 // EOF
