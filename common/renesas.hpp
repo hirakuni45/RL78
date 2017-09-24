@@ -8,6 +8,7 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
+#include <cstdint>
 #include "common/vect.h"
 #include "common/delay.hpp"
 
