@@ -61,6 +61,7 @@ namespace chip {
 		// サーミスターが VCC 側
 		static float thermistor_upper_(uint32_t raw)
 		{
+			if(raw == 0) return 0.0f;  // 零除算を避ける
 			float thr = (static_cast<float>(REFR * ADNUM) / static_cast<float>(raw)) - static_cast<float>(REFR);
 			return thr;
 		}
@@ -90,7 +91,7 @@ namespace chip {
 			float THB;
 			float TR25;
 			get_para_(THB, TR25);
-			static const float T0   = 298.15f;   ///< 絶対温度
+			static const float T0 = 298.15f;   ///< 絶対温度
 			float t = 1.0f / (std::log(thr / TR25) / THB + (1.0f / T0));
 			return t - 273.15f;
 		}
