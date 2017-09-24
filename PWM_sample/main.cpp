@@ -10,10 +10,12 @@
 */
 //=====================================================================//
 #include <cstdint>
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/tau_io.hpp"
 
 namespace {
+
 	void wait_()
 	{
 		asm("nop");
@@ -39,6 +41,7 @@ namespace {
 		return true;
 	}
 }
+
 
 int main(int argc, char* argv[])
 {
