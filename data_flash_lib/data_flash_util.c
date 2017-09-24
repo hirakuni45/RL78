@@ -39,11 +39,6 @@ inline void NOP(void)
 	asm("nop");
 }
 
-inline void _NOP(void)
-{
-	asm("nop");
-}
-
 
 /***************************************************************************/
 /*    Macro Definitions                                                    */
@@ -97,7 +92,7 @@ pfdl_status_t pfdl_open(void)
 
 	// PFDLのオープン
 	pfdl_desc.fx_MHz_u08			= PFDL_DATA_FLASH_FX_MHZ;
-	pfdl_desc.wide_voltage_mode_u08	= 0x00;
+	pfdl_desc.wide_voltage_mode_u08	= 0x01;
 	error = PFDL_Open(&pfdl_desc);
 	if (error == PFDL_OK) {
 		g_pfdl_status = PFDL_OPENED;
@@ -147,8 +142,8 @@ pfdl_status_t pfdl_blank_check(uint16_t u16Address, uint16_t u16Length)
 			/* コマンド終了待ち */
 			while( error == PFDL_BUSY )
 			{
-				_NOP();
-				_NOP();
+				NOP();
+				NOP();
 				/* 終了確認処理 */
 				error = PFDL_Handler();
 			}
@@ -186,8 +181,8 @@ pfdl_status_t pfdl_erase_block(uint16_t u16BlockNumber)
 			/* コマンド終了待ち */
 			while( error == PFDL_BUSY )
 			{
-				_NOP();
-				_NOP();
+				NOP();
+				NOP();
 				/* 終了確認処理 */
 				error = PFDL_Handler();
 			}
@@ -204,14 +199,14 @@ pfdl_status_t pfdl_erase_block(uint16_t u16BlockNumber)
  * データ・フラッシュにデータを書き込みます。
  *
  * param[in] u16Address 書き込むアドレスを指定します。
- * param[in] pvData     書き込むデータのアドレスを指定します。
+ * param[in] pu8Data    書き込むデータのアドレスを指定します。
  * param[in] u16Length  書き込むデータのサイズを指定します。
  *
  * @return 実行結果を返します。
  *
  * @attention なし
  ***************************************************************************/
-pfdl_status_t pfdl_write(uint16_t u16Address, uint8_t* pu8Data, uint16_t u16Length)
+pfdl_status_t pfdl_write(uint16_t u16Address, const uint8_t* pu8Data, uint16_t u16Length)
 {
 	pfdl_status_t	error;
 	pfdl_request_t	request;
@@ -223,13 +218,13 @@ pfdl_status_t pfdl_write(uint16_t u16Address, uint8_t* pu8Data, uint16_t u16Leng
 			request.command_enu		= PFDL_CMD_WRITE_BYTES;
 			request.index_u16		= u16Address;
 			request.bytecount_u16	= u16Length;
-			request.data_pu08		= pu8Data;
+			request.data_pu08		= (uint8_t*)pu8Data;
 			error = PFDL_Execute(&request);
 			/* コマンド終了待ち */
 			while( error == PFDL_BUSY )
 			{
-				_NOP();
-				_NOP();
+				NOP();
+				NOP();
 				/* 終了確認処理 */
 				error = PFDL_Handler();
 			}

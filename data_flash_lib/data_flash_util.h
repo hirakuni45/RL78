@@ -74,7 +74,7 @@ pfdl_status_t pfdl_open(void);
 void pfdl_close(void);
 pfdl_status_t pfdl_blank_check(uint16_t u16Address, uint16_t u16Length);
 pfdl_status_t pfdl_erase_block(uint16_t u16BlockNumber);
-pfdl_status_t pfdl_write(uint16_t u16Address, uint8_t* pu8Data, uint16_t u16Length);
+pfdl_status_t pfdl_write(uint16_t u16Address, const uint8_t* pu8Data, uint16_t u16Length);
 pfdl_status_t pfdl_read(uint16_t u16Address, uint8_t* pu8Data, uint16_t u16Length);
 pfdl_status_t pfdl_verify(uint16_t u16Address, uint16_t u16Length);
 pfdl_status_t pfdl_check_parameter(uint16_t u16DataFlashAddress, uint16_t u16Length);
