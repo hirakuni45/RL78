@@ -55,6 +55,7 @@ E-Mail: hira@rvf-rc45.net
  - /BMP180_sample ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
  - /ADC_sample ---> RL78/G13 内臓 A/D 変換サンプル
  - /ADC_SWITCH_sample ---> RL78/G13 シリーズ・スイッチ（４列）A/D 変換のサンプル
+ - /THERMISTOR_sample ---> RL78/G13 サーミスター温度表示サンプル
  - /ARITH_sample ---> RL78/G13 四則演算サンプル（文字列で数式を受け取り計算する）
  - /LCD_DOT_sample ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
  - /TOUCH_sample ---> RL78/G13 タッチ・スイッチ、サンプル
@@ -441,6 +442,7 @@ RAM や I/O 領域は、0xF0000 以降にアサインされており、この領
  - chip/ST7565.hpp　LCD 単色、ドットマトリックス・ドライバー
  - chip/SSD1306.hpp OLED 単色、ドットマトリックス・ドライバー
  - chip/VS1063.hpp　MP3 / OGG VORBIS エンコーダー、デコーダー・ドライバー
+ - chip/NTCTH.hpp サーミスター線形補完テンプレート
    
 ---
  - common/start.s　ハードウェアー・リセット初期化
