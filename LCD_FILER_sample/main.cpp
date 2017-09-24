@@ -13,15 +13,13 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
-#include "G13/system.hpp"
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
 #include "common/itimer.hpp"
 #include "common/adc_io.hpp"
 #include "common/format.hpp"
-#include "common/delay.hpp"
 #include "common/monograph.hpp"
 #include "common/font6x12.hpp"
 #include "common/kfont12.hpp"
@@ -107,77 +105,57 @@ namespace {
 
 }
 
-const void* ivec_[] __attribute__ ((section (".ivec"))) = {
-	/*  0 */  nullptr,
-	/*  1 */  nullptr,
-	/*  2 */  nullptr,
-	/*  3 */  nullptr,
-	/*  4 */  nullptr,
-	/*  5 */  nullptr,
-	/*  6 */  nullptr,
-	/*  7 */  nullptr,
-	/*  8 */  nullptr,
-	/*  9 */  nullptr,
-	/* 10 */  nullptr,
-	/* 11 */  nullptr,
-	/* 12 */  nullptr,
-	/* 13 */  nullptr,
-	/* 14 */  nullptr,
-	/* 15 */  nullptr,
-	/* 16 */  reinterpret_cast<void*>(uart_.send_task),
-	/* 17 */  reinterpret_cast<void*>(uart_.recv_task),
-	/* 18 */  reinterpret_cast<void*>(uart_.error_task),
-	/* 19 */  nullptr,
-	/* 20 */  nullptr,
-	/* 21 */  nullptr,
-	/* 22 */  nullptr,
-	/* 23 */  nullptr,
-	/* 24 */  reinterpret_cast<void*>(adc_.task),
-	/* 25 */  nullptr,
-	/* 26 */  reinterpret_cast<void*>(itm_.task),
-};
-
 
 extern "C" {
+
 	void sci_putch(char ch)
 	{
 		uart_.putch(ch);
 	}
+
 
 	void sci_puts(const char* str)
 	{
 		uart_.puts(str);
 	}
 
+
 	char sci_getch(void)
 	{
 		return uart_.getch();
 	}
+
 
 	uint16_t sci_length()
 	{
 		return uart_.recv_length();
 	}
 
+
 	DSTATUS disk_initialize(BYTE drv) {
 		return sdc_.at_mmc().disk_initialize(drv);
 	}
+
 
 	DSTATUS disk_status(BYTE drv) {
 		return sdc_.at_mmc().disk_status(drv);
 	}
 
+
 	DRESULT disk_read(BYTE drv, BYTE* buff, DWORD sector, UINT count) {
 		return sdc_.at_mmc().disk_read(drv, buff, sector, count);
 	}
+
 
 	DRESULT disk_write(BYTE drv, const BYTE* buff, DWORD sector, UINT count) {
 		return sdc_.at_mmc().disk_write(drv, buff, sector, count);
 	}
 
+
 	DRESULT disk_ioctl(BYTE drv, BYTE ctrl, void* buff) {
 		return sdc_.at_mmc().disk_ioctl(drv, ctrl, buff);
 	}
+
 
 	DWORD get_fattime(void) {
 #ifdef WITH_RTC
@@ -189,6 +167,36 @@ extern "C" {
 #else
 		return 0;
 #endif
+	}
+
+
+	void UART1_TX_intr(void)
+	{
+		uart_.send_task();
+	}
+
+
+	void UART1_RX_intr(void)
+	{
+		uart_.recv_task();
+	}
+
+
+	void UART1_ER_intr(void)
+	{
+		uart_.error_task();
+	}
+
+
+	void ADC_intr(void)
+	{
+		adc_.task();
+	}
+
+
+	void ITM_intr(void)
+	{
+		itm_.task();
 	}
 };
 
@@ -347,7 +355,7 @@ int main(int argc, char* argv[])
 		P4.B3 = n < 10 ? false : true;
 
 		if((fbf_back && !fbf) || fbcopy) {
-			lcd_.copy(bitmap_.fb());
+			lcd_.copy(bitmap_.fb(), bitmap_.page_num());
 		}
 	}
 }

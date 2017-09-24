@@ -20,6 +20,7 @@ ASOURCES	=	common/start.s
 CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
+				common/syscalls.c \
 				$(FATFS_VER)/src/ff.c \
 				$(FATFS_VER)/src/option/unicode.c \
 				common/time.c
@@ -39,7 +40,7 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-OPTIMIZE	=	-Os -flto
+OPTIMIZE	=	-Os
 # OPTIMIZE	=	-O2 -flto
 
 CP_OPT		=	-Wall -Werror \
