@@ -19,8 +19,8 @@ ASOURCES	=	common/start.s
 CSOURCES	=	common/init.c \
 				common/vect.c \
 				common/option_bytes.c \
-				common/syscalls.c \
-				data_flash_lib/data_flash_util.c
+				data_flash_lib/data_flash_util.c \
+				common/syscalls.c
 
 PSOURCES	=	main.cpp
 
@@ -40,7 +40,7 @@ INC_APP		=	. ../ ../G13
 # OPTIMIZE	=	-O2
 OPTIMIZE	=	-Os
 
-ADD_LIBS	=	../data_flash_lib/pfdl.a
+ADD_LIBS	=	../data_flash_lib/pfdl.o
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
