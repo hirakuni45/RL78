@@ -1,7 +1,7 @@
 ;;======================================================================
 ;;
 ;;  @author 平松邦仁 (hira@rvf-rc45.net)
-;;	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+;;	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 ;;				Released under the MIT license @n
 ;;				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 ;;
@@ -170,3 +170,9 @@ skip_inilist:
 
 done_inilist:
 	ret
+
+	.section .data
+	.global ___dso_handle
+	.weak   ___dso_handle
+___dso_handle:
+	.long	0
