@@ -234,4 +234,26 @@ namespace device {
 		bit_rw_t<T, bitpos::B0>  DFLLEN;
 	};
 	static dflctl_t< rw8_t<0xF0090> > DFLCTL;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	リセット・コントロール・フラグ・レジスタ（RESF）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct resf_t : public T {
+		using T::operator ();
+
+		bit_ro_t<T, bitpos::B0>  LVIRF;
+		bit_ro_t<T, bitpos::B1>  IAWRF;
+		bit_ro_t<T, bitpos::B2>  RPERF;
+
+		bit_ro_t<T, bitpos::B4>  WDTRF;
+
+		bit_ro_t<T, bitpos::B7>  TRAP;
+	};
+	static resf_t< ro8_t<0xFFFA8> > RESF;
+
 }
