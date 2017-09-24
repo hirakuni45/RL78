@@ -118,25 +118,22 @@ int main(int argc, char* argv[])
 		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
 	}
 
+
+
 	utils::format("Start RL78/G13 THERMISTOR sample\n");
 
 	uint8_t n = 0;
 	uint8_t t = 0;
 	while(1) {
 		itm_.sync();
-		adc_.start_scan(2);  // スキャン開始チャネル
-
-		adc_.sync();  // スキャン終了待ち
 
 		++t;
 		if(t >= 60) {
+			adc_.start_scan(2); // スキャン開始チャネル
+			adc_.sync();  		// スキャン終了待ち
+
 			auto v = adc_.get(2);
-#if 0
-			utils::format("(%5d) CH0: %1.2:8y[V], %d\n")
-				% nnn
-				% static_cast<uint32_t>(((v + 1) * 10) >> 3)
-				% v;
-#endif
+			v >>= 6;
 			utils::format("温度： %5.2f [度]\n") % thmister_(v);
 			t = 0;
 		}
