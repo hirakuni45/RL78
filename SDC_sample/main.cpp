@@ -9,7 +9,7 @@
 //=====================================================================//
 #include <cstdint>
 #include <cstring>
-#include "G13/system.hpp"
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
