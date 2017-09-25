@@ -35,32 +35,31 @@ E-Mail: hira@rvf-rc45.net
    
 ## RL78 プロジェクト・リスト
    
-|rl78prog                    |RL78 フラッシュへのプログラム書き込みツール                          |
-|G13                         |G13 グループ、リンカースクリプト、デバイス定義ファイル               |
-|common                      |RL78 共有クラス、小規模なクラスライブラリー、ユーティリティー        |
-   
+ - rl78prog          ---> RL78 フラッシュへのプログラム書き込みツール
+ - G13               ---> G13 グループ、リンカースクリプト、デバイス定義ファイル
+ - common            ---> RL78 共有クラス、小規模なクラスライブラリー、ユーティリティー
  - chip              ---> 各種デバイス用の制御クラスなど
- - ff12a             ---> ChaN さん作成の「FatFS 0.12a」フレームワーク、と、RL78/G13 向けドライバー
+ - ff12a             ---> ChaN さん作成の「FatFS 0.12a」フレームワーク、と、RL78/G13 SPI
+ - KiCAD_Lib         ---> KiCAD 用部品ライブラリー
  - data_flah_lib     ---> GR-Cotton/GR-Kurumi データ・フラッシュ操作ライブラリ
  - FIRST_sample      ---> RL78/G13 デバイス向け超簡単なサンプル（LED の点滅）
- - UART_sample       ---> RL78/G13 デバイス向け、シリアル・コミュニケーションのサンプル
- - INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
  - SOFT_DELAY_sample ---> RL78/G13 ソフトウェアー・タイマーのサンプル
- - DS3231_sample     ---> RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
- - DS1371_sample     ---> RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
- - SDC_sample        ---> RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
- - INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
- - PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
- - WAV_PLAYER_sample ---> RL78/G13 WAV file 再生サンプル（PWM 変調による８ビット出力）
- - VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
- - BMP180_sample     ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
+ - UART_sample       ---> RL78/G13 デバイス向け、シリアル・コミュニケーションのサンプル
+ - ARITH_sample      ---> RL78/G13 四則演算サンプル（文字列で数式を受け取り計算する）
  - ADC_sample        ---> RL78/G13 内臓 A/D 変換サンプル
  - ADC_SWITCH_sample ---> RL78/G13 シリーズ・スイッチ（４列）A/D 変換のサンプル
- - THERMISTOR_sample ---> RL78/G13 サーミスター温度表示サンプル
- - ARITH_sample      ---> RL78/G13 四則演算サンプル（文字列で数式を受け取り計算する）
- - LCD_DOT_sample    ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
+ - THERMISTOR_sample ---> RL78/G13 サーミスター温度表示サンプル（A/D 変換使用）
  - TOUCH_sample      ---> RL78/G13 タッチ・スイッチ、サンプル
- - KiCAD_Lib         ---> KiCAD 用部品ライブラリー
+ - INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
+ - INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
+ - DS3231_sample     ---> RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
+ - DS1371_sample     ---> RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
+ - PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
+ - SDC_sample        ---> RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
+ - WAV_PLAYER_sample ---> RL78/G13 WAV file 再生サンプル（PWM 変調による８ビット出力、48KHz/16bits まで対応）
+ - VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
+ - BMP180_sample     ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
+ - LCD_DOT_sample    ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
  - DATA_FLASH_sample ---> RL78/G13 データ・フラッシュ・サンプル（読み出し、書き込み、消去）   
 
 FatFS LFN の有効／無効：   
@@ -399,6 +398,22 @@ RAM や I/O 領域は、0xF0000 以降にアサインされており、この領
  - 基本的には電源を繋ぎ、適切なバイパスコンデンサを繋ぐだけで動作します。   
  - 特別（複雑な場合）な接続を要求する場合は、KiCAD のプロジェクトファイルを用意しています。   
    
+### 割り込みに関する注意
+ - UART、タイマーなど割り込みエントリーには最新の注意を！
+ - 基本的に vect.h、vect.c でベースエントリを定義しています。
+ - メイン側では、C 言語関数の実装として、ベースで定義されたエントリーを使います。
+ - 「__attribute__((weak))」を使って定義されている関数は、再定義側が優先されます。
+ - ヘッダー側には「INTERRUPT_FUNC;」を付加してあり、割り込みハンドラーとして機能します。
+ - アプリ側で実装する割り込みタスクは、割り込みハンドラーから呼ばれる前提なので、通常の関数です。
+ - エントリー名をタイポしてもエラーは出ず、無効な関数として存在するだけになるので注意して下さい。
+   
+### データ・フラッシュ操作に関する注意
+ - 標準的に、ルネサス製 PFDL-T4 ライブラリを利用する前提で、リンクファイルが作られています。
+ - 詳しくは、PFDL-T4 関係のドキュメントを参照下さい。
+ - RAM の後半にライブラリのワーク領域が予約されています。(136バイト）
+ - ライブラリを使わない場合で、少しでも RAM が欲しい場合、リンクファイルを修正する事ができます。
+ - gcc のリンクファイルの修正は、注意を要します。
+   
 ---
  - ビルドします。（自動で、従属規則が生成されます）
 ```
@@ -446,7 +461,7 @@ RAM や I/O 領域は、0xF0000 以降にアサインされており、この領
  - chip/NTCTH.hpp サーミスター線形補完テンプレート
    
 ---
- - common/start.s　ハードウェアー・リセット初期化
+ - common/start.s　ハードウェアー・リセット、初期化
  - common/init.c　main 初期化
  - common/option_bytes.hpp　オプション・バイト設定
  - common/vect.h　ハードウェアー・ベクター定義
