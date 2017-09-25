@@ -12,10 +12,6 @@
 #include "common/port_utils.hpp"
 #include "common/delay.hpp"
 
-namespace {
-
-}
-
 int main(int argc, char* argv[])
 {
 	using namespace device;
@@ -26,6 +22,7 @@ int main(int argc, char* argv[])
 
 	while(1) {
 		utils::delay::micro_second(10);
+//		utils::delay::milli_second(500);
 		P4.B3 = !P4.B3();
 	}
 }
