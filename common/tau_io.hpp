@@ -1,9 +1,11 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ タイマ・アレイ・ユニット制御 @n
-			Copyright 2016 Kunihito Hiramatsu
-	@author	平松邦仁 (hira@rvf-rc45.net)
+	@brief	RL78/G13 グループ タイマ・アレイ・ユニット制御
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "G13/system.hpp"
@@ -234,17 +236,16 @@ namespace device {
 		}
 
 	public:
-/// #pragma GCC optimize ("-fno-lto")
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	割り込みタスク
 		 */
 		//-----------------------------------------------------------------//
-		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
+		static void task() __attribute__ ((section (".lowtext")))
 		{
 			task_();
 		}
-/// #pragma GCC optimize ("-flto")
+
 
 		//-----------------------------------------------------------------//
 		/*!

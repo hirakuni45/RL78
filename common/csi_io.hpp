@@ -127,16 +127,15 @@ namespace device {
 		}
 
 	public:
-#pragma GCC optimize ("-fno-lto")
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  割り込みエントリー
 		*/
 		//-----------------------------------------------------------------//
-		static __attribute__ ((interrupt)) void task() __attribute__ ((section (".lowtext")))
+		static void task() __attribute__ ((section (".lowtext")))
 		{
 		}
-#pragma GCC optimize ("-flto")
+
 
 		//-----------------------------------------------------------------//
 		/*!
