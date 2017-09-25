@@ -11,17 +11,7 @@
 
 extern void start(void);
 
-//-----------------------------------------------------------------//
-/*!
-	@brief  無効タスクエントリー（割り込み）
-*/
-//-----------------------------------------------------------------//
-void NULL_intr(void)
-{
-}
-
-
-#pragma GCC optimize ("O0")
+// #pragma GCC optimize ("O0")
 //-----------------------------------------------------------------//
 /*!
 	@brief  リセットベクター設定
@@ -32,7 +22,20 @@ const void* vec_[] __attribute__ ((section (".vec"))) = {
 };
 
 
-void UART0_TX_intr(void) __attribute__((weak));
+#define ATTR __attribute__((weak)) __attribute__ ((section (".lowtext")))
+
+void NULL_intr(void) ATTR;
+//-----------------------------------------------------------------//
+/*!
+	@brief  無効タスクエントリー（割り込み）
+*/
+//-----------------------------------------------------------------//
+void NULL_intr(void)
+{
+}
+
+
+void UART0_TX_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  UART0-TX 割り込み
@@ -41,7 +44,7 @@ void UART0_TX_intr(void) __attribute__((weak));
 void UART0_TX_intr(void) { }
 
 
-void UART0_RX_intr(void) __attribute__((weak));
+void UART0_RX_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  UART0-RX 割り込み
@@ -50,7 +53,7 @@ void UART0_RX_intr(void) __attribute__((weak));
 void UART0_RX_intr(void) { }
 
 
-void UART0_ER_intr(void) __attribute__((weak));
+void UART0_ER_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  UART0-ER 割り込み
@@ -59,7 +62,7 @@ void UART0_ER_intr(void) __attribute__((weak));
 void UART0_ER_intr(void) { }
 
 
-void UART1_TX_intr(void) __attribute__((weak));
+void UART1_TX_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  UART1-TX 割り込み
@@ -68,7 +71,7 @@ void UART1_TX_intr(void) __attribute__((weak));
 void UART1_TX_intr(void) { }
 
 
-void UART1_RX_intr(void) __attribute__((weak));
+void UART1_RX_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  UART1-RX 割り込み
@@ -77,7 +80,7 @@ void UART1_RX_intr(void) __attribute__((weak));
 void UART1_RX_intr(void) { }
 
 
-void UART1_ER_intr(void) __attribute__((weak));
+void UART1_ER_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  UART1-ER 割り込み
@@ -86,7 +89,7 @@ void UART1_ER_intr(void) __attribute__((weak));
 void UART1_ER_intr(void) { }
 
 
-void TM00_intr(void) __attribute__((weak));
+void TM00_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM00 割り込み
@@ -95,7 +98,7 @@ void TM00_intr(void) __attribute__((weak));
 void TM00_intr(void) { }
 
 
-void TM01_intr(void) __attribute__((weak));
+void TM01_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM01 割り込み
@@ -104,7 +107,7 @@ void TM01_intr(void) __attribute__((weak));
 void TM01_intr(void) { }
 
 
-void TM02_intr(void) __attribute__((weak));
+void TM02_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM02 割り込み
@@ -113,7 +116,7 @@ void TM02_intr(void) __attribute__((weak));
 void TM02_intr(void) { }
 
 
-void TM03_intr(void) __attribute__((weak));
+void TM03_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM03 割り込み
@@ -122,7 +125,7 @@ void TM03_intr(void) __attribute__((weak));
 void TM03_intr(void) { }
 
 
-void ADC_intr(void) __attribute__((weak));
+void ADC_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  ADC 割り込み
@@ -131,7 +134,7 @@ void ADC_intr(void) __attribute__((weak));
 void ADC_intr(void) { }
 
 
-void ITM_intr(void) __attribute__((weak));
+void ITM_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  ITM 割り込み
@@ -140,7 +143,7 @@ void ITM_intr(void) __attribute__((weak));
 void ITM_intr(void) { }
 
 
-void TM04_intr(void) __attribute__((weak));
+void TM04_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM04 割り込み
@@ -149,7 +152,7 @@ void TM04_intr(void) __attribute__((weak));
 void TM04_intr(void) { }
 
 
-void TM05_intr(void) __attribute__((weak));
+void TM05_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM05 割り込み
@@ -158,7 +161,7 @@ void TM05_intr(void) __attribute__((weak));
 void TM05_intr(void) { }
 
 
-void TM06_intr(void) __attribute__((weak));
+void TM06_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM06 割り込み
@@ -167,7 +170,7 @@ void TM06_intr(void) __attribute__((weak));
 void TM06_intr(void) { }
 
 
-void TM07_intr(void) __attribute__((weak));
+void TM07_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM07 割り込み
@@ -176,7 +179,7 @@ void TM07_intr(void) __attribute__((weak));
 void TM07_intr(void) { }
 
 
-void TM10_intr(void) __attribute__((weak));
+void TM10_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM10 割り込み
@@ -185,7 +188,7 @@ void TM10_intr(void) __attribute__((weak));
 void TM10_intr(void) { }
 
 
-void TM11_intr(void) __attribute__((weak));
+void TM11_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM11 割り込み
@@ -194,7 +197,7 @@ void TM11_intr(void) __attribute__((weak));
 void TM11_intr(void) { }
 
 
-void TM12_intr(void) __attribute__((weak));
+void TM12_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM12 割り込み
@@ -203,7 +206,7 @@ void TM12_intr(void) __attribute__((weak));
 void TM12_intr(void) { }
 
 
-void TM13_intr(void) __attribute__((weak));
+void TM13_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM13 割り込み
@@ -212,7 +215,7 @@ void TM13_intr(void) __attribute__((weak));
 void TM13_intr(void) { }
 
 
-void TM14_intr(void) __attribute__((weak));
+void TM14_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM14 割り込み
@@ -221,7 +224,7 @@ void TM14_intr(void) __attribute__((weak));
 void TM14_intr(void) { }
 
 
-void TM15_intr(void) __attribute__((weak));
+void TM15_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM15 割り込み
@@ -230,7 +233,7 @@ void TM15_intr(void) __attribute__((weak));
 void TM15_intr(void) { }
 
 
-void TM16_intr(void) __attribute__((weak));
+void TM16_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM16 割り込み
@@ -239,7 +242,7 @@ void TM16_intr(void) __attribute__((weak));
 void TM16_intr(void) { }
 
 
-void TM17_intr(void) __attribute__((weak));
+void TM17_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
 	@brief  TM17 割り込み
