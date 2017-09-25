@@ -23,7 +23,7 @@
 #include "wav_in.hpp"
 
 // 128x64 LCD を使い、A/D 入力スイッチを使う場合に有効にする。
-#define ENABLE_LCD
+// #define ENABLE_LCD
 // ターゲットＬＣＤのタイプを選択
 #define LCD_ST7565
 // #define LCD_SSD1306
@@ -341,12 +341,12 @@ extern "C" {
 		uart_.error_task();
 	}
 
-
+#ifdef ENABLE_LCD
 	void ADC_intr(void)
 	{
 		adc_.task();
 	}
-
+#endif
 
 	void ITM_intr(void)
 	{
