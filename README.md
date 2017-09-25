@@ -26,6 +26,8 @@ RL78
 その為、専用のブートプログラムやローダーは必要なく、作成したバイナリーをそのまま実行できます。   
 これは、デバイスにハードウェアー・リセットが入力されて、自分のアプリケーションが動作するまでの
 全てを詳細に公開してあり、判り易いものとなっています。   
+***※ありがちなのは、コンパイラを魔改造して、内部で、動的に機能を切り替えるなどです。***   
+***そのような姑息な手段を行わなくても十分実用になる環境が、gcc と make だけで構築できます。***   
    
 デバイスＩ／Ｏ操作では、C++ で構成されたテンプレート・クラス・ライブラリーを使い、専用のヘッダー
 と各種デバイス用のクラスライブラリーを用意してあり、最小限の実装で、高機能で柔軟な操作を実現する
@@ -476,15 +478,19 @@ RAM や I/O 領域は、0xF0000 以降にアサインされており、この領
    
 ---
  - chip/chip_list.txt　チップ・リスト
- - chip/BMP180.hpp　BOSHE BMP180 温度、圧力センサー・ドライバー
- - chip/DS3231.hpp　Maxim DS3231 RTC リアルタイムクロック・ドライバー
- - chip/DS1371.hpp　Maxim DS1371 RTC リアルタイムクロック・ドライバー（３２ビット、バイナリー・カウンター）
+ - chip/BMP180.hpp　I2C BOSHE BMP180 温度、圧力センサー・ドライバー
+ - chip/DS3231.hpp　I2C Maxim DS3231 RTC リアルタイムクロック・ドライバー
+ - chip/DS1371.hpp　I2C Maxim DS1371 RTC リアルタイムクロック・ドライバー（３２ビット、バイナリー・カウンター）
  - chip/EEPROM.hpp　I2C 接続 EEPROM ドライバー
- - chip/MPU6050.hpp　InvenSense 加速度、ジャイロ・センサー・ドライバー
- - chip/ST7565.hpp　LCD 単色、ドットマトリックス・ドライバー
- - chip/SSD1306.hpp OLED 単色、ドットマトリックス・ドライバー
- - chip/VS1063.hpp　MP3 / OGG VORBIS エンコーダー、デコーダー・ドライバー
- - chip/NTCTH.hpp サーミスター線形補完テンプレート
+ - chip/MPU6050.hpp I2C InvenSense 加速度、ジャイロ・センサー・ドライバー
+ - chip/ST7565.hpp　SPI LCD 単色、ドットマトリックス・ドライバー
+ - chip/SSD1306.hpp SPI OLED 単色、ドットマトリックス・ドライバー
+ - chip/UC1701.hpp  SPI LCD 単色、ドットマトリックス・ドライバー
+ - chip/VS1063.hpp　SPI MP3 / OGG VORBIS エンコーダー、デコーダー・ドライバー
+ - chip/NTCTH.hpp Analog サーミスター線形補完テンプレート
+ - chip/VL53L0X.hpp I2C Time-of-Flight 距離センサ・ドライバー
+ - chip/MAX7219.hpp SPI LED ドライバー
+ - chip/MAX6675.hpp SPI 熱電対温度センサ・ドライバー
    
 ---
  - common/start.s　ハードウェアー・リセット、初期化
