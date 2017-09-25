@@ -35,36 +35,36 @@ E-Mail: hira@rvf-rc45.net
    
 ## RL78 プロジェクト・リスト
    
- - /rl78prog        --->   RL78 フラッシュへのプログラム書き込みツール（Windows、OS-X、※Linux 対応）
- - /G13             --->   G13 グループ、リンカースクリプト、デバイス定義ファイル
- - /common          --->   RL78 共有クラス、小規模なクラスライブラリー、ユーティリティー
- - /chip            --->   各種デバイス用の制御クラスなど
- - /ff12a           --->   ChaN さん作成の「FatFS 0.12a」フレームワーク、と、RL78/G13 向けドライバー
- - /data_flah_lib   --->   GR-Cotton(Kurumi) EEPROM（データ・フラッシュ操作ライブラリ）
- - /FIRST_sample    --->   RL78/G13 デバイス向け超簡単なサンプル（LED の点滅）
- - /UART_sample     --->   RL78/G13 デバイス向け、シリアル・コミュニケーションのサンプル（RxD0）
- - /INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
- - /SOFT_DELAY_sample ---> RL78/G13 ソフトウェアー・タイマーのサンプル
- - /DS3231_sample   --->   RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
- - /DS1371_sample   --->   RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
- - /SDC_sample      --->   RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
- - /INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
- - /PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
- - /WAV_PLAYER_sample ---> RL78/G13 WAV file 再生サンプル（PWM 変調による８ビット出力）
- - /VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
- - /BMP180_sample ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
- - /ADC_sample ---> RL78/G13 内臓 A/D 変換サンプル
- - /ADC_SWITCH_sample ---> RL78/G13 シリーズ・スイッチ（４列）A/D 変換のサンプル
- - /THERMISTOR_sample ---> RL78/G13 サーミスター温度表示サンプル
- - /ARITH_sample ---> RL78/G13 四則演算サンプル（文字列で数式を受け取り計算する）
- - /LCD_DOT_sample ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
- - /TOUCH_sample ---> RL78/G13 タッチ・スイッチ、サンプル
- - /KiCAD_Lib       --->   KiCAD 用部品ライブラリー
- - /DATA_FLASH_sample ---> RL78/G13 データ・フラッシュ・サンプル（読み出し、書き込み、消去）   
+ - rl78prog          ---> RL78 フラッシュへのプログラム書き込みツール
+ - G13               ---> G13 グループ、リンカースクリプト、デバイス定義ファイル
+ - common            ---> RL78 共有クラス、小規模なクラスライブラリー、ユーティリティー
+ - chip              ---> 各種デバイス用の制御クラスなど
+ - ff12a             ---> ChaN さん作成の「FatFS 0.12a」フレームワーク、と、RL78/G13 向けドライバー
+ - data_flah_lib     ---> GR-Cotton/GR-Kurumi データ・フラッシュ操作ライブラリ
+ - FIRST_sample      ---> RL78/G13 デバイス向け超簡単なサンプル（LED の点滅）
+ - UART_sample       ---> RL78/G13 デバイス向け、シリアル・コミュニケーションのサンプル
+ - INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
+ - SOFT_DELAY_sample ---> RL78/G13 ソフトウェアー・タイマーのサンプル
+ - DS3231_sample     ---> RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
+ - DS1371_sample     ---> RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
+ - SDC_sample        ---> RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
+ - INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
+ - PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
+ - WAV_PLAYER_sample ---> RL78/G13 WAV file 再生サンプル（PWM 変調による８ビット出力）
+ - VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
+ - BMP180_sample     ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
+ - ADC_sample        ---> RL78/G13 内臓 A/D 変換サンプル
+ - ADC_SWITCH_sample ---> RL78/G13 シリーズ・スイッチ（４列）A/D 変換のサンプル
+ - THERMISTOR_sample ---> RL78/G13 サーミスター温度表示サンプル
+ - ARITH_sample      ---> RL78/G13 四則演算サンプル（文字列で数式を受け取り計算する）
+ - LCD_DOT_sample    ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
+ - TOUCH_sample      ---> RL78/G13 タッチ・スイッチ、サンプル
+ - KiCAD_Lib         ---> KiCAD 用部品ライブラリー
+ - DATA_FLASH_sample ---> RL78/G13 データ・フラッシュ・サンプル（読み出し、書き込み、消去）   
 
 FatFS LFN の有効／無効：   
 SD カードのファイルシステム「fatfs」では、「LFN」（長いファイル名）を標準で使っており、表示は
-UTF-8 を標準で使います。   
+UTF-8 を標準で使います。（UTF-8、Shift-JIS 変換テーブルがあります）   
 この場合、１２８ＫＢ以上のデバイスが必要です。   
 これはメモリーを多く消費します、もし必要無いのであれば、「ff12a/src/ffconf.h」の「_USE_LFN」を
 「０」にして、コンパイルすれば、文字列コードは OEM、（CP932 の場合 ShiftJIS）となり、最小限の
@@ -77,7 +77,7 @@ UTF-8 を標準で使います。
 
  - msys2 のアップグレード
 
-```
+```Console
    pacman -Sy pacman
    pacman -Syu
 ```
