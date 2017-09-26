@@ -56,6 +56,7 @@ E-Mail: hira@rvf-rc45.net
  - INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
  - DS3231_sample     ---> RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
  - DS1371_sample     ---> RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
+ - VL53L0X_sample    ---> RL78/G13 VL53L0X I2C Time-of-Flight 距離センサ、サンプル
  - PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
  - SDC_sample        ---> RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
  - WAV_PLAYER_sample ---> RL78/G13 WAV file 再生サンプル（PWM 変調による８ビット出力、48KHz/16bits まで対応）
