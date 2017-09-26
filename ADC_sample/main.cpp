@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
 	uint8_t t = 0;
 	while(1) {
 		itm_.sync();
-		adc_.start_scan(2);  // スキャン開始チャネル
+		adc_.start_scan(2, true);  // スキャン開始チャネル、温度取得
 
 		adc_.sync();  // スキャン終了待ち
 
@@ -146,6 +146,14 @@ int main(int argc, char* argv[])
 			vol = static_cast<float>(val) * 3.3f / 1023.0f;
 			utils::format("A/D CH3: %4.2f [V] (%d)\n") % vol % val;
 #endif
+			// 温度表示
+			val = adc_.get_temp();
+			val >>= 6;
+			// 1.05V: 25.0度, 3.6mV/度
+			float tv = static_cast<float>(val) * 3.3f / 1023.0f;
+			float temp = (1.05f - tv) / 0.0036f + 25.0f;
+			utils::format("A/D TEMP: %4.2f [K], %4.3f [V]\n") % temp % tv;
+
 			t = 0;
 		} else {
 			++t;
