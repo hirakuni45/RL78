@@ -17,7 +17,10 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  A/D 制御クラス
+		@brief  A/D 制御クラス @n
+				温度センサ： @n
+				  +25度：1.05V @n
+				  + 1度：-3.6mV
 		@param[in]	NUM		最大チャネル数
 		@param[in]	TASK	割り込みタスク
 	*/
@@ -54,6 +57,9 @@ namespace device {
 		uint8_t	level_;
 
 		static volatile uint16_t value_[NUM];
+		static volatile uint16_t temp_;  // 温度センサ
+		static volatile uint8_t	temp_task_;
+		static volatile bool	conv_fin_;
 
 		static inline void sleep_() { asm("nop"); }
 
@@ -65,10 +71,27 @@ namespace device {
 		//-----------------------------------------------------------------//
 		static void task() __attribute__ ((section (".lowtext")))
 		{ 
-			value_[ADS()] = ADCR();
-			if(ADS() < NUM) {
-				ADS = ADS() + 1;
-				ADM0.ADCS = 1;  // start
+			uint8_t ch = ADS();
+			if(ch < NUM) {
+				value_[ch] = ADCR();
+				++ch;
+				if(ch < NUM) {
+					ADS = ch;
+					ADM0.ADCS = 1;  // start
+				} else if(temp_task_) {
+					ADS = 0x80;
+					ADM0.ADCS = 1;  // start 1st
+				} else {
+					conv_fin_ = true;
+				}
+			} else if(ch == 0x80) {  // temp
+				if(temp_task_ == 1) {
+					temp_task_ = 2;
+					ADM0.ADCS = 1;  // start 2nd
+				} else {
+					temp_ = ADCR();
+					conv_fin_ = true;
+				}
 			}
 			task_();
 		}
@@ -79,9 +102,7 @@ namespace device {
 			@brief	コンストラクター
 		 */
 		//-----------------------------------------------------------------//
-		adc_io() : level_(0) {
-			for(uint8_t i = 0; i < NUM; ++i) value_[i] = 0;
-		}
+		adc_io() : level_(0) { }
 
 
 		//-----------------------------------------------------------------//
@@ -135,20 +156,38 @@ namespace device {
 		//-----------------------------------------------------------------//
 		void sync() const {
 			if(level_ == 0) return;
-			while(ADS() < NUM) sleep_();
+
+			while(!conv_fin_) sync();
 		}
 
 
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	スキャン開始（割り込みモードの場合のみ有効）
-			@param[in]	top	開始チャネル
+			@param[in]	top		開始チャネル
+			@param[in]	temp	温度を取得する場合「true」
+			@return エラーが無ければ「true」
 		 */
 		//-----------------------------------------------------------------//
-		void start_scan(uint8_t top = 0)
+		bool start_scan(uint8_t top = 0, bool temp = false)
 		{
-			ADS = top;
-			ADM0.ADCS = 1;  // start
+			if(level_ == 0) return false;
+
+			conv_fin_ = false;
+
+			if(temp) {
+				temp_task_ = 1;
+			}
+
+			if(top < NUM) {
+				ADS = top;
+				ADM0.ADCS = 1;  // start
+			} else if(temp) {
+				ADS = 0x80;
+				ADM0.ADCS = 1;  // start
+			}
+
+			return true;
 		}
 
 
@@ -159,10 +198,10 @@ namespace device {
 			@return 変換結果（上位１０ビットが有効な値）
 		 */
 		//-----------------------------------------------------------------//
-		uint16_t get(uint8_t ch)
+		uint16_t get(uint8_t ch) const
 		{
 			if(ch >= NUM) {
-				return 0xffff;
+				return 0x0000;
 			}
 
 			if(level_ == 0) {
@@ -175,8 +214,36 @@ namespace device {
 				return value_[ch];
 			}
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	A/D 変換結果を取得
+			@param[in]	ch	変換チャネル
+			@return 変換結果（上位１０ビットが有効な値）
+		 */
+		//-----------------------------------------------------------------//
+		uint16_t get_temp() const
+		{
+			if(level_ == 0) {
+				ADS = 0x80;
+				ADM0.ADCS = 1;  // start
+				while(intr::IF1H.ADIF() == 0) sleep_();
+				intr::IF1H.ADIF = 0;
+				return ADCR();
+			} else {
+				return temp_;
+			}
+		}
 	};
 
+
 	template<uint16_t NUM, class TASK>
-		volatile uint16_t adc_io<NUM, TASK>::value_[NUM]; 
+		volatile uint16_t adc_io<NUM, TASK>::value_[NUM] = { 0 };
+	template<uint16_t NUM, class TASK>
+		volatile uint16_t adc_io<NUM, TASK>::temp_ = 0;
+	template<uint16_t NUM, class TASK>
+		volatile uint8_t adc_io<NUM, TASK>::temp_task_ = 0;
+	template<uint16_t NUM, class TASK>
+		volatile bool adc_io<NUM, TASK>::conv_fin_ = false;
 }
