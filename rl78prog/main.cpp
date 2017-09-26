@@ -15,7 +15,7 @@
 #include "area.hpp"
 
 namespace {
-	const std::string version_ = "0.98b";
+	const std::string version_ = "0.98c";
 	const std::string conf_file_ = "rl78_prog.conf";
 	const uint32_t progress_num_ = 50;
 	const char progress_cha_ = '#';

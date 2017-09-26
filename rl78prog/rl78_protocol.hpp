@@ -313,8 +313,9 @@ namespace rl78 {
 			usleep(10);  // 10us
 			// TOOL0 -> 1
 			rs232c_.set_TXD(1);
-			usleep(1000);  // 1ms
 			rs232c_.flush();
+			usleep(1000);  // 1ms
+//			rs232c_.flush();
 
 			if(!rs232c_.send(0x3a)) {
 				std::cerr << "First byte send error..." << std::endl;
