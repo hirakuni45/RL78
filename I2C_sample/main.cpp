@@ -7,7 +7,6 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
 #include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/itimer.hpp"
@@ -19,13 +18,15 @@
 
 namespace {
 
-	device::itimer<uint8_t> itm_;
+	typedef device::itimer<uint8_t> ITM;
+	ITM		itm_;
 
-	typedef utils::fifo<uint8_t, 32> buffer;
-	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
+	typedef utils::fifo<uint8_t, 32> BUFFER;
+	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART;
+	UART	uart_;
 
-	typedef device::iica_io<device::IICA0> IICA;
-	IICA iica_;
+	typedef device::iica_io<device::IICA0> I2C;
+	I2C		i2c_;
 
 	utils::command<64> command_;
 }
@@ -102,12 +103,12 @@ int main(int argc, char* argv[])
 		uart_.start(115200, intr_level);
 	}
 
-	// IICA(I2C) の開始
+	// I2C の開始
 	{
 		uint8_t intr_level = 0;
-		if(!iica_.start(IICA::speed::fast, intr_level)) {
-//		if(!iica_.start(IICA::speed::standard, intr_level)) {
-			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+		if(!i2c_.start(I2C::speed::fast, intr_level)) {
+//		if(!i2c_.start(I2C::speed::standard, intr_level)) {
+			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(i2c_.get_last_error());
 		}
 	}
 
