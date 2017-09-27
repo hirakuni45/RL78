@@ -232,6 +232,7 @@ namespace device {
 					PM1.B1 = 1;	// P1-1 input  (RxD0)
 					PU1.B1 = 0; // P1-1 pullup offline
 					PM1.B2 = 0;	// P1-2 output (TxD0)
+					P1.B1  = 1;	// ポートレジスター RxD 切り替え
 					P1.B2  = 1;	// ポートレジスター TxD 切り替え
 				} else {  // UART1
 					PM0.B3  = 1;  // P0-3 input  (RxD1)
