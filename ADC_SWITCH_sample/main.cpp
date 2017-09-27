@@ -29,9 +29,9 @@
 
 namespace {
 
-	typedef utils::fifo<uint8_t, 32> buffer;
-	typedef device::uart_io<device::SAU02, device::SAU03, buffer, buffer> UART1;
-	UART1	uart_;
+	typedef utils::fifo<uint8_t, 32> BUFFER;
+	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART;
+	UART	uart_;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -49,8 +49,8 @@ namespace {
 		B
 	};
 
-	typedef utils::bitset<uint8_t, SWITCH> switch_bits;
-	utils::switch_man<switch_bits> switch_man_;
+	typedef utils::bitset<uint8_t, SWITCH> SWITCH_BITS;
+	utils::switch_man<SWITCH_BITS> switch_man_;
 }
 
 
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 		val += 128;  // 閾値のオフセット（1024 / 4(SWITCH) / 2）
 		val /= 256;  // デコード（1024 / 4(SWITCH）
 
-		switch_bits tmp;
+		SWITCH_BITS tmp;
 		if(val < 4) {
 			tmp.set(static_cast<SWITCH>(val));
 		}
