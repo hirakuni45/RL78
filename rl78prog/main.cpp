@@ -181,7 +181,7 @@ namespace {
 		std::string c = utils::get_file_base(cmd);
 
 		cout << "Renesas RL78 Series Programmer Version " << version_ << endl;
-		cout << "Copyright (C) 2016, Hiramatsu Kunihito (hira@rvf-rc45.net)" << endl;
+		cout << "Copyright (C) 2016, 2017 Hiramatsu Kunihito (hira@rvf-rc45.net)" << endl;
 		cout << "usage:" << endl;
 		cout << c << " [options] [mot file] ..." << endl;
 		cout << endl;
@@ -201,6 +201,7 @@ namespace {
 		cout << "    --verbose                     Verbose output" << endl;
 		cout << "    -h, --help                    Display this" << endl;
 	}
+
 
 	bool conversion_security_param_(const std::string& param, rl78::protocol::security_t& seq) {
 		seq.FLG = 0xff;
