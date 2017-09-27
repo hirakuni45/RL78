@@ -1,12 +1,13 @@
 //=====================================================================//
 /*!	@file
-	@brief	サウンド生成サンプル @n
-			P16/TO01(40) から、左チャネル @n
-			P17/TO02(39) から、右チャネル
-	@author	平松邦仁 (hira@rvf-rc45.net)
+	@brief	BASIC サンプル
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
@@ -17,12 +18,14 @@
 namespace {
 
 	// 送信、受信バッファの定義
-	typedef utils::fifo<uint32_t, 32> buffer;
+	typedef utils::fifo<uint32_t, 32> BUFFER;
 	// UART の定義（SAU02、SAU03）
-	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
+	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART;
+	UART	uart_;
 
 	// インターバル・タイマー
-	device::itimer<uint8_t> itm_;
+	typedef device::itimer<uint8_t> ITM;
+	ITM		itm_;
 
 	utils::command<64> command_;
 }
@@ -70,12 +73,6 @@ extern "C" {
 	{
 		uart_.error_task();
 	}
-
-
-//	void ADC_intr(void)
-//	{
-//		adc_.task();
-//	}
 
 
 	void ITM_intr(void)
