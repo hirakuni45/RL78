@@ -5,27 +5,28 @@
 			P15: green LED @n
 			P16: red LED @n
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
-#include<cstring>
 #include "common/renesas.hpp"
 #include "common/port_utils.hpp"
-#include "common/uart_io.hpp"
 #include "common/fifo.hpp"
+#include "common/uart_io.hpp"
+#include "common/adc_io.hpp"
 #include "common/format.hpp"
 #include "common/iica_io.hpp"
 #include "common/itimer.hpp"
 #include "common/flash_io.hpp"
 #include "common/command.hpp"
 
+#include "sw.hpp"
+
 namespace {
 
-	typedef device::iica_io<device::IICA0> IICA;
-	IICA 	iica_;
+	typedef device::itimer<uint8_t> ITM;
+	ITM		itm_;
 
 	// UART1 の定義（SAU2、SAU3）
 	typedef utils::fifo<uint8_t, 64> BUFFER;
@@ -34,15 +35,30 @@ namespace {
 	UART0	uart0_;
 //	UART1	uart1_;
 
-	typedef device::itimer<uint8_t> ITM;
-	ITM		itm_;
+	typedef device::iica_io<device::IICA0> IICA;
+	IICA 	iica_;
+
+	// 最終チャネル番号＋１を設定
+	typedef device::adc_io<1, utils::null_task> ADC;
+	ADC 	adc_;
 
 	typedef device::flash_io FLASH;
 	FLASH	flash_;
 
 //	utils::command<64> command_;
 
+	// MIC 切り替え、入力定義
+	typedef device::PORT<device::port_no::P12, device::bitpos::B2> MIC_SW1;
+	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MIC_SW2;
+	utils::sw2<MIC_SW1, MIC_SW2> sw2_;
 
+	// CH 設定、入力定義
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B1> CH_SW1;
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B0> CH_SW2;
+	typedef device::PORT<device::port_no::P0,  device::bitpos::B1> CH_SW3;
+	typedef device::PORT<device::port_no::P0,  device::bitpos::B0> CH_SW4;
+	typedef device::PORT<device::port_no::P12, device::bitpos::B0> CH_SW5;
+	utils::sw5<CH_SW1, CH_SW2, CH_SW3, CH_SW4, CH_SW5> sw5_;
 }
 
 
@@ -72,28 +88,28 @@ extern "C" {
 	}
 
 
-	void UART1_TX_intr(void)
+	void UART0_TX_intr(void)
 	{
 		uart0_.send_task();
 	}
 
 
-	void UART1_RX_intr(void)
+	void UART0_RX_intr(void)
 	{
 		uart0_.recv_task();
 	}
 
 
-	void UART1_ER_intr(void)
+	void UART0_ER_intr(void)
 	{
 		uart0_.error_task();
 	}
 
 
-//	void ADC_intr(void)
-//	{
-//		adc_.task();
-//	}
+	void ADC_intr(void)
+	{
+		adc_.task();
+	}
 
 
 	void ITM_intr(void)
@@ -130,6 +146,13 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	// A/D の開始
+	{
+		device::PM2.B0 = 1;
+		uint8_t intr_level = 1;  // 割り込み設定
+		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
+	}
+
 	// data flash の開始
 	{
 
@@ -137,24 +160,35 @@ int main(int argc, char* argv[])
 
 
 	ADPC = 0x01; // A/D input All digital port
+
 	PM2.B3 = 0;  // POWER CTRL (OUTPUT)
 	P2.B3  = 1;  // Active high (ON)
 
 	PM1.B5 = 0;  // LED G output
 	PM1.B6 = 0;  // LED R output
 
-	PM12.B1 = 1;  // MIC Sel-SW2
-	PM12.B2 = 1;  // MIC Sel-SW1
+	sw2_.start();
+	PMC12 = 0xfe;  // setup P12_0: digital port
+	sw5_.start();
 
-	PM12.B0 = 1;  // CH Sel-SW5
-	PM0.B0  = 1;  // CH Sel-SW4
-	PM0.B1  = 1;  // CH Sel-SW3
-	PM2.B0 = 1;  // CH Sel-SW2
-	PM2.B1 = 1;  // CH Sel-SW1
+	utils::format("Start Digital MIC\n");
 
 	uint8_t cnt = 0;
+	uint8_t n = 0;
 	while(1) {
 		itm_.sync();
+
+		if(sci_length() > 0) {
+			char ch = sci_getch();
+			sci_putch(ch);
+		}
+
+		++n;
+		if(n >= 60) {
+			utils::format("MIC: %02b\n") % static_cast<uint16_t>(sw2_.get());
+			utils::format("CH:  %05b\n") % static_cast<uint16_t>(sw5_.get());
+			n = 0;
+		}
 
 		if(cnt >= 20) {
 			cnt = 0;
@@ -168,51 +202,4 @@ int main(int argc, char* argv[])
 		}
 		++cnt;
 	}
-
-#if 0
-	utils::format("Start RL78/G13 DMIC ctrl\n");
-
-	command_.set_prompt("# ");
-
-	uint8_t cnt = 0;
-	while(1) {
-		itm_.sync();
-
-		if(cnt >= 20) {
-			cnt = 0;
-		}
-		if(cnt < 10) P4.B3 = 1;
-		else P4.B3 = 0;
-		++cnt;
-
-		// コマンド入力と、コマンド解析
-		if(command_.service()) {
-			uint8_t cmdn = command_.get_words();
-			if(cmdn >= 1) {
-#if 0
-				if(command_.cmp_word(0, "date")) {
-					if(cmdn == 1) {
-						time_t t = get_time_();
-						if(t != 0) {
-							disp_time_(t);
-						}
-					} else {
-						set_time_date_();
-					}
-				} else if(command_.cmp_word(0, "help")) {
-					sci_puts("date\n");
-					sci_puts("date yyyy/mm/dd hh:mm[:ss]\n");
-				} else {
-					char buff[16];
-					if(command_.get_word(0, sizeof(buff), buff)) {
-						sci_puts("Command error: ");
-						sci_puts(buff);
-						sci_putch('\n');
-					}
-				}
-#endif
-			}
-		}
-	}
-#endif
 }
