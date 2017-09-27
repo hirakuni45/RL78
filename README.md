@@ -52,18 +52,19 @@ E-Mail: hira@rvf-rc45.net
  - ADC_SWITCH_sample ---> RL78/G13 シリーズ・スイッチ（４列）A/D 変換のサンプル
  - THERMISTOR_sample ---> RL78/G13 サーミスター温度表示サンプル（A/D 変換使用）
  - TOUCH_sample      ---> RL78/G13 タッチ・スイッチ、サンプル
+ - DATA_FLASH_sample ---> RL78/G13 データ・フラッシュ・サンプル（読み出し、書き込み、消去）
  - INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
  - INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
  - DS3231_sample     ---> RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
  - DS1371_sample     ---> RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
+ - BMP180_sample     ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
  - VL53L0X_sample    ---> RL78/G13 VL53L0X I2C Time-of-Flight 距離センサ、サンプル
- - PWM_sample ---> RL78/G13 TAU 利用 PWM 出力サンプル 
+ - PWM_sample        ---> RL78/G13 TAU 利用 PWM 出力サンプル 
  - SDC_sample        ---> RL78/G13 SD カードの操作サンプル（SDカードのルートディレクトリーのリスト）
  - WAV_PLAYER_sample ---> RL78/G13 WAV file 再生サンプル（PWM 変調による８ビット出力、48KHz/16bits まで対応）
  - VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
- - BMP180_sample     ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
- - LCD_DOT_sample    ---> RL78/G13 ST7565(R)/SSD1306 LCD コントローラー、グラフィックス表示サンプル
- - DATA_FLASH_sample ---> RL78/G13 データ・フラッシュ・サンプル（読み出し、書き込み、消去）   
+ - LCD_DOT_sample    ---> RL78/G13 ST7565(R)/SSD1306 SPI LCD コントローラー、グラフィックス表示サンプル
+ - MAX6675_sample    ---> RL78/G13 MAX6675 SPI K 熱電対、温度表示サンプル
 
 FatFS LFN の有効／無効：   
 SD カードのファイルシステム「fatfs」では、「LFN」（長いファイル名）を標準で使っており、表示は
@@ -493,7 +494,7 @@ RAM や I/O 領域は、0xF0000 以降にアサインされており、この領
  - chip/NTCTH.hpp Analog サーミスター線形補完テンプレート
  - chip/VL53L0X.hpp I2C Time-of-Flight 距離センサ・ドライバー
  - chip/MAX7219.hpp SPI LED ドライバー
- - chip/MAX6675.hpp SPI 熱電対温度センサ・ドライバー
+ - chip/MAX6675.hpp SPI K 熱電対温度センサ・ドライバー
    
 ---
  - common/start.s　ハードウェアー・リセット、初期化
