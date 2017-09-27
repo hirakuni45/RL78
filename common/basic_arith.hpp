@@ -4,7 +4,10 @@
 	@brief	Arithmetic テンプレート @n
 			※テキストの数式を展開して、計算結果を得る。@n
 			演算式解析
-	@author	平松邦仁 (hira@rvf-rc45.net)
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include <cstdint>
