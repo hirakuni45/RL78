@@ -65,6 +65,7 @@ E-Mail: hira@rvf-rc45.net
  - VS1063_PLAYER_sample ---> RL78/G13 VS1063 Audio Decoder 再生サンプル
  - LCD_DOT_sample    ---> RL78/G13 ST7565(R)/SSD1306 SPI LCD コントローラー、グラフィックス表示サンプル
  - MAX6675_sample    ---> RL78/G13 MAX6675 SPI K 熱電対、温度表示サンプル
+ - MAX7219_sample    ---> RL78/G13 MAX7219 SPI LED 表示サンプル
 
 FatFS LFN の有効／無効：   
 SD カードのファイルシステム「fatfs」では、「LFN」（長いファイル名）を標準で使っており、表示は
@@ -493,8 +494,8 @@ RAM や I/O 領域は、0xF0000 以降にアサインされており、この領
  - chip/VS1063.hpp　SPI MP3 / OGG VORBIS エンコーダー、デコーダー・ドライバー
  - chip/NTCTH.hpp Analog サーミスター線形補完テンプレート
  - chip/VL53L0X.hpp I2C Time-of-Flight 距離センサ・ドライバー
- - chip/MAX7219.hpp SPI LED ドライバー
  - chip/MAX6675.hpp SPI K 熱電対温度センサ・ドライバー
+ - chip/MAX7219.hpp SPI LED ドライバー
    
 ---
  - common/start.s　ハードウェアー・リセット、初期化
