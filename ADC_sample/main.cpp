@@ -8,7 +8,6 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
 #include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/fifo.hpp"
@@ -19,10 +18,6 @@
 #include "common/task.hpp"
 
 namespace {
-	void wait_()
-	{
-		asm("nop");
-	}
 
 	typedef utils::fifo<uint8_t, 32> BUFFER;
 	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART1;
