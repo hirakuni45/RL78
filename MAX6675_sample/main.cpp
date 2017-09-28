@@ -15,7 +15,7 @@
 #include "common/format.hpp"
 #include "common/delay.hpp"
 #include "common/csi_io.hpp"
-#include "chip/max6675.hpp"
+#include "chip/MAX6675.hpp"
 
 namespace {
 
