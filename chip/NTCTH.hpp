@@ -1,8 +1,8 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	NTC サーミスタ 温度計算 クラス @n
-			Copyright 2017 Kunihito Hiramatsu
+	@brief	NTC サーミスタ 温度計算 クラス
+    @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
