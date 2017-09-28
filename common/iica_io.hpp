@@ -251,7 +251,7 @@ namespace device {
 			@return 送信が完了した場合「true」
 		 */
 		//-----------------------------------------------------------------//
-		bool send(uint8_t adr, const uint8_t* src, uint8_t len)
+		bool send(uint8_t adr, const void* src, uint8_t len)
 		{
 			error_ = error::none;
 
@@ -262,9 +262,10 @@ namespace device {
 			}
 
 			// 送信データ転送
+			const uint8_t* p = static_cast<const uint8_t*>(src);
 			for(uint8_t i = 0; i < len; ++i) {
-				iica_.IICA = *src;
-				++src;
+				iica_.IICA = *p;
+				++p;
 				if(!probe_ack_()) {
 					iica_.IICCTL0.SPT = 1;
 					error_ = error::send_data;
@@ -285,7 +286,7 @@ namespace device {
 			@return 送信が完了した場合「true」
 		 */
 		//-----------------------------------------------------------------//
-		bool send(uint8_t adr, uint8_t first, const uint8_t* src, uint8_t len)
+		bool send(uint8_t adr, uint8_t first, const void* src, uint8_t len)
 		{
 			error_ = error::none;
 
@@ -303,9 +304,10 @@ namespace device {
 			}
 
 			// 送信データ転送
+			const uint8_t* p = static_cast<const uint8_t*>(src);
 			for(uint8_t i = 0; i < len; ++i) {
-				iica_.IICA = *src;
-				++src;
+				iica_.IICA = *p;
+				++p;
 				if(!probe_ack_()) {
 					iica_.IICCTL0.SPT = 1;
 					error_ = error::send_data;
@@ -327,7 +329,7 @@ namespace device {
 			@return 送信が完了した場合「true」
 		 */
 		//-----------------------------------------------------------------//
-		bool send(uint8_t adr, uint8_t first, uint8_t second, const uint8_t* src, uint8_t len)
+		bool send(uint8_t adr, uint8_t first, uint8_t second, const void* src, uint8_t len)
 		{
 			error_ = error::none;
 
@@ -352,9 +354,10 @@ namespace device {
 			}
 
 			// 送信データ転送
+			const uint8_t* p = static_cast<const uint8_t*>(src);
 			for(uint8_t i = 0; i < len; ++i) {
-				iica_.IICA = *src;
-				++src;
+				iica_.IICA = *p;
+				++p;
 				if(!probe_ack_()) {
 					iica_.IICCTL0.SPT = 1;
 					error_ = error::send_data;
@@ -374,7 +377,7 @@ namespace device {
 			@return 受信が完了した場合「true」
 		 */
 		//-----------------------------------------------------------------//
-		bool recv(uint8_t adr, uint8_t* dst, uint8_t len)
+		bool recv(uint8_t adr, void* dst, uint8_t len)
 		{
 			error_ = error::none;
 
@@ -391,6 +394,7 @@ namespace device {
 			iica_.IICCTL0.WREL = 1;  // Wait 削除
 
 			// 受信データ転送
+			uint8_t* p = static_cast<uint8_t*>(dst);
 			for(uint8_t i = 0; i < len; ++i) {
 				if(i == (len - 1)) {  // last data..
 					iica_.IICCTL0.ACKE = 0;
@@ -402,8 +406,8 @@ namespace device {
 					// utils::format("idx: %d\n") % static_cast<uint32_t>(i);
 					return false;
 				}
-				*dst = iica_.IICA();
-				++dst;
+				*p = iica_.IICA();
+				++p;
 				if(i != (len - 1)) {
 					iica_.IICCTL0.WREL = 1;  // Wait 削除
 				}
