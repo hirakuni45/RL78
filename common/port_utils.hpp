@@ -8,7 +8,7 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include "G13/port.hpp"
+#include "common/renesas.hpp"
 
 namespace utils {
 
