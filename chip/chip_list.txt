@@ -106,3 +106,20 @@ VL53L0X：
 ・World smallest Time-of-Flight (ToF) ranging sensor
 ・http://www.st.com/ja/imaging-and-photonics-solutions/vl53l0x.html
 ・Interface: I2C
+
+
+MFRC522:
+・NXP Semiconductors (Philips)
+・highly integrated reader/writer IC for contactless communication at 13.56 MHz
+・https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf
+・Interface: SPI/I2C/UART (SPI)
+
+
+TX_MOD:
+・315MHz/433MHz RF Transmitter
+・Interface: Digital Out (Serial)
+
+
+RX_MOD:
+・315MHz/433MHz RF Receiver
+・Interface: Digital Out (Serial)
