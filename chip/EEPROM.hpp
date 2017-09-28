@@ -9,7 +9,6 @@
 */
 //=====================================================================//
 #include <cstdint>
-#include "common/iica_io.hpp"
 #include "common/delay.hpp"
 
 namespace chip {
