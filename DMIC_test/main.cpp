@@ -59,6 +59,11 @@ namespace {
 	typedef device::PORT<device::port_no::P0,  device::bitpos::B0> CH_SW4;
 	typedef device::PORT<device::port_no::P12, device::bitpos::B0> CH_SW5;
 	utils::sw5<CH_SW1, CH_SW2, CH_SW3, CH_SW4, CH_SW5> sw5_;
+
+	// Volume +/-
+	typedef device::PORT<device::port_no::P3,  device::bitpos::B1> VOL_UP;
+	typedef device::PORT<device::port_no::P7,  device::bitpos::B3> VOL_DN;
+	utils::sw2<VOL_UP, VOL_DN> vol_;
 }
 
 
@@ -88,31 +93,31 @@ extern "C" {
 	}
 
 
-	void UART0_TX_intr(void)
+	INTERRUPT_FUNC void UART0_TX_intr(void)
 	{
 		uart0_.send_task();
 	}
 
 
-	void UART0_RX_intr(void)
+	INTERRUPT_FUNC void UART0_RX_intr(void)
 	{
 		uart0_.recv_task();
 	}
 
 
-	void UART0_ER_intr(void)
+	INTERRUPT_FUNC void UART0_ER_intr(void)
 	{
 		uart0_.error_task();
 	}
 
 
-	void ADC_intr(void)
+	INTERRUPT_FUNC void ADC_intr(void)
 	{
 		adc_.task();
 	}
 
 
-	void ITM_intr(void)
+	INTERRUPT_FUNC void ITM_intr(void)
 	{
 		itm_.task();
 	}
@@ -134,7 +139,7 @@ int main(int argc, char* argv[])
 	// UART0 の開始
 	{
 		uint8_t intr_level = 1;
-		uart0_.start(115200, intr_level);
+		uart0_.start(19200, intr_level);
 	}
 
 	// IICA(I2C) の開始
@@ -155,9 +160,7 @@ int main(int argc, char* argv[])
 
 	// data flash の開始
 	{
-
 	}
-
 
 	ADPC = 0x01; // A/D input All digital port
 
@@ -168,26 +171,49 @@ int main(int argc, char* argv[])
 	PM1.B6 = 0;  // LED R output
 
 	sw2_.start();
-	PMC12 = 0xfe;  // setup P12_0: digital port
+	PMC12 = 0b11111110;  // setup P12_0: digital port
 	sw5_.start();
 
-	utils::format("Start Digital MIC\n");
+	vol_.start();
+
+///	utils::format("Start Digital MIC\n");
 
 	uint8_t cnt = 0;
-	uint8_t n = 0;
+	uint8_t vol = 0;
 	while(1) {
 		itm_.sync();
 
-		if(sci_length() > 0) {
-			char ch = sci_getch();
-			sci_putch(ch);
+		vol_.service();
+		if(vol_.positive() & 1) {
+			if(vol < 8) {
+				++vol;
+			}
+		}
+		if(vol_.positive() & 2) {
+			if(vol > 0) {
+				--vol;
+			}
 		}
 
-		++n;
-		if(n >= 60) {
-			utils::format("MIC: %02b\n") % static_cast<uint16_t>(sw2_.get());
-			utils::format("CH:  %05b\n") % static_cast<uint16_t>(sw5_.get());
-			n = 0;
+		if(uart0_.recv_length() > 0) {
+			char ch = uart0_.getch();
+
+			if(ch == 'C') {  // CH-SW (0 to 31)
+				auto n = sw5_.get();
+				uart0_.putch((n / 10) + '0');
+				uart0_.putch((n % 10) + '0');
+				uart0_.putch('\n');
+			} else if(ch == 'M') {  // MIC-SW (0 to 3)
+				auto n = sw2_.get();
+				uart0_.putch((n % 10) + '0');
+				uart0_.putch('\n');
+			} else if(ch == 'F') {  // 混信フラグ (0 to 1)
+				uart0_.putch('0');
+				uart0_.putch('\n');
+			} else if(ch == 'V') {  // ボリューム値
+				uart0_.putch('0' + vol);
+				uart0_.putch('\n');
+			}
 		}
 
 		if(cnt >= 20) {
