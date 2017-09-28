@@ -3,15 +3,15 @@
 	@brief	MFRC522・メイン @n
 																@n
 			＊＊＊＊＊　電源は必ず３．３Ｖで使う事！ ＊＊＊＊＊ @n
-																@n
-			MFRC522(SDA)  ---> MFRC_CS (P1_0:20) @n
-			MFRC522(SCK)  ---> SPI_SCK (P1_1:19) @n
-			MFRC522(MOSI) ---> SPI_MOSI(P1_2:18) @n
-			MFRC522(MISO) ---> SPI_MISO(P1_3:17) @n
-			MFRC522(IRQ)       N.C @n
-			MFRC522(GND)  ---> GND @n
-			MFRC522(RES)  ---> MFRC_RES(P4_2: 1) @n
-			MFRC522(3.3V) ---> 3.3V
+                                                                @n
+			・P52      (35) ---> MFRC522(SDA/CS) @n
+			・P73/SO01 (26) ---> MFRC522(MOSI)   @n
+			・P74/SI01 (25) ---> MFRC522(MISO)   @n
+			・P75/SCK01(24) ---> MFRC522(SCK)    @n
+			・N.C.          ---> MFRC522(IRQ)    @n
+			・GND           ---> MFRC522(GND)    @n
+			・P53      (36) ---> MFRC522(RES)    @n
+			・3.3V          ---> MFRC522(3.3V)
     @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
 				Released under the MIT license @n
@@ -39,13 +39,13 @@ namespace {
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
 
-	// CSI(SPI) の定義、CSI20 の通信では、「SAU10」を利用、１ユニット、チャネル０
-	typedef device::csi_io<device::SAU10> SPI;
+	// CSI(SPI) の定義、通信では、「SAU01」を利用、０ユニット、チャネル１
+	typedef device::csi_io<device::SAU01> SPI;
 	SPI		spi_;
 
 	// MFRC522 インターフェースの定義
-	typedef device::PORT<device::port_no::P5, device::bitpos::B5> MFRC_CS;	///< 選択信号
-	typedef device::PORT<device::port_no::P5, device::bitpos::B4> MFRC_RES;	///< リセット信号
+	typedef device::PORT<device::port_no::P5, device::bitpos::B2> MFRC_CS;	///< 選択信号
+	typedef device::PORT<device::port_no::P5, device::bitpos::B3> MFRC_RES;	///< リセット信号
 	typedef chip::MFRC522<SPI, MFRC_CS, MFRC_RES> MFRC;
 	MFRC	mfrc_(spi_);
 }
@@ -77,25 +77,25 @@ extern "C" {
 	}
 
 
-	void UART1_TX_intr(void)
+	INTERRUPT_FUNC void UART1_TX_intr(void)
 	{
 		uart_.send_task();
 	}
 
 
-	void UART1_RX_intr(void)
+	INTERRUPT_FUNC void UART1_RX_intr(void)
 	{
 		uart_.recv_task();
 	}
 
 
-	void UART1_ER_intr(void)
+	INTERRUPT_FUNC void UART1_ER_intr(void)
 	{
 		uart_.error_task();
 	}
 
 
-	void ITM_intr(void)
+	INTERRUPT_FUNC void ITM_intr(void)
 	{
 		itm_.task();
 	}

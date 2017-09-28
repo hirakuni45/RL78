@@ -7,8 +7,7 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
-#include<cstring>
+#include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 #include "common/uart_io.hpp"
 #include "common/fifo.hpp"
@@ -68,25 +67,25 @@ extern "C" {
 	}
 
 
-	void UART1_TX_intr(void)
+	INTERRUPT_FUNC void UART1_TX_intr(void)
 	{
 		uart_.send_task();
 	}
 
 
-	void UART1_RX_intr(void)
+	INTERRUPT_FUNC void UART1_RX_intr(void)
 	{
 		uart_.recv_task();
 	}
 
 
-	void UART1_ER_intr(void)
+	INTERRUPT_FUNC void UART1_ER_intr(void)
 	{
 		uart_.error_task();
 	}
 
 
-	void ITM_intr(void)
+	INTERRUPT_FUNC void ITM_intr(void)
 	{
 		itm_.task();
 	}
