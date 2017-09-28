@@ -318,6 +318,55 @@ namespace device {
 
 		//-----------------------------------------------------------------//
 		/*!
+			@brief	送信
+			@param[in]	adr	７ビットアドレス
+			@param[in]	first	第一データ
+			@param[in]	second	第二データ
+			@param[in]	src	転送先
+			@param[in]	len	受信バイト数
+			@return 送信が完了した場合「true」
+		 */
+		//-----------------------------------------------------------------//
+		bool send(uint8_t adr, uint8_t first, uint8_t second, const uint8_t* src, uint8_t len)
+		{
+			error_ = error::none;
+
+			if(!send_adr_(adr << 1)) {
+				iica_.IICCTL0.WREL = 1;
+				iica_.IICCTL0.SPT = 1;
+				return false;
+			}
+
+			iica_.IICA = first;
+			if(!probe_ack_()) {
+				iica_.IICCTL0.SPT = 1;
+				error_ = error::send_data;
+				return false;
+			}
+
+			iica_.IICA = second;
+			if(!probe_ack_()) {
+				iica_.IICCTL0.SPT = 1;
+				error_ = error::send_data;
+				return false;
+			}
+
+			// 送信データ転送
+			for(uint8_t i = 0; i < len; ++i) {
+				iica_.IICA = *src;
+				++src;
+				if(!probe_ack_()) {
+					iica_.IICCTL0.SPT = 1;
+					error_ = error::send_data;
+					return false;
+				}
+			}
+			return out_stop_();
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
 			@brief	受信
 			@param[in]	adr	７ビットアドレス
 			@param[out]	dst	転送先
