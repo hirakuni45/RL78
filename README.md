@@ -55,6 +55,7 @@ E-Mail: hira@rvf-rc45.net
  - DATA_FLASH_sample ---> RL78/G13 データ・フラッシュ・サンプル（読み出し、書き込み、消去）
  - INTERVAL_TIMER_sample ---> RL78/G13 内臓１２ビット、インターバル・タイマーのサンプル
  - INTERVAL_TIMER_TAU_sample ---> RL78/G13 TAU 利用インターバル・タイマー・サンプル
+ - EEPROM_sample     ---> RL78?G13 EEPROM I2C Read/Write サンプル
  - DS3231_sample     ---> RL78/G13 DS3231 I2C Real Time Clock の時間表示、設定サンプル
  - DS1371_sample     ---> RL78/G13 DS1371 I2C Real Time Clock の時間表示、設定サンプル
  - BMP180_sample     ---> RL78/G13 BMP180 I2C 圧力／温度センサー読み込み、表示サンプル
