@@ -11,6 +11,7 @@
 
 // 起動時の動作周波数を指定出来る。
 // どれかを１つだけ有効にする事。
+#if defined(SIG_G13)
 #define START_FREQ	0xE8	///< 32MHz
 // #define START_FREQ	0xE0	///< 24MHz
 // #define START_FREQ	0xE9	///< 16MHz
@@ -21,7 +22,18 @@
 // #define START_FREQ	0xE3	///<  3MHz
 // #define START_FREQ	0xEC	///<  2MHz
 // #define START_FREQ	0xED	///<  1MHz
-
+#elif defined(SIG_L1C)
+// #define START_FREQ	0xF0	///< 48MHz for USB
+#define START_FREQ	0xE0	///< 24MHz
+// #define START_FREQ	0xE9	///< 16MHz
+// #define START_FREQ	0xE1	///< 12MHz
+// #define START_FREQ	0xEA	///<  8MHz
+// #define START_FREQ	0xE2	///<  6MHz
+// #define START_FREQ	0xEB	///<  4MHz
+// #define START_FREQ	0xE3	///<  3MHz
+// #define START_FREQ	0xEC	///<  2MHz
+// #define START_FREQ	0xED	///<  1MHz
+#endif
 
 /*
   オンチップ・デバッグ・オプション・バイトのフォーマット（0x000C3/0x010C3）

@@ -10,16 +10,17 @@
 //=====================================================================//
 #include <cstdint>
 
-/// F_CLK が３２以外はエラーにする
-#if (F_CLK != 32000000)
+/// F_CLK が３２、２４以外はエラーにする
+#if (F_CLK != 32000000) && (F_CLK != 24000000)
 #  error "delay.hpp requires F_CLK to be defined"
 #endif
 
 namespace utils {
 
+
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  基準クロック３２ＭＨｚの待ち @n
+		@brief  基準クロック３２／２４ＭＨｚの待ち @n
 				※-O2、-Os などの最適化が条件、最適化無しの場合などは、@n
 				アセンブルリストを参照の上、マシンサイクルを確認 @n
 				※基準クロックが32MHz以外の場合、@n
@@ -37,7 +38,11 @@ namespace utils {
 		*/
 		//-----------------------------------------------------------------//
 		static void nano_second(uint16_t ns) {
+#if (F_CLK == 32000000)
 			ns /= 250;  // 31.25ns x 8 (250ns)
+#elif (F_CLK == 24000000)
+			ns /= 333;  // 41.67ns x 8 (333ns)
+#endif
 			while(ns > 0) {
 				--ns;
 			}
@@ -57,12 +62,19 @@ namespace utils {
 		//-----------------------------------------------------------------//
 		static void micro_second(uint16_t us) {
 			while(us > 0) {
+#if (F_CLK == 32000000)
 				asm("nop"); asm("nop"); asm("nop"); asm("nop");
 				asm("nop"); asm("nop"); asm("nop"); asm("nop");
 				asm("nop"); asm("nop"); asm("nop"); asm("nop");
 				asm("nop"); asm("nop"); asm("nop"); asm("nop");
 				asm("nop"); asm("nop"); asm("nop"); asm("nop");
 				asm("nop"); asm("nop"); asm("nop"); asm("nop");
+#elif (F_CLK == 24000000)
+				asm("nop"); asm("nop"); asm("nop"); asm("nop");
+				asm("nop"); asm("nop"); asm("nop"); asm("nop");
+				asm("nop"); asm("nop"); asm("nop"); asm("nop");
+				asm("nop"); asm("nop"); asm("nop"); asm("nop");
+#endif
 				--us;
 			}
 			// (2) decw	0xffef0

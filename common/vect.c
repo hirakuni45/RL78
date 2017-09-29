@@ -256,6 +256,7 @@ void TM17_intr(void) { }
 	@brief  割り込みベクターテーブルの定義
 */
 //-----------------------------------------------------------------//
+#if defined(SIG_G13)
 const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
 	/*  0 INTWDTI                  */  (void*)NULL_intr,  /* ウォッチドッグ・タイマのインターバル　*/
 	/*  1 INTLVL                   */  (void*)NULL_intr,  /* 電圧検出 */
@@ -320,3 +321,71 @@ const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
 	/* 60                          */  (void*)NULL_intr,
 	/* 61                          */  (void*)NULL_intr
 };
+#endif
+
+#if defined(SIG_L1C)
+const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
+	/* 0x04   0 INTWDTI                  */  (void*)NULL_intr,  /* ウォッチドッグ・タイマのインターバル　*/
+	/* 0x06   1 INTLVL                   */  (void*)NULL_intr,  /* 電圧検出 */
+	/* 0x08   2 INTP0                    */  (void*)NULL_intr,
+	/* 0x0A   3 INTP1                    */  (void*)NULL_intr,
+	/* 0x0C   4 INTP2                    */  (void*)NULL_intr,
+	/* 0x0E   5 INTP3                    */  (void*)NULL_intr,
+	/* 0x10   6 INTP4                    */  (void*)NULL_intr,
+	/* 0x12   7 INTP5                    */  (void*)NULL_intr,
+	/* 0x14   8 INTST2/INTCSI20/INTIIC20 */  (void*)NULL_intr,
+	/* 0x16   9 INTSR2/INTCSI21/INTIIC21 */  (void*)NULL_intr,
+	/* 0x18  10 INTSRE2/INTTM11H         */  (void*)NULL_intr,
+	/* 0x1A								 */  (void*)0xffff,
+	/* 0x1C								 */  (void*)0xffff,
+	/* 0x1E  11 UART0-TX                 */  (void*)UART0_TX_intr,
+	/* 0x20  12 INTTM0                   */  (void*)TM00_intr,
+	/* 0x22  13 UART0-RX                 */  (void*)UART0_RX_intr,
+	/* 0x24  14 UART0-ER                 */  (void*)UART0_ER_intr,
+	/* 0x26  15 UART1-TX                 */  (void*)UART1_TX_intr,
+	/* 0x28  16 UART1-RX                 */  (void*)UART1_RX_intr, 
+	/* 0x2A  17 UART1-ER                 */  (void*)UART1_ER_intr,
+	/* 0x2C  18 INTIICA0                 */  (void*)NULL_intr,
+	/* 0x2E  19 INTRTIT                  */  (void*)NULL_intr,
+	/* 0x30								 */  (void*)0xffff,
+	/* 0x32  20 INTTM01                  */  (void*)TM01_intr,
+	/* 0x34  21 INTTM02                  */  (void*)TM02_intr,
+	/* 0x36  22 INTTM03                  */  (void*)TM03_intr,
+	/* 0x38  23 INTAD                    */  (void*)ADC_intr,
+	/* 0x3A  24 INTRTC                   */  (void*)NULL_intr,
+	/* 0x3C  25 INTIT                    */  (void*)ITM_intr,
+	/* 0x3E  26 INTKR                    */  (void*)NULL_intr,
+	/* 0x40  27 INTST3/INTCSI30/INTIIC30 */  (void*)NULL_intr,
+	/* 0x42  28 INTSR3/INTCSI31/INTIIC31 */  (void*)NULL_intr,
+	/* 29 INTTM04                  */  (void*)TM04_intr,
+	/* 30 INTTM05                  */  (void*)TM05_intr,
+	/* 31 INTTP6                   */  (void*)NULL_intr,
+	/* 32 INTTP7                   */  (void*)NULL_intr,
+	/* 33 INTCMP0                  */  (void*)NULL_intr,
+	/* 34 INTCMP1                  */  (void*)NULL_intr,
+	/* 35 INTTM06                  */  (void*)TM06_intr,
+	/* 36 INTTM07                  */  (void*)TM07_intr,
+	/* 37 INTPUSB                  */  (void*)NULL_intr,
+	/* 38 INTRSUM                  */  (void*)NULL_intr,
+	/* 39 INTSRE3                  */  (void*)NULL_intr,
+	/* 40 INTKB2_0                 */  (void*)NULL_intr,
+	/* 41 INTKB2_1                 */  (void*)NULL_intr,
+	/* 42 INTFL                    */  (void*)NULL_intr,
+	/* 43 INTKB2_2                 */  (void*)NULL_intr,
+	/* 44 DTC0FIFO                 */  (void*)NULL_intr,
+	/* 45 DTC1FIFO                 */  (void*)NULL_intr,
+	/* 46                          */  (void*)NULL_intr,
+	/* 47                          */  (void*)NULL_intr,
+	/* 48                          */  (void*)NULL_intr,
+	/* 49                          */  (void*)NULL_intr,
+	/* 50                          */  (void*)NULL_intr,
+	/* 51                          */  (void*)NULL_intr,
+	/* 52                          */  (void*)NULL_intr,
+	/* 53                          */  (void*)NULL_intr,
+	/* 54                          */  (void*)NULL_intr,
+	/* 55                          */  (void*)NULL_intr,
+	/* 56                          */  (void*)NULL_intr,
+	/* 57                          */  (void*)NULL_intr,
+	/* 58                          */  (void*)NULL_intr,
+};
+#endif

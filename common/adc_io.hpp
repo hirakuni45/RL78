@@ -1,9 +1,9 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ A/D 制御
+	@brief	RL78 (G13/L1C) グループ A/D 制御
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */

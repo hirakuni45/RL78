@@ -8,9 +8,7 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include "G13/system.hpp"
-#include "G13/sau.hpp"
-#include "G13/intr.hpp"
+#include "common/renesas.hpp"
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
 #ifndef F_CLK
@@ -74,6 +72,7 @@ namespace device {
 		// 受信割り込みマスク設定
 		static void recv_interrupt_mask_(bool f)
 		{
+#if 0
 			switch(get_chanel_no()) {
 			case 0:
 				intr::MK0H.SRMK0 = f;
@@ -88,6 +87,7 @@ namespace device {
 				intr::MK1H.SRMK3 = f;
 				break;
 			}
+#endif
 		}
 
 	public:
@@ -99,6 +99,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		static void send_intrrupt_mask_(bool f)
 		{
+#if 0
 			switch(get_chanel_no()) {
 			case 0:
 				intr::MK0H.STMK0 = f;
@@ -113,6 +114,7 @@ namespace device {
 				intr::MK1H.STMK3 = f;
 				break;
 			}
+#endif
 		}
 
 
@@ -169,7 +171,8 @@ namespace device {
 			@return エラーなら「false」
 		*/
 		//-----------------------------------------------------------------//
-		bool start(uint32_t baud, uint8_t level = 0) {
+		bool start(uint32_t baud, uint8_t level = 0)
+		{
 			intr_level_ = level;
 
 			// ボーレートから分周比の算出
@@ -191,11 +194,7 @@ namespace device {
 			}
 
 			// 対応するユニットを有効にする
-			if(tx_.get_unit_no() == 0) {
-				PER0.SAU0EN = 1;
-			} else {
-				PER0.SAU1EN = 1;
-			}
+			enable(SAUtx::get_peripheral());
 
 			// 各ユニットで、チャネル０、１、２、３で共有の為、
 			// ０、１：PRS0、２、３：PRS1 を使う
@@ -268,6 +267,7 @@ namespace device {
 				--level;
 				level ^= 0x03;
 				// 送信側優先順位
+#if 0
 				switch(get_chanel_no()) {
 				case 0:
 					intr::PR00H.STPR0 = (level) & 1;
@@ -295,6 +295,7 @@ namespace device {
 					break;
 				}
 				recv_interrupt_mask_(0);
+#endif
 			}
 
 			return true;
