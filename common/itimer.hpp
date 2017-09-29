@@ -1,16 +1,14 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ 12 ビット・インターバルタイマー制御
+	@brief	RL78 (G13/L1C) グループ 12 ビット・インターバルタイマー制御
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include "G13/timer.hpp"
-#include "G13/system.hpp"
-#include "G13/intr.hpp"
+#include "common/renesas.hpp"
 #include "common/task.hpp"
 
 namespace device {
@@ -74,10 +72,11 @@ namespace device {
 				return false;
 			}
 
-			PER0.RTCEN = 1;
+			enable(itm::get_peripheral());
 
 			OSMC.WUTMMCK0 = 1;
-			ITMC = (v - 1) | 0x8000;
+
+			itm::ITMC = (v - 1) | 0x8000;
 
 			counter_ = 0;
 
@@ -85,9 +84,8 @@ namespace device {
 			if(level > 0) {
 				--level;
 				level ^= 0x03;
-				intr::PR01H.ITPR = (level) & 1;
-				intr::PR11H.ITPR = (level & 2) >> 1;
-				intr::MK1H.ITMK = 0;
+				intr::set_level(itm::get_peripheral(), level);
+				intr::enable(itm::get_peripheral());
 			}
 
 			return true;
@@ -113,8 +111,8 @@ namespace device {
 				volatile T counter = counter_;
 				while(counter == counter_) sleep_();
 			} else {
-				while(intr::IF1H.ITIF() == 0) sleep_();
-				intr::IF1H.ITIF = 0;
+				while(intr::get_request(itm::get_peripheral()) == 0) sleep_();
+				intr::set_request(itm::get_peripheral(), 0);
 				++counter_;
 			}
 		}
