@@ -3,12 +3,13 @@
 /*!	@file
 	@brief	RL78/G13 割り込み機能を制御するレジスタ定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "common/io_utils.hpp"
+#include "G13/peripheral.hpp"
 
 namespace device {
 
@@ -666,5 +667,80 @@ namespace device {
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		static basic_rw_t< rw8_t<0xFFF37> > KRM;
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  割り込み要求フラグの取得
+			@param[in]	per	ペリフェラル型
+			@return 割り込み発生なら「true」
+		*/
+		//-------------------------------------------------------------//
+		static bool get_request(peripheral per)
+		{
+			switch(per) {
+			case peripheral::ITM:
+				return IF1H.ITIF();
+
+			default:
+				return false;
+			}
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  割り込み要求フラグの設定
+			@param[in]	per	ペリフェラル型
+			@return 割り込み発生なら「true」
+		*/
+		//-------------------------------------------------------------//
+		static void set_request(peripheral per, bool ena)
+		{
+			switch(per) {
+			case peripheral::ITM:
+				IF1H.ITIF = ena;
+				break;
+
+			default:
+				break;
+			}
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  割り込み許可
+		*/
+		//-------------------------------------------------------------//
+		static void enable(peripheral per, bool ena = true)
+		{
+			switch(per) {
+			case peripheral::ITM:
+				intr::MK1H.ITMK = !ena;
+				break;
+			default:
+				break;
+			}
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  割り込みレベル設定
+			@param[in]	level	割り込みレベル（０、１、２）
+		*/
+		//-------------------------------------------------------------//
+		static void set_level(peripheral per, uint8_t level)
+		{
+			switch(per) {
+			case peripheral::ITM:
+				intr::PR01H.ITPR = (level) & 1;
+				intr::PR11H.ITPR = (level & 2) >> 1;
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }
