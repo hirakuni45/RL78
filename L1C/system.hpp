@@ -1,9 +1,9 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ・システム・レジスター定義
+	@brief	RL78/L1C グループ・システム・レジスター定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -140,16 +140,41 @@ namespace device {
 		using T::operator |=;
 		using T::operator &=;
 
-		bit_rw_t<T, bitpos::B7> RTCEN;   ///< リアルタイム・クロック、インターバル・タイマの入力クロック供給の制御
-		bit_rw_t<T, bitpos::B6> IICA1EN; ///< シリアル・インタフェース１の入力クロック供給の制御
+		bit_rw_t<T, bitpos::B7> RTCWEN;  ///< リアルタイム・クロック２
+
 		bit_rw_t<T, bitpos::B5> ADCEN;   ///< A/Dコンバータの入力クロックの制御
 		bit_rw_t<T, bitpos::B4> IICA0EN; ///< シリアル・インタフェース０の入力クロック供給の制御
 		bit_rw_t<T, bitpos::B3> SAU1EN;  ///< シリアル・アレイ・ユニット１の入力クロック供給の制御
 		bit_rw_t<T, bitpos::B2> SAU0EN;  ///< シリアル・アレイ・ユニット０の入力クロック供給の制御
-		bit_rw_t<T, bitpos::B1> TAU1EN;  ///< タイマ・アレイ・ユニット１の入力クロック供給の制御
+
 		bit_rw_t<T, bitpos::B0> TAU0EN;  ///< タイマ・アレイ・ユニット０の入力クロック供給の制御
 	};
 	static per0_t< rw8_t<0xF00F0> > PER0;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	周辺イネーブル・レジスタ１（PER1） @n
+				リセット時：00H
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct per1_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, bitpos::B7> TMKAEN;   ///< インターバル・タイマの入力クロック供給の制御
+
+		bit_rw_t<T, bitpos::B5> CMPEN;
+		bit_rw_t<T, bitpos::B4> TKB20EN;
+		bit_rw_t<T, bitpos::B3> DTCEN;
+
+		bit_rw_t<T, bitpos::B0> DACEN;
+	};
+	static per1_t< rw8_t<0xF007A> > PER1;
 
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -216,6 +241,66 @@ namespace device {
 		bit_rw_t<T, bitpos::B0>  HIOTRM0;
 	};
 	static hiotrm_t< rw8_t<0xF00A0> > HIOTRM;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	PLL制御レジスタ(DSCCTL)
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct dscctl_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, bitpos::B0>  DSCON;
+		bit_rw_t<T, bitpos::B1>  DSCM;
+		bit_rw_t<T, bitpos::B2>  DSFRDIV;
+	};
+	static dscctl_t< rw8_t<0xF02E5> > DSCCTL;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	メイン・クロック制御レジスタ(MCKC)
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct mckc_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, bitpos::B0>  CKSELR;
+		bit_rw_t<T, bitpos::B1>  RDIV0;
+		bit_rw_t<T, bitpos::B2>  RDIV1;
+
+		bits_rw_t<T, bitpos::B1, 2>  RDIV;
+	};
+	static mckc_t< rw8_t<0xF02E6> > MCKC;
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	USBクロック選択レジスタ(UCKSEL)
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class T>
+	struct ucksel_t : public T {
+		using T::operator =;
+		using T::operator ();
+		using T::operator |=;
+		using T::operator &=;
+
+		bit_rw_t<T, bitpos::B0>  UCKSELC;
+	};
+	static ucksel_t< rw16_t<0xF06C4> > UCKSEL;
 
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//

@@ -1,16 +1,25 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ・Ａ／Ｄコンバーター定義
+	@brief	RL78/L1C グループ・Ａ／Ｄコンバーター定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "common/io_utils.hpp"
+#include "L1C/peripheral.hpp"
 
 namespace device {
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief	A/Dコンバータ・モード・レジスタ0（ADM0）
+		@param[in]	T	アクセス・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
@@ -165,4 +174,14 @@ namespace device {
 		bits_rw_t<T, bitpos::B0, 2> ADTES;  ///< A/D変換対象
 	};
 	static adtes_t< rw8_t<0xF0013> > ADTES;
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  ペリフェラル種別を取得
+			@return ペリフェラル種別
+		*/
+		//-------------------------------------------------------------//
+///		peripheral get_peripheral() const { return peripheral::ADC; }
+
 }
