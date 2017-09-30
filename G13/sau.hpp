@@ -3,24 +3,26 @@
 /*!	@file
 	@brief	RL78/G13 グループ・シリアル・アレイ・ユニット定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "common/io_utils.hpp"
+#include "G13/peripheral.hpp"
 
 namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  シリアル・アレイ・ユニット・テンプレート
+		@param[in]	PER		ペリフェラル型
 		@param[in]	UOFS	ユニット・オフセット（0x00、0x40）
 		@param[in]	CHOFS	チャネル・オフセット（0x00, 0x02, 0x04, 0x06)
 		@param[in]	SDR_O	SDR レジスターオフセット（0x00, 0x30, 0x08, 0x04）
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint32_t UOFS, uint32_t CHOFS, uint32_t SDR_O>
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t SDR_O>
 	struct sau_t {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -245,16 +247,26 @@ namespace device {
         */
         //-----------------------------------------------------------------//
 		static uint8_t get_chanel_no() { return CHOFS / 0x02; }
-	};
-	typedef sau_t<0x00, 0x00, 0x00> SAU00;
-	typedef sau_t<0x00, 0x02, 0x02> SAU01;
-	typedef sau_t<0x00, 0x04, 0x34> SAU02;
-	typedef sau_t<0x00, 0x06, 0x36> SAU03;
 
-	typedef sau_t<0x40, 0x00, 0x38> SAU10;
-	typedef sau_t<0x40, 0x02, 0x3A> SAU11;
-	typedef sau_t<0x40, 0x04, 0x04> SAU12;
-	typedef sau_t<0x40, 0x06, 0x06> SAU13;
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  ペリフェラル種別を取得
+			@return ペリフェラル種別
+		*/
+		//-------------------------------------------------------------//
+		static peripheral get_peripheral() { return PER; }
+	};
+	typedef sau_t<peripheral::SAU00, 0x00, 0x00, 0x00> SAU00;
+	typedef sau_t<peripheral::SAU01, 0x00, 0x02, 0x02> SAU01;
+	typedef sau_t<peripheral::SAU02, 0x00, 0x04, 0x34> SAU02;
+	typedef sau_t<peripheral::SAU03, 0x00, 0x06, 0x36> SAU03;
+
+	typedef sau_t<peripheral::SAU10, 0x40, 0x00, 0x38> SAU10;
+	typedef sau_t<peripheral::SAU11, 0x40, 0x02, 0x3A> SAU11;
+	typedef sau_t<peripheral::SAU12, 0x40, 0x04, 0x04> SAU12;
+	typedef sau_t<peripheral::SAU13, 0x40, 0x06, 0x06> SAU13;
+
 
 	namespace SAU {
 
