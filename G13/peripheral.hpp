@@ -54,6 +54,8 @@ namespace device {
 	//-----------------------------------------------------------------//
 	static void enable(peripheral per, bool ena = true)
 	{
+		static uint8_t sau_flag = 0;
+
 		switch(per) {
 		case peripheral::ITM:
 			PER0.RTCEN = ena;
@@ -63,14 +65,31 @@ namespace device {
 		case peripheral::SAU01:
 		case peripheral::SAU02:
 		case peripheral::SAU03:
-			PER0.SAU0EN = ena;
+			{
+				uint8_t flag = 1 << (static_cast<uint8_t>(per) - static_cast<uint8_t>(peripheral::SAU00));
+				if(ena) sau_flag |= flag;
+				else sau_flag &= ~flag;
+				if(sau_flag & 0b1111) {
+					PER0.SAU0EN = 1;
+				} else {
+					PER0.SAU0EN = 0;
+				}
+			}
 			break;
-
 		case peripheral::SAU10:
 		case peripheral::SAU11:
 		case peripheral::SAU12:
 		case peripheral::SAU13:
-			PER0.SAU1EN = ena;
+			{
+				uint8_t flag = 1 << (static_cast<uint8_t>(per) - static_cast<uint8_t>(peripheral::SAU00));
+				if(ena) sau_flag |= flag;
+				else sau_flag &= ~flag;
+				if(sau_flag & 0b11110000) {
+					PER0.SAU1EN = 1;
+				} else {
+					PER0.SAU1EN = 0;
+				}
+			}
 			break;
 
 		default:
