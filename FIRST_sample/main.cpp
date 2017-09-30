@@ -13,7 +13,6 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
 #include "common/renesas.hpp"
 #include "common/port_utils.hpp"
 
