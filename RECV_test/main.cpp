@@ -11,7 +11,8 @@
 #include "common/port_utils.hpp"
 #include "common/itimer.hpp"
 #include "common/fifo.hpp"
-/// #include "common/uart_io.hpp"
+#include "common/uart_io.hpp"
+#include "common/format.hpp"
 
 #include "chip/SEGMENT.hpp"
 
@@ -20,14 +21,12 @@ namespace {
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
 
-#if 0
 	// UART1 の定義（SAU2、SAU3）
 	typedef utils::fifo<uint8_t, 64> BUFFER;
 	typedef device::uart_io<device::SAU00, device::SAU01, BUFFER, BUFFER> UART0;
 	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART1;
 	UART0	uart0_;
 //	UART1	uart1_;
-#endif
 
 	typedef device::PORT<device::port_no::P7, device::bitpos::B3> SG1_A;
 	typedef device::PORT<device::port_no::P7, device::bitpos::B2> SG1_B;
@@ -51,6 +50,48 @@ namespace {
 
 extern "C" {
 
+	void sci_putch(char ch)
+	{
+		uart0_.putch(ch);
+	}
+
+
+	void sci_puts(const char* str)
+	{
+		uart0_.puts(str);
+	}
+
+
+	char sci_getch(void)
+	{
+		return uart0_.getch();
+	}
+
+
+	uint16_t sci_length()
+	{
+		return uart0_.recv_length();
+	}
+
+
+	INTERRUPT_FUNC void UART0_TX_intr(void)
+	{
+		uart0_.send_task();
+	}
+
+
+	INTERRUPT_FUNC void UART0_RX_intr(void)
+	{
+		uart0_.recv_task();
+	}
+
+
+	INTERRUPT_FUNC void UART0_ER_intr(void)
+	{
+		uart0_.error_task();
+	}
+
+
 	INTERRUPT_FUNC void ITM_intr(void)
 	{
 		itm_.task();
@@ -67,6 +108,16 @@ int main(int argc, char* argv[])
 		uint8_t intr_level = 1;
 		itm_.start(60, intr_level);
 	}
+
+	// UART0 の開始
+	{
+		uint8_t intr_level = 1;
+		uart0_.start(115200, intr_level);
+	}
+
+
+	utils::format("Start Digital MIC Reciver\n");
+
 
 	device::PFSEG0 = 0x00;
 	device::PFSEG1 = 0x00;
@@ -92,6 +143,8 @@ int main(int argc, char* argv[])
 			n = 0;
 			++t;
 			if(t >= 100) t = 0;
+
+			utils::format("%d\n") % static_cast<uint16_t>(t);
 
 		}
 		if(n < 20) {
