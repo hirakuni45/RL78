@@ -1,7 +1,7 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ・タイマ・アレイ・ユニット定義
+	@brief	RL78/L1C グループ・タイマ・アレイ・ユニット定義
     @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
 				Released under the MIT license @n
