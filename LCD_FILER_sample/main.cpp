@@ -45,9 +45,10 @@
 namespace {
 
 	// 送信、受信バッファの定義
-	typedef utils::fifo<uint8_t, 32> buffer;
+	typedef utils::fifo<uint8_t, 32> BUFFER;
 	// UART の定義（SAU02、SAU03）
-	device::uart_io<device::SAU02, device::SAU03, buffer, buffer> uart_;
+	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART1;
+	UART1	uart_;
 
 	device::itimer<uint8_t> itm_;
 
@@ -87,8 +88,8 @@ namespace {
 	graphics::filer<sdc_io, bitmap> filer_(sdc_, bitmap_);
 
 #ifdef ADC_SWITCH
-	typedef device::adc_io<4, utils::null_task> adc;
-	adc adc_;
+	typedef device::adc_io<4, utils::null_task> ADC;
+	ADC		adc_;
 
 	enum class SWITCH : uint8_t {
 		RIGHT,
@@ -170,31 +171,31 @@ extern "C" {
 	}
 
 
-	void UART1_TX_intr(void)
+	INTERRUPT_FUNC void UART1_TX_intr(void)
 	{
 		uart_.send_task();
 	}
 
 
-	void UART1_RX_intr(void)
+	INTERRUPT_FUNC void UART1_RX_intr(void)
 	{
 		uart_.recv_task();
 	}
 
 
-	void UART1_ER_intr(void)
+	INTERRUPT_FUNC void UART1_ER_intr(void)
 	{
 		uart_.error_task();
 	}
 
 
-	void ADC_intr(void)
+	INTERRUPT_FUNC void ADC_intr(void)
 	{
 		adc_.task();
 	}
 
 
-	void ITM_intr(void)
+	INTERRUPT_FUNC void ITM_intr(void)
 	{
 		itm_.task();
 	}
@@ -226,7 +227,7 @@ int main(int argc, char* argv[])
 		device::PM2.B2 = 1;
 		device::PM2.B3 = 1;
 		uint8_t intr_level = 1;
-		adc_.start(adc::REFP::VDD, adc::REFM::VSS, intr_level);
+		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
 	}
 
 	// SD カードアクセス開始
