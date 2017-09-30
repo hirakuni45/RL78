@@ -613,6 +613,9 @@ namespace device {
 			case peripheral::ITM:
 				return IF1H.TMKAIF();
 
+			case peripheral::ADC:
+				return IF1H.ADIF();
+
 			default:
 				return false;
 			}
@@ -631,6 +634,10 @@ namespace device {
 			switch(per) {
 			case peripheral::ITM:
 				IF1H.TMKAIF = ena;
+				break;
+
+			case peripheral::ADC:
+				IF1H.ADIF = ena;
 				break;
 
 			default:
@@ -652,6 +659,10 @@ namespace device {
 
 			case peripheral::ITM:
 				MK1H.TMKAMK = !ena;
+				break;
+
+			case peripheral::ADC:
+				MK1H.ADMK = !ena;
 				break;
 
 			case peripheral::SAU00:  // UART0-TX
@@ -699,6 +710,11 @@ namespace device {
 			case peripheral::ITM:
 				PR01H.TMKAPR = (level) & 1;
 				PR11H.TMKAPR = (level & 2) >> 1;
+				break;
+
+			case peripheral::ADC:
+				PR01H.ADPR = (level) & 1;
+				PR11H.ADPR = (level & 2) >> 1;
 				break;
 
 			case peripheral::SAU00:  // UART0-TX

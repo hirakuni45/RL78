@@ -62,6 +62,10 @@ namespace device {
 			PER1.TMKAEN = ena;
 			break;
 
+		case peripheral::ADC:
+			PER0.ADCEN = 1;
+			break;
+
 		case peripheral::SAU00:
 		case peripheral::SAU01:
 		case peripheral::SAU02:
