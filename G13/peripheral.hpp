@@ -70,7 +70,8 @@ namespace device {
 		//-------------------------------------------------------------//
 		static void enable(peripheral per, bool ena = true)
 		{
-			static uint8_t sau_flag = 0;
+			static uint8_t sau_refc = 0;
+			static uint8_t tau_refc = 0;
 
 			switch(per) {
 			case peripheral::ITM:
@@ -86,10 +87,10 @@ namespace device {
 			case peripheral::SAU02:
 			case peripheral::SAU03:
 				{
-					uint8_t flag = 1 << (static_cast<uint8_t>(per) - static_cast<uint8_t>(peripheral::SAU00));
-					if(ena) sau_flag |= flag;
-					else sau_flag &= ~flag;
-					if(sau_flag & 0b1111) {
+					uint8_t refc = 1 << (static_cast<uint8_t>(per) - static_cast<uint8_t>(peripheral::SAU00));
+					if(ena) sau_refc |= refc;
+					else sau_refc &= ~refc;
+					if(sau_refc & 0b1111) {
 						PER0.SAU0EN = 1;
 					} else {
 						PER0.SAU0EN = 0;
@@ -101,16 +102,35 @@ namespace device {
 			case peripheral::SAU12:
 			case peripheral::SAU13:
 				{
-					uint8_t flag = 1 << (static_cast<uint8_t>(per) - static_cast<uint8_t>(peripheral::SAU00));
-					if(ena) sau_flag |= flag;
-					else sau_flag &= ~flag;
-					if(sau_flag & 0b11110000) {
+					uint8_t refc = 1 << (static_cast<uint8_t>(per) - static_cast<uint8_t>(peripheral::SAU00));
+					if(ena) sau_refc |= refc;
+					else sau_refc &= ~refc;
+					if(sau_refc & 0b11110000) {
 						PER0.SAU1EN = 1;
 					} else {
 						PER0.SAU1EN = 0;
 					}
 				}
 				break;
+
+			case peripheral::TAU00:
+			case peripheral::TAU01:
+			case peripheral::TAU02:
+			case peripheral::TAU03:
+			case peripheral::TAU04:
+			case peripheral::TAU05:
+			case peripheral::TAU06:
+			case peripheral::TAU07:
+				{
+					uint8_t refc = 1 << (static_cast<uint8_t>(per) - static_cast<uint8_t>(peripheral::TAU00));
+					if(ena) tau_refc |= refc;
+					else tau_refc &= ~refc;
+					if(tau_refc) {
+						PER0.TAU0EN = 1;
+					} else {
+						PER0.TAU0EN = 0;
+					}
+				}
 
 			default:
 				break;
