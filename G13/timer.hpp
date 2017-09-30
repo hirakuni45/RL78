@@ -13,7 +13,7 @@
 
 namespace device {
 
-	namespace itm {
+	struct itm {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -43,5 +43,5 @@ namespace device {
 		*/
 		//-----------------------------------------------------------------//
 		static peripheral get_peripheral() { return peripheral::ITM; }
-	}
+	};
 }
