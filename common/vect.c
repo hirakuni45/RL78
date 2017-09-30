@@ -89,6 +89,60 @@ void UART1_ER_intr(void) ATTR;
 void UART1_ER_intr(void) { }
 
 
+void UART2_TX_intr(void) ATTR;
+//-----------------------------------------------------------------//
+/*!
+	@brief  UART2-TX 割り込み
+*/
+//-----------------------------------------------------------------//
+void UART2_TX_intr(void) { }
+
+
+void UART2_RX_intr(void) ATTR;
+//-----------------------------------------------------------------//
+/*!
+	@brief  UART2-RX 割り込み
+*/
+//-----------------------------------------------------------------//
+void UART2_RX_intr(void) { }
+
+
+void UART2_ER_intr(void) ATTR;
+//-----------------------------------------------------------------//
+/*!
+	@brief  UART2-ER 割り込み
+*/
+//-----------------------------------------------------------------//
+void UART2_ER_intr(void) { }
+
+
+void UART3_TX_intr(void) ATTR;
+//-----------------------------------------------------------------//
+/*!
+	@brief  UART3-TX 割り込み
+*/
+//-----------------------------------------------------------------//
+void UART3_TX_intr(void) { }
+
+
+void UART3_RX_intr(void) ATTR;
+//-----------------------------------------------------------------//
+/*!
+	@brief  UART3-RX 割り込み
+*/
+//-----------------------------------------------------------------//
+void UART3_RX_intr(void) { }
+
+
+void UART3_ER_intr(void) ATTR;
+//-----------------------------------------------------------------//
+/*!
+	@brief  UART3-ER 割り込み
+*/
+//-----------------------------------------------------------------//
+void UART3_ER_intr(void) { }
+
+
 void TM00_intr(void) ATTR;
 //-----------------------------------------------------------------//
 /*!
@@ -266,9 +320,9 @@ const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
 	/*  5 INTP3                    */  (void*)NULL_intr,
 	/*  6 INTP4                    */  (void*)NULL_intr,
 	/*  7 INTP5                    */  (void*)NULL_intr,
-	/*  8 INTST2/INTCSI20/INTIIC20 */  (void*)NULL_intr,
-	/*  9 INTSR2/INTCSI21/INTIIC21 */  (void*)NULL_intr,
-	/* 10 INTSRE2/INTTM11H         */  (void*)NULL_intr,
+	/*  8 INTST2/INTCSI20/INTIIC20 */  (void*)UART2_TX_intr,
+	/*  9 INTSR2/INTCSI21/INTIIC21 */  (void*)UART2_RX_intr,
+	/* 10 INTSRE2/INTTM11H         */  (void*)UART2_ER_intr,
 	/* 11 INTDMA0                  */  (void*)NULL_intr,
 	/* 12 INTDMA1                  */  (void*)NULL_intr,
 	/* 13 UART0-TX                 */  (void*)UART0_TX_intr,
@@ -286,9 +340,9 @@ const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
 	/* 25 INTRTC                   */  (void*)NULL_intr,
 	/* 26 INTIT                    */  (void*)ITM_intr,
 	/* 27 INTKR                    */  (void*)NULL_intr,
-	/* 28 INTST3/INTCSI30/INTIIC30 */  (void*)NULL_intr,
-	/* 29 INTSR3/INTCSI31/INTIIC31 */  (void*)NULL_intr,
-	/* 30 INTTM13                  */  (void*)NULL_intr,
+	/* 28 INTST3/INTCSI30/INTIIC30 */  (void*)UART3_TX_intr,
+	/* 29 INTSR3/INTCSI31/INTIIC31 */  (void*)UART3_RX_intr,
+	/* 30 INTTM13                  */  (void*)TM13_intr,
 	/* 31 INTTM04                  */  (void*)TM04_intr,
 	/* 32 INTTM05                  */  (void*)TM05_intr,
 	/* 33 INTTM06                  */  (void*)TM06_intr,
@@ -302,7 +356,7 @@ const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
 	/* 41 INTTM10                  */  (void*)TM10_intr,
 	/* 42 INTTM11                  */  (void*)TM11_intr,
 	/* 43 INTTM12                  */  (void*)TM12_intr,
-	/* 44 INTSRE3/INTTM13H         */  (void*)TM13_intr,
+	/* 44 INTSRE3/INTTM13H         */  (void*)UART3_ER_intr,
 	/* 45 INTMD                    */  (void*)NULL_intr,
 	/* 46 INTIICA1                 */  (void*)NULL_intr,
 	/* 47 INTFL                    */  (void*)NULL_intr,
@@ -333,9 +387,9 @@ const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
 	/* 0x0E   5 INTP3                    */  (void*)NULL_intr,
 	/* 0x10   6 INTP4                    */  (void*)NULL_intr,
 	/* 0x12   7 INTP5                    */  (void*)NULL_intr,
-	/* 0x14   8 INTST2/INTCSI20/INTIIC20 */  (void*)NULL_intr,
-	/* 0x16   9 INTSR2/INTCSI21/INTIIC21 */  (void*)NULL_intr,
-	/* 0x18  10 INTSRE2/INTTM11H         */  (void*)NULL_intr,
+	/* 0x14   8 INTST2/INTCSI20/INTIIC20 */  (void*)UART2_TX_intr,
+	/* 0x16   9 INTSR2/INTCSI21/INTIIC21 */  (void*)UART2_RX_intr,
+	/* 0x18  10 INTSRE2/INTTM11H         */  (void*)UART2_ER_intr,
 	/* 0x1A								 */  (void*)0xffff,
 	/* 0x1C								 */  (void*)0xffff,
 	/* 0x1E  11 UART0-TX                 */  (void*)UART0_TX_intr,
@@ -355,37 +409,37 @@ const void* intr_vec_tables[] __attribute__ ((section (".ivec"))) = {
 	/* 0x3A  24 INTRTC                   */  (void*)NULL_intr,
 	/* 0x3C  25 INTIT                    */  (void*)ITM_intr,
 	/* 0x3E  26 INTKR                    */  (void*)NULL_intr,
-	/* 0x40  27 INTST3/INTCSI30/INTIIC30 */  (void*)NULL_intr,
-	/* 0x42  28 INTSR3/INTCSI31/INTIIC31 */  (void*)NULL_intr,
-	/* 29 INTTM04                  */  (void*)TM04_intr,
-	/* 30 INTTM05                  */  (void*)TM05_intr,
-	/* 31 INTTP6                   */  (void*)NULL_intr,
-	/* 32 INTTP7                   */  (void*)NULL_intr,
-	/* 33 INTCMP0                  */  (void*)NULL_intr,
-	/* 34 INTCMP1                  */  (void*)NULL_intr,
-	/* 35 INTTM06                  */  (void*)TM06_intr,
-	/* 36 INTTM07                  */  (void*)TM07_intr,
-	/* 37 INTPUSB                  */  (void*)NULL_intr,
-	/* 38 INTRSUM                  */  (void*)NULL_intr,
-	/* 39 INTSRE3                  */  (void*)NULL_intr,
-	/* 40 INTKB2_0                 */  (void*)NULL_intr,
-	/* 41 INTKB2_1                 */  (void*)NULL_intr,
-	/* 42 INTFL                    */  (void*)NULL_intr,
-	/* 43 INTKB2_2                 */  (void*)NULL_intr,
-	/* 44 DTC0FIFO                 */  (void*)NULL_intr,
-	/* 45 DTC1FIFO                 */  (void*)NULL_intr,
-	/* 46                          */  (void*)NULL_intr,
-	/* 47                          */  (void*)NULL_intr,
-	/* 48                          */  (void*)NULL_intr,
-	/* 49                          */  (void*)NULL_intr,
-	/* 50                          */  (void*)NULL_intr,
-	/* 51                          */  (void*)NULL_intr,
-	/* 52                          */  (void*)NULL_intr,
-	/* 53                          */  (void*)NULL_intr,
-	/* 54                          */  (void*)NULL_intr,
-	/* 55                          */  (void*)NULL_intr,
-	/* 56                          */  (void*)NULL_intr,
-	/* 57                          */  (void*)NULL_intr,
-	/* 58                          */  (void*)NULL_intr,
+	/* 0x40  27 INTST3/INTCSI30/INTIIC30 */  (void*)UART3_TX_intr,
+	/* 0x42  28 INTSR3/INTCSI31/INTIIC31 */  (void*)UART3_RX_intr,
+	/* 0x44                              */  (void*)0xffff,
+	/* 0x46  29 INTTM04                  */  (void*)TM04_intr,
+	/* 0x48  30 INTTM05                  */  (void*)TM05_intr,
+	/* 0x4A  31 INTTP6                   */  (void*)NULL_intr,
+	/* 0x4C  32 INTTP7                   */  (void*)NULL_intr,
+	/* 0x4E                              */  (void*)0xffff,
+	/* 0x50  33 INTCMP0                  */  (void*)NULL_intr,
+	/* 0x52  34 INTCMP1                  */  (void*)NULL_intr,
+	/* 0x54  35 INTTM06                  */  (void*)TM06_intr,
+	/* 0x56  36 INTTM07                  */  (void*)TM07_intr,
+	/* 0x58  37 INTPUSB                  */  (void*)NULL_intr,
+	/* 0x5A  38 INTRSUM                  */  (void*)NULL_intr,
+	/* 0x5C  39 INTSRE3                  */  (void*)UART3_ER_intr,
+	/* 0x5E  40 INTKB2_0                 */  (void*)NULL_intr,
+	/* 0x60  41 INTKB2_1                 */  (void*)NULL_intr,
+	/* 0x62  42 INTFL                    */  (void*)NULL_intr,
+	/* 0x64  43 INTKB2_2                 */  (void*)NULL_intr,
+	/* 0x66  44 DTC0FIFO                 */  (void*)NULL_intr,
+	/* 0x68  45 DTC1FIFO                 */  (void*)NULL_intr,
+	/* 0x6A  46                          */  (void*)NULL_intr,
+	/* 0x6C  47                          */  (void*)NULL_intr,
+	/* 0x6E  48                          */  (void*)NULL_intr,
+	/* 0x70  49                          */  (void*)NULL_intr,
+	/* 0x72  50                          */  (void*)NULL_intr,
+	/* 0x74  51                          */  (void*)NULL_intr,
+	/* 0x76  52                          */  (void*)NULL_intr,
+	/* 0x78  53                          */  (void*)NULL_intr,
+	/* 0x7A  54                          */  (void*)NULL_intr,
+	/* 0x7C  55                          */  (void*)NULL_intr,
+	/* 0x7E  56                          */  (void*)NULL_intr,
 };
 #endif
