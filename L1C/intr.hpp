@@ -13,7 +13,7 @@
 
 namespace device {
 
-	namespace intr {
+	struct intr {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -804,5 +804,5 @@ namespace device {
 				break;
 			}
 		}
-	}
+	};
 }
