@@ -685,6 +685,23 @@ namespace device {
 			case peripheral::ADC:
 				return IF1H.ADIF();
 
+			case peripheral::SAU00:  // UART0-TX
+				return IF0H.STIF0();
+			case peripheral::SAU01:  // UART0-RX
+				return IF0H.SRIF0();
+			case peripheral::SAU02:  // UART1-TX
+				return IF1L.STIF1();
+			case peripheral::SAU03:  // UART1-RX
+				return IF1L.SRIF1();
+			case peripheral::SAU10:  // UART2-TX
+				return IF0H.STIF2();
+			case peripheral::SAU11:  // UART2-RX
+				return IF0H.SRIF2();
+			case peripheral::SAU12:  // UART3-TX
+				return IF1H.STIF3();
+			case peripheral::SAU13:  // UART3-RX
+				return IF1H.SRIF3();
+
 			default:
 				return false;
 			}
@@ -707,6 +724,31 @@ namespace device {
 
 			case peripheral::ADC:
 				IF1H.ADIF = ena;
+				break;
+
+			case peripheral::SAU00:  // UART0-TX
+				IF0H.STIF0 = ena;
+				break;
+			case peripheral::SAU01:  // UART0-RX
+				IF0H.SRIF0 = ena;
+				break;
+			case peripheral::SAU02:  // UART1-TX
+				IF1L.STIF1 = ena;
+				break;
+			case peripheral::SAU03:  // UART1-RX
+				IF1L.SRIF1 = ena;
+				break;
+			case peripheral::SAU10:  // UART2-TX
+				IF0H.STIF2 = ena;
+				break;
+			case peripheral::SAU11:  // UART2-RX
+				IF0H.SRIF2 = ena;
+				break;
+			case peripheral::SAU12:  // UART3-TX
+				IF1H.STIF3 = ena;
+				break;
+			case peripheral::SAU13:  // UART3-RX
+				IF1H.SRIF3 = ena;
 				break;
 
 			default:
