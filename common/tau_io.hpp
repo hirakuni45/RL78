@@ -1,9 +1,9 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ タイマ・アレイ・ユニット制御
+	@brief	RL78/(G13/L1C) グループ タイマ・アレイ・ユニット制御
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -36,14 +36,6 @@ namespace device {
 		static TASK task_;
 
 		uint8_t	intr_level_ = 0;
-
-		void enable_per_(bool f = true) {  // 対応するユニットを有効にする
-			if(TAU::get_unit_no() == 0) {
-				PER0.TAU0EN = f;
-			} else {
-				PER0.TAU1EN = f;
-			}
-		}
 
 		enum class mode {
 			INTERVAL = 0,           ///< インターバル・タイマ
@@ -93,146 +85,18 @@ namespace device {
 			}
 		}
 
-		void interrupt_mask_(bool f)
-		{
-			if(TAU::get_unit_no() == 0) {
-				switch(TAU::get_chanel_no()) {
-				case 0:
-					intr::MK1L.TMMK00 = f;
-					break;
-				case 1:
-					intr::MK1L.TMMK01 = f;
-					break;
-				case 2:
-					intr::MK1L.TMMK02 = f;
-					break;
-				case 3:
-					intr::MK1L.TMMK03 = f;
-					break;
-				case 4:
-					intr::MK1H.TMMK04 = f;
-					break;
-				case 5:
-					intr::MK2L.TMMK05 = f;
-					break;
-				case 6:
-					intr::MK2L.TMMK06 = f;
-					break;
-				case 7:
-					intr::MK2L.TMMK07 = f;
-					break;
-				}
-			} else {
-				switch(TAU::get_chanel_no()) {
-				case 0:
-					intr::MK2H.TMMK10 = f;
-					break;
-				case 1:
-					intr::MK2H.TMMK11 = f;
-					break;
-				case 2:
-					intr::MK2H.TMMK12 = f;
-					break;
-				case 3:
-					intr::MK1H.TMMK13 = f;
-					break;
-				case 4:
-					intr::MK3L.TMMK14 = f;
-					break;
-				case 5:
-					intr::MK3L.TMMK15 = f;
-					break;
-				case 6:
-					intr::MK3L.TMMK16 = f;
-					break;
-				case 7:
-					intr::MK3L.TMMK17 = f;
-					break;
-				}
-			}
-		}
-
 		void set_interrupt_() {
+
 			if(intr_level_ == 0) {
-				interrupt_mask_(1);
+				intr::enable(TAU::get_peripheral(), false);
 				return;
 			}
 
 			auto level = intr_level_;
 			--level;
 			level ^= 0x03;
-			if(TAU::get_unit_no() == 0) {
-				switch(TAU::get_chanel_no()) {
-				case 0:
-					intr::PR01L.TMPR00 = (level) & 1;
-					intr::PR11L.TMPR00 = (level & 2) >> 1;
-					break;
-				case 1:
-					intr::PR01L.TMPR01 = (level) & 1;
-					intr::PR11L.TMPR01 = (level & 2) >> 1;
-					break;
-				case 2:
-					intr::PR01L.TMPR02 = (level) & 1;
-					intr::PR11L.TMPR02 = (level & 2) >> 1;
-					break;
-				case 3:
-					intr::PR01L.TMPR03 = (level) & 1;
-					intr::PR11L.TMPR03 = (level & 2) >> 1;
-					break;
-				case 4:
-					intr::PR01H.TMPR04 = (level) & 1;
-					intr::PR11H.TMPR04 = (level & 2) >> 1;
-					break;
-				case 5:
-					intr::PR02L.TMPR05 = (level) & 1;
-					intr::PR12L.TMPR05 = (level & 2) >> 1;
-					break;
-				case 6:
-					intr::PR02L.TMPR06 = (level) & 1;
-					intr::PR12L.TMPR06 = (level & 2) >> 1;
-					break;
-				case 7:
-					intr::PR02L.TMPR07 = (level) & 1;
-					intr::PR12L.TMPR07 = (level & 2) >> 1;
-					break;
-				}
-			} else {
-				switch(TAU::get_chanel_no()) {
-				case 0:
-					intr::PR02H.TMPR10 = (level) & 1;
-					intr::PR12H.TMPR10 = (level & 2) >> 1;
-					break;
-				case 1:
-					intr::PR02H.TMPR11 = (level) & 1;
-					intr::PR12H.TMPR11 = (level & 2) >> 1;
-					break;
-				case 2:
-					intr::PR02H.TMPR12 = (level) & 1;
-					intr::PR12H.TMPR12 = (level & 2) >> 1;
-					break;
-				case 3:
-					intr::PR01H.TMPR13 = (level) & 1;
-					intr::PR11H.TMPR13 = (level & 2) >> 1;
-					break;
-				case 4:
-					intr::PR03L.TMPR14 = (level) & 1;
-					intr::PR13L.TMPR14 = (level & 2) >> 1;
-					break;
-				case 5:
-					intr::PR03L.TMPR15 = (level) & 1;
-					intr::PR13L.TMPR15 = (level & 2) >> 1;
-					break;
-				case 6:
-					intr::PR03L.TMPR16 = (level) & 1;
-					intr::PR13L.TMPR16 = (level & 2) >> 1;
-					break;
-				case 7:
-					intr::PR03L.TMPR17 = (level) & 1;
-					intr::PR13L.TMPR17 = (level & 2) >> 1;
-					break;
-				}
-			}
-			interrupt_mask_(0);
+			intr::set_level(TAU::get_peripheral(), level);
+			intr::enable(TAU::get_peripheral());
 		}
 
 	public:
@@ -329,7 +193,7 @@ namespace device {
 		{
 			intr_level_ = level;
 
-			enable_per_();
+			manage::enable(TAU::get_peripheral());
 
 			mode_ = mode::INTERVAL;
 			if(!set_freq(freq)) {
@@ -366,7 +230,7 @@ namespace device {
 		{
 			intr_level_ = level;
 
-			enable_per_();
+			manage::enable(TAU::get_peripheral());
 
 			mode_ = mode::INTERVAL;
 
