@@ -649,15 +649,34 @@ namespace device {
 		static void enable(peripheral per, bool ena = true)
 		{
 			switch(per) {
+
 			case peripheral::ITM:
 				MK1H.TMKAMK = !ena;
 				break;
 
-			case peripheral::SAU00:
+			case peripheral::SAU00:  // UART0-TX
 				MK0H.STMK0 = !ena;
 				break;
-			case peripheral::SAU01:
+			case peripheral::SAU01:  // UART0-RX
 				MK0H.SRMK0 = !ena;
+				break;
+			case peripheral::SAU02:  // UART1-TX
+				MK1L.STMK1 = !ena;
+				break;
+			case peripheral::SAU03:  // UART1-RX
+				MK1L.SRMK1 = !ena;
+				break;
+			case peripheral::SAU10:  // UART2-TX
+				MK0H.STMK2 = !ena;
+				break;
+			case peripheral::SAU11:  // UART2-RX
+				MK0H.SRMK2 = !ena;
+				break;
+			case peripheral::SAU12:  // UART3-TX
+				MK1H.STMK3 = !ena;
+				break;
+			case peripheral::SAU13:  // UART3-RX
+				MK1H.SRMK3 = !ena;
 				break;
 
 			default:
@@ -676,10 +695,45 @@ namespace device {
 		static void set_level(peripheral per, uint8_t level)
 		{
 			switch(per) {
+
 			case peripheral::ITM:
 				PR01H.TMKAPR = (level) & 1;
 				PR11H.TMKAPR = (level & 2) >> 1;
 				break;
+
+			case peripheral::SAU00:  // UART0-TX
+				PR00H.STPR0 = (level) & 1;
+				PR10H.STPR0 = (level & 2) >> 1;
+				break;
+			case peripheral::SAU01:  // UART0-RX
+				PR00H.SRPR0 = (level) & 1;
+				PR10H.SRPR0 = (level & 2) >> 1;
+				break;
+			case peripheral::SAU02:  // UART1-TX
+				PR01L.STPR1 = (level) & 1;
+				PR11L.STPR1 = (level & 2) >> 1;
+				break;
+			case peripheral::SAU03:  // UART1-RX
+				PR01L.SRPR1 = (level) & 1;
+				PR11L.SRPR1 = (level & 2) >> 1;
+				break;
+			case peripheral::SAU10:  // UART2-TX
+				PR00H.STPR2 = (level) & 1;
+				PR10H.STPR2 = (level & 2) >> 1;
+				break;
+			case peripheral::SAU11:  // UART2-RX
+				PR00H.SRPR2 = (level) & 1;
+				PR10H.SRPR2 = (level & 2) >> 1;
+				break;
+			case peripheral::SAU12:  // UART3-TX
+				PR01H.STPR3 = (level) & 1;
+				PR11H.STPR3 = (level & 2) >> 1;
+				break;
+			case peripheral::SAU13:  // UART3-RX
+				PR01H.SRPR3 = (level) & 1;
+				PR11H.SRPR3 = (level & 2) >> 1;
+				break;
+
 			default:
 				break;
 			}

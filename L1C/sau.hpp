@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/L1C グループ・シリアル・アレイ・ユニット定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -255,7 +255,7 @@ namespace device {
 			@return ペリフェラル種別
 		*/
 		//-------------------------------------------------------------//
-		peripheral get_peripheral() const { return PER; }
+		static peripheral get_peripheral() { return PER; }
 	};
 	typedef sau_t<peripheral::SAU00, 0x00, 0x00, 0x00> SAU00;
 	typedef sau_t<peripheral::SAU01, 0x00, 0x02, 0x02> SAU01;
@@ -266,6 +266,7 @@ namespace device {
 	typedef sau_t<peripheral::SAU11, 0x40, 0x02, 0x3A> SAU11;
 	typedef sau_t<peripheral::SAU12, 0x40, 0x04, 0x04> SAU12;
 	typedef sau_t<peripheral::SAU13, 0x40, 0x06, 0x06> SAU13;
+
 
 	namespace SAU {
 
