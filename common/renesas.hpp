@@ -27,7 +27,6 @@
 #include "L1C/port.hpp"
 #include "L1C/system.hpp"
 #include "L1C/adc.hpp"
-#include "L1C/dma.hpp"
 #include "L1C/iica.hpp"
 #include "L1C/intr.hpp"
 #include "L1C/sau.hpp"
