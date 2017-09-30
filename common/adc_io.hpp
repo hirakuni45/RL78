@@ -117,7 +117,7 @@ namespace device {
 			level_ = level;
 
 			// ADC 許可
-			enable(adc::get_peripheral());
+			manage::enable(adc::get_peripheral());
 
 			// ポート設定
 //			ADPC = 0x00;  // all port A/D

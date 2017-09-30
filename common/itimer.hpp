@@ -72,7 +72,7 @@ namespace device {
 				return false;
 			}
 
-			enable(itm::get_peripheral());
+			manage::enable(itm::get_peripheral());
 
 			OSMC.WUTMMCK0 = 1;
 

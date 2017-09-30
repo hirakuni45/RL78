@@ -148,7 +148,7 @@ namespace device {
 			}
 
 			// 対応するユニットを有効にする（SAUtx を代表とする）
-			enable(SAUtx::get_peripheral());
+			manage::enable(SAUtx::get_peripheral());
 
 			// 各ユニットで、チャネル０、１、２、３で共有の為、
 			// ０、１：PRS0、２、３：PRS1 を使う
@@ -180,8 +180,8 @@ namespace device {
 			SAUtx::SOE = 1;	// シリアル出力許可(Txd)
 
 			// 対応するポートの設定
-			set_uart_port(SAUtx::get_peripheral());
-			set_uart_port(SAUrx::get_peripheral());
+			manage::set_uart_port(SAUtx::get_peripheral());
+			manage::set_uart_port(SAUrx::get_peripheral());
 
 			send_stall_ = true;
 
