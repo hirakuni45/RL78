@@ -623,28 +623,37 @@ namespace device {
 
 			case peripheral::SAU00:  // UART0-TX
 				return IF0H.STIF0();
-				break;
 			case peripheral::SAU01:  // UART0-RX
 				return IF0H.SRIF0();
-				break;
 			case peripheral::SAU02:  // UART1-TX
 				return IF1L.STIF1();
-				break;
 			case peripheral::SAU03:  // UART1-RX
 				return IF1L.SRIF1();
-				break;
 			case peripheral::SAU10:  // UART2-TX
 				return IF0H.STIF2();
-				break;
 			case peripheral::SAU11:  // UART2-RX
 				return IF0H.SRIF2();
-				break;
 			case peripheral::SAU12:  // UART3-TX
 				return IF1H.STIF3();
-				break;
 			case peripheral::SAU13:  // UART3-RX
 				return IF1H.SRIF3();
-				break;
+
+			case peripheral::TAU00:  // TAU00
+				return IF0H.TMIF00();
+			case peripheral::TAU01:  // TAU01
+				return IF1L.TMIF01();
+			case peripheral::TAU02:  // TAU02
+				return IF1H.TMIF02();
+			case peripheral::TAU03:  // TAU03
+				return IF1H.TMIF03();
+			case peripheral::TAU04:  // TAU04
+				return IF2L.TMIF04();
+			case peripheral::TAU05:  // TAU05
+				return IF2L.TMIF05();
+			case peripheral::TAU06:  // TAU06
+				return IF2H.TMIF06();
+			case peripheral::TAU07:  // TAU07
+				return IF2H.TMIF07();
 
 			default:
 				return false;
@@ -695,6 +704,31 @@ namespace device {
 				IF1H.SRIF3 = ena;
 				break;
 
+			case peripheral::TAU00:  // TAU00
+				IF0H.TMIF00 = ena;
+				break;
+			case peripheral::TAU01:  // TAU01
+				IF1L.TMIF01 = ena;
+				break;
+			case peripheral::TAU02:  // TAU02
+				IF1H.TMIF02 = ena;
+				break;
+			case peripheral::TAU03:  // TAU03
+				IF1H.TMIF03 = ena;
+				break;
+			case peripheral::TAU04:  // TAU04
+				IF2L.TMIF04 = ena;
+				break;
+			case peripheral::TAU05:  // TAU05
+				IF2L.TMIF05 = ena;
+				break;
+			case peripheral::TAU06:  // TAU06
+				IF2H.TMIF06 = ena;
+				break;
+			case peripheral::TAU07:  // TAU07
+				IF2H.TMIF07 = ena;
+				break;
+
 			default:
 				break;
 			}
@@ -743,6 +777,31 @@ namespace device {
 				break;
 			case peripheral::SAU13:  // UART3-RX
 				MK1H.SRMK3 = !ena;
+				break;
+
+			case peripheral::TAU00:  // TAU00
+				MK0H.TMMK00 = !ena;
+				break;
+			case peripheral::TAU01:  // TAU01
+				MK1L.TMMK01 = !ena;
+				break;
+			case peripheral::TAU02:  // TAU02
+				MK1H.TMMK02 = !ena;
+				break;
+			case peripheral::TAU03:  // TAU03
+				MK1H.TMMK03 = !ena;
+				break;
+			case peripheral::TAU04:  // TAU04
+				MK2L.TMMK04 = !ena;
+				break;
+			case peripheral::TAU05:  // TAU05
+				MK2L.TMMK05 = !ena;
+				break;
+			case peripheral::TAU06:  // TAU06
+				MK2H.TMMK06 = !ena;
+				break;
+			case peripheral::TAU07:  // TAU07
+				MK2H.TMMK07 = !ena;
 				break;
 
 			default:
@@ -803,6 +862,39 @@ namespace device {
 			case peripheral::SAU13:  // UART3-RX
 				PR01H.SRPR3 = (level) & 1;
 				PR11H.SRPR3 = (level & 2) >> 1;
+				break;
+
+			case peripheral::TAU00:  // TAU00
+				PR00H.TMPR00 = (level) & 1;
+				PR10H.TMPR00 = (level & 2) >> 1;
+				break;
+			case peripheral::TAU01:  // TAU01
+				PR01L.TMPR01 = (level) & 1;
+				PR11L.TMPR01 = (level & 2) >> 1;
+				break;
+			case peripheral::TAU02:  // TAU02
+				PR01H.TMPR02 = (level) & 1;
+				PR11H.TMPR02 = (level & 2) >> 1;
+				break;
+			case peripheral::TAU03:  // TAU03
+				PR01H.TMPR03 = (level) & 1;
+				PR11H.TMPR03 = (level & 2) >> 1;
+				break;
+			case peripheral::TAU04:  // TAU04
+				PR02L.TMPR04 = (level) & 1;
+				PR12L.TMPR04 = (level & 2) >> 1;
+				break;
+			case peripheral::TAU05:  // TAU05
+				PR02L.TMPR05 = (level) & 1;
+				PR12L.TMPR05 = (level & 2) >> 1;
+				break;
+			case peripheral::TAU06:  // TAU06
+				PR02H.TMPR06 = (level) & 1;
+				PR12H.TMPR06 = (level & 2) >> 1;
+				break;
+			case peripheral::TAU07:  // TAU07
+				PR02H.TMPR07 = (level) & 1;
+				PR12H.TMPR07 = (level & 2) >> 1;
 				break;
 
 			default:
