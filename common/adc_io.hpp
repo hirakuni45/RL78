@@ -1,17 +1,16 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78 (G13/L1C) グループ A/D 制御
+	@brief	RL78 (G13/L1C) グループ A/D 制御 @n
+				・G13: 分解能１０ビット @n
+				・L1C: 分解能１２ビット @n
     @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include "G13/system.hpp"
-#include "G13/adc.hpp"
-#include "G13/intr.hpp"
-#include "common/delay.hpp"
+#include "common/renesas.hpp"
 
 namespace device {
 
@@ -71,25 +70,25 @@ namespace device {
 		//-----------------------------------------------------------------//
 		static void task() __attribute__ ((section (".lowtext")))
 		{ 
-			uint8_t ch = ADS();
+			uint8_t ch = adc::ADS();
 			if(ch < NUM) {
-				value_[ch] = ADCR();
+				value_[ch] = adc::ADCR();
 				++ch;
 				if(ch < NUM) {
-					ADS = ch;
-					ADM0.ADCS = 1;  // start
+					adc::ADS = ch;
+					adc::ADM0.ADCS = 1;  // start
 				} else if(temp_task_) {
-					ADS = 0x80;
-					ADM0.ADCS = 1;  // start 1st
+					adc::ADS = 0x80;
+					adc::ADM0.ADCS = 1;  // start 1st
 				} else {
 					conv_fin_ = true;
 				}
 			} else if(ch == 0x80) {  // temp
 				if(temp_task_ == 1) {
 					temp_task_ = 2;
-					ADM0.ADCS = 1;  // start 2nd
+					adc::ADM0.ADCS = 1;  // start 2nd
 				} else {
-					temp_ = ADCR();
+					temp_ = adc::ADCR();
 					conv_fin_ = true;
 				}
 			}
@@ -118,31 +117,30 @@ namespace device {
 			level_ = level;
 
 			// ADC 許可
-			PER0.ADCEN = 1;
+			enable(adc::get_peripheral());
 
 			// ポート設定
 //			ADPC = 0x00;  // all port A/D
 
-			ADM0.FR = 6;  // fclk/4
-			ADM0.LV = 0;  // 19 fAD
+			adc::ADM0.FR = 6;  // fclk/4
+			adc::ADM0.LV = 0;  // 19 fAD
 
-			ADM2.ADREFP = static_cast<uint8_t>(refp);  // 0:VDD, 1:P20/VREFP, 2:Internal 1.45V
-			ADM2.ADREFM = static_cast<uint8_t>(refm);  // 0:VSS, 1:P21/VREFM
-			ADM2.ADTYP  = 0;  // 0: 10bits, 1:8bits
+			adc::ADM2.ADREFP = static_cast<uint8_t>(refp);  // 0:VDD, 1:P20/VREFP, 2:Internal 1.45V
+			adc::ADM2.ADREFM = static_cast<uint8_t>(refm);  // 0:VSS, 1:P21/VREFM
+			adc::ADM2.ADTYP  = 0;  // 0: 10bits, 1:8bits
 
-			ADM0.ADCE = 1;  // A/D 許可
-			ADM0.ADMD = 0;  // セレクトモード
+			adc::ADM0.ADCE = 1;  // A/D 許可
+			adc::ADM0.ADMD = 0;  // セレクトモード
 
-			ADM1.ADTMD = 0;  // soft trigger
-			ADM1.ADSCM = 1;  // one shot convert
+			adc::ADM1 = adc::ADM1.ADTMD.b(0) | // soft trigger
+						adc::ADM1.ADSCM.b(1);  // one shot convert
 
 			// 割り込みレベル設定とマスク解除
 			if(level > 0) {
 				--level;
 				level ^= 0x03;
-				intr::PR01H.ADPR = (level) & 1;
-				intr::PR11H.ADPR = (level & 2) >> 1;
-				intr::MK1H.ADMK = 0;
+				intr::set_level(adc::get_peripheral(), level);
+				intr::enable(adc::get_peripheral());
 			}
 
 			utils::delay::micro_second(1);
@@ -154,7 +152,8 @@ namespace device {
 			@brief	読み込み同期（ポーリングの場合は無視される）
 		 */
 		//-----------------------------------------------------------------//
-		void sync() const {
+		void sync() const
+		{
 			if(level_ == 0) return;
 
 			while(!conv_fin_) sync();
@@ -180,11 +179,11 @@ namespace device {
 			}
 
 			if(top < NUM) {
-				ADS = top;
-				ADM0.ADCS = 1;  // start
+				adc::ADS = top;
+				adc::ADM0.ADCS = 1;  // start
 			} else if(temp) {
-				ADS = 0x80;
-				ADM0.ADCS = 1;  // start
+				adc::ADS = 0x80;
+				adc::ADM0.ADCS = 1;  // start
 			}
 
 			return true;
@@ -205,11 +204,11 @@ namespace device {
 			}
 
 			if(level_ == 0) {
-				ADS = ch;
-				ADM0.ADCS = 1;  // start
-				while(intr::IF1H.ADIF() == 0) sleep_();
-				intr::IF1H.ADIF = 0;
-				return ADCR();
+				adc::ADS = ch;
+				adc::ADM0.ADCS = 1;  // start
+				while(intr::get_request(adc::get_peripheral()) == 0) sleep_();
+				intr::set_request(adc::get_peripheral(), 0);
+				return adc::ADCR();
 			} else {
 				return value_[ch];
 			}
@@ -220,17 +219,17 @@ namespace device {
 		/*!
 			@brief	A/D 変換結果を取得
 			@param[in]	ch	変換チャネル
-			@return 変換結果（上位１０ビットが有効な値）
+			@return 変換結果（G13: 上位１０ビット、G13: 上位１２ビットが有効）
 		 */
 		//-----------------------------------------------------------------//
 		uint16_t get_temp() const
 		{
 			if(level_ == 0) {
-				ADS = 0x80;
-				ADM0.ADCS = 1;  // start
-				while(intr::IF1H.ADIF() == 0) sleep_();
-				intr::IF1H.ADIF = 0;
-				return ADCR();
+				adc::ADS = 0x80;
+				adc::ADM0.ADCS = 1;  // start
+				while(intr::get_request(adc::get_peripheral()) == 0) sleep_();
+				intr::set_request(adc::get_peripheral(), 0);
+				return adc::ADCR();
 			} else {
 				return temp_;
 			}
