@@ -3,24 +3,26 @@
 /*!	@file
 	@brief	RL78/G13 グループ・タイマ・アレイ・ユニット定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "common/io_utils.hpp"
+#include "G13/peripheral.hpp"
 
 namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  タイマ・アレイ・ユニット・テンプレート
+		@param[in]	PER		ペリフェラル型
 		@param[in]	UOFS	ユニット・オフセット（0x00、0x40）
 		@param[in]	CHOFS	チャネル・オフセット（0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E)
 		@param[in]	DRADR	データレジスタ・アドレス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
 	struct tau_t {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -288,22 +290,31 @@ namespace device {
         */
         //-----------------------------------------------------------------//
 		static uint8_t get_chanel_no() { return CHOFS / 0x02; }
-	};
-	typedef tau_t<0x00, 0x00, 0xFFF18> TAU00;
-	typedef tau_t<0x00, 0x02, 0xFFF1A> TAU01;
-	typedef tau_t<0x00, 0x04, 0xFFF64> TAU02;
-	typedef tau_t<0x00, 0x06, 0xFFF66> TAU03;
-	typedef tau_t<0x00, 0x08, 0xFFF68> TAU04;
-	typedef tau_t<0x00, 0x0A, 0xFFF6A> TAU05;
-	typedef tau_t<0x00, 0x0C, 0xFFF6C> TAU06;
-	typedef tau_t<0x00, 0x0E, 0xFFF6E> TAU07;
 
-	typedef tau_t<0x40, 0x00, 0xFFF70> TAU10;
-	typedef tau_t<0x40, 0x02, 0xFFF72> TAU11;
-	typedef tau_t<0x40, 0x04, 0xFFF74> TAU12;
-	typedef tau_t<0x40, 0x06, 0xFFF76> TAU13;
-	typedef tau_t<0x40, 0x08, 0xFFF78> TAU14;
-	typedef tau_t<0x40, 0x0A, 0xFFF7A> TAU15;
-	typedef tau_t<0x40, 0x0C, 0xFFF7C> TAU16;
-	typedef tau_t<0x40, 0x0E, 0xFFF7E> TAU17;
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  ペリフェラル種別を取得
+			@return ペリフェラル種別
+		*/
+		//-------------------------------------------------------------//
+		static peripheral get_peripheral() { return PER; }
+	};
+	typedef tau_t<peripheral::TAU00, 0x00, 0x00, 0xFFF18> TAU00;
+	typedef tau_t<peripheral::TAU01, 0x00, 0x02, 0xFFF1A> TAU01;
+	typedef tau_t<peripheral::TAU02, 0x00, 0x04, 0xFFF64> TAU02;
+	typedef tau_t<peripheral::TAU03, 0x00, 0x06, 0xFFF66> TAU03;
+	typedef tau_t<peripheral::TAU04, 0x00, 0x08, 0xFFF68> TAU04;
+	typedef tau_t<peripheral::TAU05, 0x00, 0x0A, 0xFFF6A> TAU05;
+	typedef tau_t<peripheral::TAU06, 0x00, 0x0C, 0xFFF6C> TAU06;
+	typedef tau_t<peripheral::TAU07, 0x00, 0x0E, 0xFFF6E> TAU07;
+
+	typedef tau_t<peripheral::TAU10, 0x40, 0x00, 0xFFF70> TAU10;
+	typedef tau_t<peripheral::TAU11, 0x40, 0x02, 0xFFF72> TAU11;
+	typedef tau_t<peripheral::TAU12, 0x40, 0x04, 0xFFF74> TAU12;
+	typedef tau_t<peripheral::TAU13, 0x40, 0x06, 0xFFF76> TAU13;
+	typedef tau_t<peripheral::TAU14, 0x40, 0x08, 0xFFF78> TAU14;
+	typedef tau_t<peripheral::TAU15, 0x40, 0x0A, 0xFFF7A> TAU15;
+	typedef tau_t<peripheral::TAU16, 0x40, 0x0C, 0xFFF7C> TAU16;
+	typedef tau_t<peripheral::TAU17, 0x40, 0x0E, 0xFFF7E> TAU17;
 }
