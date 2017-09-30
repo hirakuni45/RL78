@@ -58,38 +58,38 @@ extern "C" {
 	}
 
 #ifdef UART0
-	void UART0_TX_intr(void)
+	INTERRUPT_FUNC void UART0_TX_intr(void)
 	{
 		uart_.send_task();
 	}
 
 
-	void UART0_RX_intr(void)
+	INTERRUPT_FUNC void UART0_RX_intr(void)
 	{
 		uart_.recv_task();
 	}
 
 
-	void UART0_ER_intr(void)
+	INTERRUPT_FUNC void UART0_ER_intr(void)
 	{
 		uart_.error_task();
 	}
 #endif
 
 #ifdef UART1
-	void UART1_TX_intr(void)
+	INTERRUPT_FUNC void UART1_TX_intr(void)
 	{
 		uart_.send_task();
 	}
 
 
-	void UART1_RX_intr(void)
+	INTERRUPT_FUNC void UART1_RX_intr(void)
 	{
 		uart_.recv_task();
 	}
 
 
-	void UART1_ER_intr(void)
+	INTERRUPT_FUNC void UART1_ER_intr(void)
 	{
 		uart_.error_task();
 	}
