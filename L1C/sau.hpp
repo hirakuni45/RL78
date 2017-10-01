@@ -19,7 +19,7 @@ namespace device {
 		@param[in]	PER		ペリフェラル型
 		@param[in]	UOFS	ユニット・オフセット（0x00、0x40）
 		@param[in]	CHOFS	チャネル・オフセット（0x00, 0x02, 0x04, 0x06)
-		@param[in]	SDR_O	SDR レジスターオフセット（0x00, 0x30, 0x08, 0x04）
+		@param[in]	SDR_O	SDR レジスターオフセット
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t SDR_O>

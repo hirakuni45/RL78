@@ -28,7 +28,31 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class SAUtx, class SAUrx, class BUFtx, class BUFrx>
 	class uart_io {
+	public:
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  パリティ
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class PARITY : uint8_t {
+			NONE,	///< 無し
+			EVEN,	///< 偶数
+			ODD,	///< 奇数
+		};
 
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  ストップ・ビット
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class STOP : uint8_t {
+			MONE,	///< 無し
+			ONE,	///< 1 ストップ
+			TWO,	///< 2 ストップ
+		};
+
+	private:
 		static BUFtx send_;
 		static BUFrx recv_;
 
@@ -39,10 +63,10 @@ namespace device {
 
 
 		// ※必要なら、実装する
-		inline void sleep_() { asm("nop"); }
+		inline void sleep_() const noexcept { asm("nop"); }
 
 
-		void send_restart_()
+		void send_restart_() noexcept
 		{
 			if(send_stall_ && send_.length() > 0) {
 				while(SAUtx::SSR.TSF() != 0) sleep_();
@@ -54,7 +78,7 @@ namespace device {
 		}
 
 
-		void putch_(char ch)
+		void putch_(char ch) noexcept
 		{
 			if(intr_level_) {
 				/// ７／８ を超えてた場合は、バッファが空になるまで待つ。
@@ -77,7 +101,7 @@ namespace device {
 			@brief  送信割り込み
 		*/
 		//-----------------------------------------------------------------//
-		static void send_task() __attribute__ ((section (".lowtext")))
+		static void send_task() noexcept __attribute__ ((section (".lowtext")))
 		{
 			if(send_.length()) {
 				SAUtx::SDR_L = send_.get();
@@ -93,7 +117,7 @@ namespace device {
 			@brief  受信割り込み
 		*/
 		//-----------------------------------------------------------------//
-		static void recv_task() __attribute__ ((section (".lowtext")))
+		static void recv_task() noexcept __attribute__ ((section (".lowtext")))
 		{
 			recv_.put(SAUrx::SDR_L());
 		}
@@ -114,7 +138,7 @@ namespace device {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		uart_io() : intr_level_(0), crlf_(true) { }
+		uart_io() noexcept : intr_level_(0), crlf_(true) { }
 
 
 		//-----------------------------------------------------------------//
@@ -122,10 +146,11 @@ namespace device {
 			@brief  ボーレートを設定して、UART を有効にする
 			@param[in]	baud	ボーレート
 			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
+			@param[in]	parity	パリティ・ビット
 			@return エラーなら「false」
 		*/
 		//-----------------------------------------------------------------//
-		bool start(uint32_t baud, uint8_t level = 0)
+		bool start(uint32_t baud, uint8_t level = 0, PARITY parity = PARITY::NONE, STOP stop = STOP::ONE) noexcept
 		{
 			intr_level_ = level;
 
@@ -163,13 +188,21 @@ namespace device {
 			SAUtx::SMR = 0x0020 | SAUtx::SMR.CKS.b(cks) | SAUtx::SMR.MD.b(1) | SAUtx::SMR.MD0.b(1);
 			SAUrx::SMR = 0x0020 | SAUtx::SMR.CKS.b(cks) | SAUrx::SMR.STS.b(1) | SAUrx::SMR.MD.b(1);
 
-			// 8 date, 1 stop, no-parity LSB-first
+			// 8 date, LSB-first
+			uint8_t ptc;
+			if(parity == PARITY::EVEN) ptc = 2;
+			else if(parity == PARITY::ODD) ptc = 3;
+			else ptc = 0;
+			uint8_t slc;
+			if(stop == STOP::ONE) slc = 1;
+			else if(stop == STOP::TWO) slc = 2;
+			else slc = 0;
 			// 送信設定
 			SAUtx::SCR = 0x0004 | SAUtx::SCR.TXE.b(1) | SAUtx::SCR.SLC.b(1) | SAUtx::SCR.DLS.b(3) |
-					     SAUtx::SCR.DIR.b(1);
+					     SAUtx::SCR.DIR.b(1) | SAUtx::SCR.PTC.b(ptc) | SAUtx::SCR.SLC.b(slc);
 			// 受信設定
 			SAUrx::SCR = 0x0004 | SAUrx::SCR.RXE.b(1) | SAUrx::SCR.SLC.b(1) | SAUrx::SCR.DLS.b(3) |
-						 SAUrx::SCR.DIR.b(1);
+						 SAUrx::SCR.DIR.b(1) | SAUtx::SCR.PTC.b(ptc) | SAUtx::SCR.SLC.b(slc);
 
 			// ボーレート・ジェネレーター設定
 			SAUtx::SDR = div << 8;
@@ -208,7 +241,7 @@ namespace device {
 			@param[in]	f	「false」なら無効
 		 */
 		//-----------------------------------------------------------------//
-		void auto_crlf(bool f = true) { crlf_ = f; }
+		void auto_crlf(bool f = true) noexcept { crlf_ = f; }
 
 
 		//-----------------------------------------------------------------//
@@ -217,7 +250,7 @@ namespace device {
 			@return　バッファのサイズ
 		 */
 		//-----------------------------------------------------------------//
-		uint16_t send_length() const {
+		uint16_t send_length() const noexcept {
 			if(intr_level_) {
 				return send_.length();
 			} else {
@@ -233,7 +266,7 @@ namespace device {
 			@return　バッファのサイズ
 		 */
 		//-----------------------------------------------------------------//
-		uint16_t recv_length() const {
+		uint16_t recv_length() const noexcept {
 			if(intr_level_) {
 				return recv_.length();
 			} else {
@@ -248,7 +281,8 @@ namespace device {
 			@param[in]	ch	文字コード
 		 */
 		//-----------------------------------------------------------------//
-		void putch(char ch) {
+		void putch(char ch) noexcept
+		{
 			if(crlf_ && ch == '\n') {
 				putch_('\r');
 			}
@@ -262,7 +296,8 @@ namespace device {
 			@return 文字コード
 		 */
 		//-----------------------------------------------------------------//
-		char getch() {
+		char getch() noexcept
+		{
 			if(intr_level_) {
 				while(recv_.length() == 0) sleep_();
 				return recv_.get();
@@ -279,7 +314,8 @@ namespace device {
 			@param[in]	s	出力ストリング
 		 */
 		//-----------------------------------------------------------------//
-		void puts(const char* s) {
+		void puts(const char* s) noexcept
+		{
 			char ch;
 			while((ch = *s) != 0) {
 				putch(ch);
@@ -294,7 +330,8 @@ namespace device {
 			@return UART チャネル番号
 		 */
 		//-----------------------------------------------------------------//
-		static uint8_t get_chanel_no() {
+		static uint8_t get_chanel_no() noexcept
+		{
 			return (SAUtx::get_unit_no() << 1) | ((SAUtx::get_chanel_no() >> 1) & 1);
 		}
 	};

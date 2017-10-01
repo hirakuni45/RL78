@@ -31,7 +31,7 @@ namespace device {
 
 		uint8_t	intr_level_;
 
-		inline void sleep_() const { asm("nop"); }
+		inline void sleep_() const noexcept { asm("nop"); }
 
 	public:
 		//-----------------------------------------------------------------//
@@ -39,7 +39,7 @@ namespace device {
 			@brief  インターバル・タイマー割り込みタスク
 		*/
 		//-----------------------------------------------------------------//
-		static void task() __attribute__ ((section (".lowtext")))
+		static void task() noexcept __attribute__ ((section (".lowtext")))
 		{
 			++counter_;
 			task_();
@@ -51,7 +51,7 @@ namespace device {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		itimer() : intr_level_(0) { }
+		itimer() noexcept : intr_level_(0) { }
 
 
 		//-----------------------------------------------------------------//
@@ -62,7 +62,7 @@ namespace device {
 			@return エラーなら「false」
 		*/
 		//-----------------------------------------------------------------//
-		bool start(uint16_t freq, uint8_t level = 0)
+		bool start(uint16_t freq, uint8_t level = 0) noexcept
 		{
 			intr_level_ = level;
 
@@ -98,7 +98,7 @@ namespace device {
 			@return 同期回数
 		*/
 		//-----------------------------------------------------------------//
-		T get_counter() const { return counter_; }
+		T get_counter() const noexcept { return counter_; }
 
 
 		//-----------------------------------------------------------------//
@@ -106,7 +106,8 @@ namespace device {
 			@brief  インターバル・タイマーとの同期
 		*/
 		//-----------------------------------------------------------------//
-		void sync() const {
+		void sync() const noexcept
+		{
 			if(intr_level_) {
 				volatile T counter = counter_;
 				while(counter == counter_) sleep_();

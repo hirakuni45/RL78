@@ -78,9 +78,10 @@ namespace chip {
 		/*!
 			@brief	数字設定
 			@param[in]	n	数字（0 to 9)
+			@param[in]	dp	小数点
 		 */
 		//-----------------------------------------------------------------//
-		static void decimal(uint8_t n)
+		static void decimal(uint8_t n, bool dp = 0)
 		{
 			static const uint8_t tbl[10] = {
 				seg_a | seg_b | seg_c | seg_d | seg_e | seg_f,
@@ -96,9 +97,7 @@ namespace chip {
 			};
 
 			if(n < 10) {
-				direct(tbl[n]);
-			} else {
-				direct(seg_g);
+				direct(tbl[n] | (dp ? 0x80 : 0x00));
 			}
 		}
 	};
