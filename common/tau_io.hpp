@@ -47,44 +47,6 @@ namespace device {
 
 		mode	mode_;
 
-		void set_port_dir_(bool outena) {
-			switch(TAU::get_chanel_no()) {
-			case 0:
-				PM0.B1 = !outena;
-				P0.B1 = 0;
-				PMC0.B1 = 0;
-				break;
-			case 1:
-				PM1.B6 = !outena;
-				P1.B6 = 0;
-				break;
-			case 2:
-				PM1.B7 = !outena;
-				P1.B7 = 0;
-				break;
-			case 3:
-				PM3.B1 = !outena;
-				P3.B1 = 0;
-				break;
-			case 4:
-				PM4.B2 = !outena;
-				P4.B2 = 0;
-				break;
-			case 5:
-				PM0.B5 = !outena;
-				P0.B5 = 0;
-				break;
-			case 6:
-				PM0.B6 = !outena;
-				P0.B6 = 0;
-				break;
-			case 7:
-				PM4.B1 = !outena;
-				P4.B1 = 0;
-				break;
-			}
-		}
-
 		void set_interrupt_() {
 
 			if(intr_level_ == 0) {
@@ -201,7 +163,7 @@ namespace device {
 			}
 
 			if(outena) {
-				set_port_dir_(true);
+				manage::set_tau_port(TAU::get_peripheral(), true);
 			}
 
 			TAU::TOM = 0;  // タイマ出力モード（マスター）
@@ -247,7 +209,7 @@ namespace device {
 			TAU::TDR = value;
 
 			if(outena) {
-				set_port_dir_(true);
+				manage::set_tau_port(TAU::get_peripheral(), true);
 			}
 
 			TAU::TOM = 0;  // タイマ出力モード（マスター）
@@ -299,7 +261,7 @@ namespace device {
 				| TAU::TMR.MD.b(static_cast<uint8_t>(mode::ONE_COUNT)) | TAU::TMR.MD0.b(1);
 			TAU::TDR = val;
 
-			set_port_dir_(true);
+			manage::set_tau_port(TAU::get_peripheral(), true);
 
 			TAU::TOM = 1;  // タイマ出力モード（スレーブ）
 			TAU::TO = 0;  // 出力初期値
