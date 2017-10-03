@@ -1,17 +1,15 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ SAU/CSI 制御
+	@brief	RL78 (G13/L1C) グループ SAU/CSI 制御 @n
+			※現状では、割り込みに対応していない、ポーリングのみ動作可能
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include "G13/system.hpp"
-#include "G13/sau.hpp"
-#include "G13/intr.hpp"
-
+#include "common/renesas.hpp"
 #include "common/format.hpp"
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
@@ -47,84 +45,6 @@ namespace device {
 		uint8_t	intr_level_;
 
 		inline void sleep_() { asm("nop"); }
-
-		void sync_() {
-			if(SAU::get_unit_no() == 0) {
-				switch(SAU::get_chanel_no()) {
-				case 0:
-					while(intr::IF0H.CSIIF00() == 0) sleep_();
-					intr::IF0H.CSIIF00 = 0;
-					break;
-				case 1:
-					while(intr::IF0H.CSIIF01() == 0) sleep_();
-					intr::IF0H.CSIIF01 = 0;
-					break;
-				case 2:
-					while(intr::IF1L.CSIIF10() == 0) sleep_();
-					intr::IF1L.CSIIF10 = 0;
-					break;
-				case 3:
-					while(intr::IF1L.CSIIF11() == 0) sleep_();
-					intr::IF1L.CSIIF11 = 0;
-					break;
-				}
-			} else {
-				switch(SAU::get_chanel_no()) {
-				case 0:
-					while(intr::IF0H.CSIIF20() == 0) sleep_();
-					intr::IF0H.CSIIF20 = 0;
-					break;
-				case 1:
-					while(intr::IF0H.CSIIF21() == 0) sleep_();
-					intr::IF0H.CSIIF21 = 0;
-					break;
-				case 2:
-					while(intr::IF1H.CSIIF30() == 0) sleep_();
-					intr::IF1H.CSIIF30 = 0;
-					break;
-				case 3:
-					while(intr::IF1H.CSIIF31() == 0) sleep_();
-					intr::IF1H.CSIIF31 = 0;
-					break;
-				}
-			}
-		}
-
-		// 割り込み設定
-		static void interrupt_mask_(bool f)
-		{
-			if(SAU::get_unit_no() == 0) {
-				switch(SAU::get_chanel_no()) {
-				case 0:
-					intr::MK0H.CSIMK00 = f;
-					break;
-				case 1:
-					intr::MK0H.CSIMK01 = f;
-					break;
-				case 2:
-					intr::MK1L.CSIMK10 = f;
-					break;
-				case 3:
-					intr::MK1L.CSIMK11 = f;
-					break;
-				}
-			} else {
-				switch(SAU::get_chanel_no()) {
-				case 0:
-					intr::MK0H.CSIMK20 = f;
-					break;
-				case 1:
-					intr::MK0H.CSIMK21 = f;
-					break;
-				case 2:
-					intr::MK1H.CSIMK30 = f;
-					break;
-				case 3:
-					intr::MK1H.CSIMK31 = f;
-					break;
-				}
-			}
-		}
 
 	public:
 		//-----------------------------------------------------------------//
@@ -183,11 +103,7 @@ namespace device {
 			div &= 0xfe;
 
 			// 対応するユニットを有効にする
-			if(SAU::get_unit_no() == 0) {
-				PER0.SAU0EN = 1;
-			} else {
-				PER0.SAU1EN = 1;
-			}
+			manage::enable(SAU::get_peripheral());
 
 			// 各ユニットで、チャネル０、１、２、３で共有の為、
 			// ０、１：PRS0、２、３：PRS1 を使う
@@ -215,79 +131,7 @@ namespace device {
 			SAU::SOE = 1;	// シリアル出力許可
 
 			// 対応するポートの設定
-			if(SAU::get_unit_no() == 0) {
-				if(SAU::get_chanel_no() == 0) {  // Chanel 0
-					PU1.B2 = 0;
-					PU1.B1 = 0;
-					PU1.B0 = 0;
-					PM1.B2 = 0;	 // P1-2 output (SO00)
-					PM1.B1 = 1;	 // P1-1 input  (SI00)
-					PM1.B0 = 0;  // P1-0 output (SCK00)
-					PIM1.B1 = 1; // P1-1 TTL input
-					P1.B2  = 1;	 // ポートレジスター (SO00)  切り替え
-					P1.B1  = 1;  // ポートレジスター (SI00)  切り替え
-					P1.B0  = 1;  // ポートレジスター (SCK00) 切り替え
-				} else if(SAU::get_chanel_no() == 1) {  // Chanel 1
-					PU7.B3 = 0;
-					PU7.B4 = 0;
-					PU7.B5 = 0;
-					PM7.B3 = 0;  // P7-3 output (SO01)
-					PM7.B4 = 1;  // P7-4 input  (SI01)
-					PM7.B5 = 0;  // P7-5 output (SCK01)
-					P7.B3 = 1;   // ポートレジスター (SO01)  切り替え
-					P7.B4 = 1;   // ポートレジスター (SI01)  切り替え
-					P7.B5 = 1;   // ポートレジスター (SCK01) 切り替え
-				} else if(SAU::get_chanel_no() == 2) {  // Chanel 2
-					PU0.B2 = 0;
-					PU0.B3 = 0;
-					PU0.B4 = 0;
-					PM0.B2  = 0;  // P0-2 output (SO10)
-					PM0.B3  = 1;  // P0-3 input  (SI10)
-					PM0.B4  = 0;  // P0-4 output (SCK10)
-					PMC0.B2 = 0;  // ポートモードコントロール
-					PMC0.B3 = 0;  // ポートモードコントロール
-					PIM0.B3 = 1;  // ポート入力モード
-					P0.B2   = 1;  // ポートレジスター SO10  切り替え
-					P0.B3   = 1;  // ポートレジスター SI10  切り替え
-					P0.B4   = 1;  // ポートレジスター SCK10 切り替え
-				} else {  // chanel 3
-					PU5.B2 = 0;
-					PU5.B1 = 0;
-					PU3.B0 = 0;
-					PM5.B1 = 0;  // P5-1 output (SO11)
-					PM5.B0 = 1;  // P5-0 input  (SI11)
-					PM3.B0 = 0;  // P3-0 output (SCK11)
-					P5.B1 = 1;   // ポートレジスター SO11  切り替え
-					P5.B0 = 1;   // ポートレジスター SI11  切り替え
-					P3.B0 = 1;   // ポートレジスター SCK11 切り替え
-				}
-			} else {
-				if(SAU::get_chanel_no() == 0) {  // Chanel 0
-					PU1.B3 = 0;
-					PU1.B4 = 0;
-					PU1.B5 = 0;
-					PM1.B3 = 0;	 // P1-3 output (SO20)
-					PM1.B4 = 1;	 // P1-4 input  (SI20)
-					PM1.B5 = 0;  // P1-5 output (SCK20)
-					P1.B3  = 1;	 // ポートレジスター SO20  切り替え
-					P1.B4  = 1;  // ポートレジスター SI20  切り替え
-					P1.B5  = 1;  // ポートレジスター SCK20 切り替え
-				} else if(SAU::get_chanel_no() == 1) {  // Chanel 1
-					PU7.B2 = 0;
-					PU7.B1 = 0;
-					PU7.B0 = 0;
-					PM7.B2 = 0;  // P7-2 output (SO21)
-					PM7.B1 = 1;  // P7-1 input  (SI21)
-					PM7.B0 = 0;  // P7-0 output (SCK21)
-					P7.B2  = 1;  // ポートレジスター SO21  切り替え
-					P7.B1  = 1;  // ポートレジスター SI21  切り替え
-					P7.B0  = 1;  // ポートレジスター SCK21 切り替え
-				} else if(SAU::get_chanel_no() == 2) {  // Chanel 2（128ピンデバイスでサポート）
-
-				} else {  // Chanel 3（128ピンデバイスでサポート）
-
-				}
-			}
+			manage::set_csi_port(SAU::get_peripheral(), manage::csi_port::INOUT);
 
 ///			send_stall_ = true;
 
@@ -297,46 +141,8 @@ namespace device {
 			if(intr_level_ > 0) {
 				--level;
 				level ^= 0x03;
-				if(SAU::get_unit_no() == 0) {
-					switch(SAU::get_chanel_no()) {
-					case 0:
-						intr::PR00H.CSIPR00 = (level) & 1;
-						intr::PR10H.CSIPR00 = (level & 2) >> 1;
-						break;
-					case 1:
-						intr::PR00H.CSIPR01 = (level) & 1;
-						intr::PR10H.CSIPR01 = (level & 2) >> 1;
-						break;
-					case 2:
-						intr::PR01L.CSIPR10 = (level) & 1;
-						intr::PR11L.CSIPR10 = (level & 2) >> 1;
-						break;
-					case 3:
-						intr::PR01L.CSIPR11 = (level) & 1;
-						intr::PR11L.CSIPR11 = (level & 2) >> 1;
-						break;
-					}
-				} else {
-					switch(SAU::get_chanel_no()) {
-					case 0:
-						intr::PR00H.CSIPR20 = (level) & 1;
-						intr::PR10H.CSIPR20 = (level & 2) >> 1;
-						break;
-					case 1:
-						intr::PR00H.CSIPR21 = (level) & 1;
-						intr::PR10H.CSIPR21 = (level & 2) >> 1;
-						break;
-					case 2:
-						intr::PR01H.CSIPR30 = (level) & 1;
-						intr::PR11H.CSIPR30 = (level & 2) >> 1;
-						break;
-					case 3:
-						intr::PR01H.CSIPR31 = (level) & 1;
-						intr::PR11H.CSIPR31 = (level & 2) >> 1;
-						break;
-					}
-				}
-				interrupt_mask_(0);
+				intr::set_level(SAU::get_peripheral(), level);
+				intr::enable(SAU::get_peripheral());
 			}
 
 			return true;
@@ -356,7 +162,8 @@ namespace device {
 				return 0;
 			} else {
 				SAU::SDR_L = ch;
-				sync_();
+				while(intr::get_request(SAU::get_peripheral()) == 0) sleep_();
+				intr::set_request(itm::get_peripheral(), 0);
 				return SAU::SDR_L();
 			}
 		}
@@ -405,7 +212,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		void destroy()
 		{
-			interrupt_mask_(1);  // set mask
+			intr::enable(SAU::get_peripheral(), false);
 			SAU::ST = 1;  // SAU stop
 			SAU::SS = 0;	// unit disable
 			SAU::SOE = 0;

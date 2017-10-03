@@ -1,14 +1,16 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	RL78/G13 グループ IICA 制御 @n
-			Copyright 2016 Kunihito Hiramatsu
-	@author	平松邦仁 (hira@rvf-rc45.net)
+	@brief	RL78/ (G13/L1C) グループ IICA 制御 @n
+			※マスター動作のみ実装 @n
+			※割り込みに対応していない、ポーリングのみ動作可能
+    @author 平松邦仁 (hira@rvf-rc45.net)
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+				Released under the MIT license @n
+				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include "G13/system.hpp"
-#include "G13/iica.hpp"
-#include "common/delay.hpp"
+#include "common/renesas.hpp"
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
 #ifndef F_CLK
@@ -55,7 +57,6 @@ namespace device {
 		};
 
 	private:
-		static IICA iica_;
 		static volatile uint8_t sync_;
 
 		uint8_t		intr_lvl_;
@@ -71,12 +72,12 @@ namespace device {
 		bool sync_intr_(uint8_t loop)
 		{
 			// 最終クロック検出割り込み
-			while(intr::IF1L.IICAIF0() == 0) {
+			while(intr::get_request(IICA::get_peripheral()) == 0) {
 				utils::delay::micro_second(1);
 				if(loop == 0) return false;
 				--loop;
 			}
-			intr::IF1L.IICAIF0 = 0;  // 割り込みフラグ・クリア
+			intr::set_request(IICA::get_peripheral(), 0);
 			return true;
 		}
 
@@ -85,7 +86,7 @@ namespace device {
 		bool probe_ack_()
 		{
 			sync_intr_(speed_);
-			if(iica_.IICS.ACKD() == 0) {  // アクノリッジ確認
+			if(IICA::IICS.ACKD() == 0) {  // アクノリッジ確認
 				return false;
 			}
 			return true;
@@ -94,17 +95,17 @@ namespace device {
 		// アドレスの転送
 		bool send_adr_(uint8_t adr) {
 			// バスが開放されているか確認（通信状態ならエラー）
-			if(iica_.IICS.SPD() != 0 && iica_.IICF.IICBSY() == 0) ;
+			if(IICA::IICS.SPD() != 0 && IICA::IICF.IICBSY() == 0) ;
 			else {
 				error_ = error::bus_open;
 				return false;
 			}
 
-			iica_.IICCTL0.STT = 1;  // スタート・コンディション（開始）
+			IICA::IICCTL0.STT = 1;  // スタート・コンディション（開始）
 
 			utils::delay::micro_second(1);
 
-			iica_.IICA = adr;  // アドレス
+			IICA::IICA = adr;  // アドレス
 			if(!probe_ack_()) {  // アクノリッジの確認
 				error_ = error::address;
 				return false;
@@ -114,7 +115,7 @@ namespace device {
 
 
 		bool out_stop_() {
-			iica_.IICCTL0.SPT = 1;   // ストップ・コンディション
+			IICA::IICCTL0.SPT = 1;   // ストップ・コンディション
 			bool f = sync_intr_(speed_ / 2);
 			if(!f) {
 				error_ = error::stop;
@@ -153,7 +154,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool start(speed spd_type, uint8_t intr_lvl)
 		{
-			iica_.IICCTL0.IICE = 0;  // Unit Disable
+			IICA::IICCTL0.IICE = 0;  // Unit Disable
 
 			intr_lvl_ = intr_lvl;
 
@@ -180,7 +181,7 @@ namespace device {
 				wh = 26;
 				speed_ = 23 * 2;  // 400K b.p.s * 9 clock * 2 (us)
 				// ※デジタル・フィルター有効
-				smc = iica_.IICCTL1.SMC.b(1) | iica_.IICCTL1.DFC.b(1);
+				smc = IICA::IICCTL1.SMC.b(1) | IICA::IICCTL1.DFC.b(1);
 				break;
 
 			//   1M b.p.s. 時 tF: 0.1us、tR: 0.1us
@@ -189,7 +190,7 @@ namespace device {
 				wh = 10;
 				speed_ = 9 * 3; // 1M b.p.s * 9 clock * 3 (us)
 				// ※デジタル・フィルター有効
-				smc = iica_.IICCTL1.SMC.b(1) | iica_.IICCTL1.DFC.b(1);
+				smc = IICA::IICCTL1.SMC.b(1) | IICA::IICCTL1.DFC.b(1);
 				break;
 			default:
 				// error_ = error::start;
@@ -197,38 +198,30 @@ namespace device {
 			}
 
 			// ユニットを有効にする
-			if(iica_.get_unit_no() == 0) {
-				PER0.IICA0EN = 1;
-			} else {
-				PER0.IICA1EN = 1;
-			}
+			manage::enable(IICA::get_peripheral());
 
 			// 転送レート設定、IICE(0) の時に設定
-			iica_.IICWL = wl / 2;
-			iica_.IICWH = wh / 2;
+			IICA::IICWL = wl / 2;
+			IICA::IICWH = wh / 2;
 
-			iica_.SVA = sadr_;  // スレーブ時のアドレス設定
+			IICA::SVA = sadr_;  // スレーブ時のアドレス設定
 
-			iica_.IICF.IICRSV = 1;  // 通信予約（不許可）
+			IICA::IICF.IICRSV = 1;  // 通信予約（不許可）
 
 			// IICE(0) の時に設定
-			iica_.IICCTL1 = iica_.IICCTL1.PRS.b(1) | smc;
+			IICA::IICCTL1 = IICA::IICCTL1.PRS.b(1) | smc;
 
 			// clock 9, stop condition interrupt.
-			iica_.IICCTL0 = iica_.IICCTL0.WTIM.b(1) | iica_.IICCTL0.SPIE.b(1);
+			IICA::IICCTL0 = IICA::IICCTL0.WTIM.b(1) | IICA::IICCTL0.SPIE.b(1);
 
-			iica_.IICCTL0.IICE = 1;  // ユニット許可
+			IICA::IICCTL0.IICE = 1;  // ユニット許可
 
 			// ポート・モード設定、IICE(1) の時に設定
-			if(iica_.get_unit_no() == 0) {
-				PM6 &= 0b1111'1100;
-				P6  &= 0b1111'1100;
-			} else {
-				PM6 &= 0b1111'0011;
-				P6  &= 0b1111'0011;
-			}
+			manage::set_iica_port(IICA::get_peripheral());
 
-			intr::IF1L.IICAIF0 = 0;  // 割り込みフラグ・クリア
+			// 割り込みフラグ・クリア
+			intr::set_request(IICA::get_peripheral(), 0);
+
 			return out_stop_();
 		}
 
@@ -256,18 +249,18 @@ namespace device {
 			error_ = error::none;
 
 			if(!send_adr_(adr << 1)) {
-				iica_.IICCTL0.WREL = 1;
-				iica_.IICCTL0.SPT = 1;
+				IICA::IICCTL0.WREL = 1;
+				IICA::IICCTL0.SPT  = 1;
 				return false;
 			}
 
 			// 送信データ転送
 			const uint8_t* p = static_cast<const uint8_t*>(src);
 			for(uint8_t i = 0; i < len; ++i) {
-				iica_.IICA = *p;
+				IICA::IICA = *p;
 				++p;
 				if(!probe_ack_()) {
-					iica_.IICCTL0.SPT = 1;
+					IICA::IICCTL0.SPT = 1;
 					error_ = error::send_data;
 					return false;
 				}
@@ -291,14 +284,14 @@ namespace device {
 			error_ = error::none;
 
 			if(!send_adr_(adr << 1)) {
-				iica_.IICCTL0.WREL = 1;
-				iica_.IICCTL0.SPT = 1;
+				IICA::IICCTL0.WREL = 1;
+				IICA::IICCTL0.SPT = 1;
 				return false;
 			}
 
-			iica_.IICA = first;
+			IICA::IICA = first;
 			if(!probe_ack_()) {
-				iica_.IICCTL0.SPT = 1;
+				IICA::IICCTL0.SPT = 1;
 				error_ = error::send_data;
 				return false;
 			}
@@ -306,10 +299,10 @@ namespace device {
 			// 送信データ転送
 			const uint8_t* p = static_cast<const uint8_t*>(src);
 			for(uint8_t i = 0; i < len; ++i) {
-				iica_.IICA = *p;
+				IICA::IICA = *p;
 				++p;
 				if(!probe_ack_()) {
-					iica_.IICCTL0.SPT = 1;
+					IICA::IICCTL0.SPT = 1;
 					error_ = error::send_data;
 					return false;
 				}
@@ -334,21 +327,21 @@ namespace device {
 			error_ = error::none;
 
 			if(!send_adr_(adr << 1)) {
-				iica_.IICCTL0.WREL = 1;
-				iica_.IICCTL0.SPT = 1;
+				IICA::IICCTL0.WREL = 1;
+				IICA::IICCTL0.SPT = 1;
 				return false;
 			}
 
-			iica_.IICA = first;
+			IICA::IICA = first;
 			if(!probe_ack_()) {
-				iica_.IICCTL0.SPT = 1;
+				IICA::IICCTL0.SPT = 1;
 				error_ = error::send_data;
 				return false;
 			}
 
-			iica_.IICA = second;
+			IICA::IICA = second;
 			if(!probe_ack_()) {
-				iica_.IICCTL0.SPT = 1;
+				IICA::IICCTL0.SPT = 1;
 				error_ = error::send_data;
 				return false;
 			}
@@ -356,10 +349,10 @@ namespace device {
 			// 送信データ転送
 			const uint8_t* p = static_cast<const uint8_t*>(src);
 			for(uint8_t i = 0; i < len; ++i) {
-				iica_.IICA = *p;
+				IICA::IICA = *p;
 				++p;
 				if(!probe_ack_()) {
-					iica_.IICCTL0.SPT = 1;
+					IICA::IICCTL0.SPT = 1;
 					error_ = error::send_data;
 					return false;
 				}
@@ -382,34 +375,34 @@ namespace device {
 			error_ = error::none;
 
 			if(!send_adr_((adr << 1) | 1)) {
-				iica_.IICCTL0.WREL = 1;
-				iica_.IICCTL0.SPT = 1;
+				IICA::IICCTL0.WREL = 1;
+				IICA::IICCTL0.SPT = 1;
 				// utils::format("recv address\n");
 				return false;
 			}
 
 			if(len > 1) {
-				iica_.IICCTL0.ACKE = 1;  // ACK 自動生成
+				IICA::IICCTL0.ACKE = 1;  // ACK 自動生成
 			}
-			iica_.IICCTL0.WREL = 1;  // Wait 削除
+			IICA::IICCTL0.WREL = 1;  // Wait 削除
 
 			// 受信データ転送
 			uint8_t* p = static_cast<uint8_t*>(dst);
 			for(uint8_t i = 0; i < len; ++i) {
 				if(i == (len - 1)) {  // last data..
-					iica_.IICCTL0.ACKE = 0;
+					IICA::IICCTL0.ACKE = 0;
 				}
 				if(!sync_intr_(speed_)) {
 					error_ = error::recv_data;
-					iica_.IICCTL0.WREL = 1;
-					iica_.IICCTL0.SPT = 1;
+					IICA::IICCTL0.WREL = 1;
+					IICA::IICCTL0.SPT = 1;
 					// utils::format("idx: %d\n") % static_cast<uint32_t>(i);
 					return false;
 				}
-				*p = iica_.IICA();
+				*p = IICA::IICA();
 				++p;
 				if(i != (len - 1)) {
-					iica_.IICCTL0.WREL = 1;  // Wait 削除
+					IICA::IICCTL0.WREL = 1;  // Wait 削除
 				}
 			}
 
