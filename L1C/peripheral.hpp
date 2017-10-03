@@ -195,5 +195,64 @@ namespace device {
 			}
 			return true;
 		}
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  TAU ポートの設定
+			@param[in]	per	ペリフェラル型
+			@param[in]	dir	出力の場合「true」
+			@return SAUxx 型では無い場合「false」
+		*/
+		//-------------------------------------------------------------//
+		static bool set_tau_port(peripheral per, bool dir)
+		{
+			switch(per) {
+
+			case peripheral::TAU00:
+				PM0.B3 = !dir;
+				P0.B3  = 0;
+				break;
+
+			case peripheral::TAU01:
+				PM3.B2 = !dir;
+				P3.B2  = 0;
+				break;
+
+			case peripheral::TAU02:
+				PM0.B5 = !dir;
+				P5.B5  = 0;
+				break;
+
+			case peripheral::TAU03:
+				PM3.B0 = !dir;
+				P3.B0  = 0;
+				break;
+
+			case peripheral::TAU04:
+				PM2.B2 = !dir;
+				P2.B2  = 0;
+				break;
+
+			case peripheral::TAU05:
+				PM2.B7 = !dir;
+				P2.B7  = 0;
+				break;
+
+			case peripheral::TAU06:
+				PM0.B7 = !dir;
+				P0.B7  = 0;
+				break;
+
+			case peripheral::TAU07:
+				PM2.B3 = !dir;
+				P2.B3 = 0;
+				break;
+
+			default:
+				return false;		
+			}
+			return true;
+		}
 	};
 }
