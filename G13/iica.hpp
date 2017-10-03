@@ -155,7 +155,7 @@ namespace device {
 			@return 「０」又は「１」
         */
         //-----------------------------------------------------------------//
-		uint8_t get_unit_no() const { return UOFS / 0x08; }
+		static uint8_t get_unit_no() { return UOFS / 0x08; }
 
 
 		//-------------------------------------------------------------//

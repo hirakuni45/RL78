@@ -690,6 +690,11 @@ namespace device {
 			case peripheral::ADC:
 				return IF1H.ADIF();
 
+			case peripheral::IICA0:
+				return IF1L.IICAIF0();
+			case peripheral::IICA1:
+				return IF2H.IICAIF1();
+
 			case peripheral::SAU00:  // UART0-TX
 				return IF0H.STIF0();
 			case peripheral::SAU01:  // UART0-RX
@@ -762,6 +767,13 @@ namespace device {
 
 			case peripheral::ADC:
 				IF1H.ADIF = ena;
+				break;
+
+			case peripheral::IICA0:
+				IF1L.IICAIF0 = ena;
+				break;
+			case peripheral::IICA1:
+				IF2H.IICAIF1 = ena;
 				break;
 
 			case peripheral::SAU00:  // UART0-TX
@@ -859,6 +871,13 @@ namespace device {
 
 			case peripheral::ADC:
 				MK1H.ADMK = !ena;
+				break;
+
+			case peripheral::IICA0:
+				MK1L.IICAMK0 = !ena;
+				break;
+			case peripheral::IICA1:
+				MK2H.IICAMK1 = !ena;
 				break;
 
 			case peripheral::SAU00:  // UART0-TX
@@ -959,6 +978,15 @@ namespace device {
 			case peripheral::ADC:
 				PR01H.ADPR = (level) & 1;
 				PR11H.ADPR = (level & 2) >> 1;
+				break;
+
+			case peripheral::IICA0:
+				PR01L.IICAPR0 = (level) & 1;
+				PR11L.IICAPR0 = (level & 2) >> 1;
+				break;
+			case peripheral::IICA1:
+				PR02H.IICAPR1 = (level) & 1;
+				PR12H.IICAPR1 = (level & 2) >> 1;
 				break;
 
 			case peripheral::SAU00:  // UART0-TX

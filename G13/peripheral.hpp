@@ -23,7 +23,8 @@ namespace device {
 
 		ADC,		///< A/D コンバーター
 
-		I2C,		///< I2C インターフェース
+		IICA0,		///< IICA0 (I2C-0) インターフェース
+		IICA1,		///< IICA1 (I2C-0) インターフェース
 
 		SAU00,		///< シリアル・アレイ・ユニット００
 		SAU01,		///< シリアル・アレイ・ユニット０１
@@ -61,6 +62,30 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	struct manage {
 
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  UART シリアル・クロック型
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class uart_sck : uint8_t {
+			NONE,	///< クロック無し
+			INPUT,	///< クロック入力
+			OUTPUT,	///< クロック出力
+		};
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  CSI ポート型
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class csi_port : uint8_t {
+			INPUT,		///< 入力(MISO) のみ有効
+			OUTPUT,		///< 出力(MOSI) のみ有効
+			INOUT,		///< 入出力有効
+		};
+
+
 		//-------------------------------------------------------------//
 		/*!
 			@brief  ペリフェラル許可
@@ -80,6 +105,13 @@ namespace device {
 
 			case peripheral::ADC:
 				PER0.ADCEN = ena;
+				break;
+
+			case peripheral::IICA0:
+				PER0.IICA0EN = ena;
+				break;
+			case peripheral::IICA1:
+				PER0.IICA1EN = ena;
 				break;
 
 			case peripheral::SAU00:
@@ -140,12 +172,41 @@ namespace device {
 
 		//-------------------------------------------------------------//
 		/*!
+			@brief  IICA ポートの設定
+			@param[in]	per	ペリフェラル型
+			@return IICAx 型では無い場合「false」
+		*/
+		//-------------------------------------------------------------//
+		static bool set_iica_port(peripheral per)
+		{
+			switch(per) {
+
+			case peripheral::IICA0:
+				PM6 &= 0b1111'1100;
+				P6  &= 0b1111'1100;
+				break;
+
+			case peripheral::IICA1:
+				PM6 &= 0b1111'0011;
+				P6  &= 0b1111'0011;
+				break;
+
+			default:
+				return false;		
+			}
+			return true;
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
 			@brief  UART ポートの設定
 			@param[in]	per	ペリフェラル型
+			@param[in]	sck	UART クロック入出力型
 			@return SAUxx 型では無い場合「false」
 		*/
 		//-------------------------------------------------------------//
-		static bool set_uart_port(peripheral per)
+		static bool set_uart_port(peripheral per, uart_sck sck = uart_sck::NONE)
 		{
 			switch(per) {
 
@@ -204,10 +265,114 @@ namespace device {
 
 		//-------------------------------------------------------------//
 		/*!
+			@brief  CSI(SPI) ポートの設定
+			@param[in]	per		ペリフェラル型
+			@param[in]	port	入力／出力の設定型（クロックは常に有効）
+			@return SAUxx 型では無い場合「false」
+		*/
+		//-------------------------------------------------------------//
+		static bool set_csi_port(peripheral per, csi_port port)
+		{
+			bool inp = false;
+			bool out = false;
+			if(port == csi_port::INPUT  || port == csi_port::INOUT) inp = true;
+			if(port == csi_port::OUTPUT || port == csi_port::INOUT) out = true;
+
+			switch(per) {
+
+			case peripheral::SAU00:
+				if(inp) {
+					PU1.B1  = 0;
+					PM1.B1  = 1;  // P1-1 input  (SI00)
+					PIM1.B1 = 1;  // P1-1 TTL input
+					P1.B1   = 1;  // ポートレジスター (SI00)  切り替え
+				}
+				if(out) {
+					PU1.B2 = 0;
+					PM1.B2 = 0;  // P1-2 output (SO00)
+					P1.B2  = 1;  // ポートレジスター (SO00)  切り替え
+				}
+				PU1.B0 = 0;
+				PM1.B0 = 0;  // P1-0 output (SCK00)
+				P1.B0  = 1;  // ポートレジスター (SCK00) 切り替え
+				break;
+
+			case peripheral::SAU01:
+				PU7.B3 = 0;
+				PU7.B4 = 0;
+				PU7.B5 = 0;
+				PM7.B3 = 0;  // P7-3 output (SO01)
+				PM7.B4 = 1;  // P7-4 input  (SI01)
+				PM7.B5 = 0;  // P7-5 output (SCK01)
+				P7.B3 = 1;   // ポートレジスター (SO01)  切り替え
+				P7.B4 = 1;   // ポートレジスター (SI01)  切り替え
+				P7.B5 = 1;   // ポートレジスター (SCK01) 切り替え
+				break;
+
+			case peripheral::SAU02:
+				PU0.B2 = 0;
+				PU0.B3 = 0;
+				PU0.B4 = 0;
+				PM0.B2  = 0;  // P0-2 output (SO10)
+				PM0.B3  = 1;  // P0-3 input  (SI10)
+				PM0.B4  = 0;  // P0-4 output (SCK10)
+				PMC0.B2 = 0;  // ポートモードコントロール
+				PMC0.B3 = 0;  // ポートモードコントロール
+				PIM0.B3 = 1;  // ポート入力モード
+				P0.B2   = 1;  // ポートレジスター SO10  切り替え
+				P0.B3   = 1;  // ポートレジスター SI10  切り替え
+				P0.B4   = 1;  // ポートレジスター SCK10 切り替え
+				break;
+
+			case peripheral::SAU03:
+				PU5.B2 = 0;
+				PU5.B1 = 0;
+				PU3.B0 = 0;
+				PM5.B1 = 0;  // P5-1 output (SO11)
+				PM5.B0 = 1;  // P5-0 input  (SI11)
+				PM3.B0 = 0;  // P3-0 output (SCK11)
+				P5.B1 = 1;   // ポートレジスター SO11  切り替え
+				P5.B0 = 1;   // ポートレジスター SI11  切り替え
+				P3.B0 = 1;   // ポートレジスター SCK11 切り替え
+				break;
+
+			case peripheral::SAU10:
+				PU1.B3 = 0;
+				PU1.B4 = 0;
+				PU1.B5 = 0;
+				PM1.B3 = 0;	 // P1-3 output (SO20)
+				PM1.B4 = 1;	 // P1-4 input  (SI20)
+				PM1.B5 = 0;  // P1-5 output (SCK20)
+				P1.B3  = 1;	 // ポートレジスター SO20  切り替え
+				P1.B4  = 1;  // ポートレジスター SI20  切り替え
+				P1.B5  = 1;  // ポートレジスター SCK20 切り替え
+				break;
+
+			case peripheral::SAU11:
+				PU7.B2 = 0;
+				PU7.B1 = 0;
+				PU7.B0 = 0;
+				PM7.B2 = 0;  // P7-2 output (SO21)
+				PM7.B1 = 1;  // P7-1 input  (SI21)
+				PM7.B0 = 0;  // P7-0 output (SCK21)
+				P7.B2  = 1;  // ポートレジスター SO21  切り替え
+				P7.B1  = 1;  // ポートレジスター SI21  切り替え
+				P7.B0  = 1;  // ポートレジスター SCK21 切り替え
+				break;
+
+			default:
+				return false;		
+			}
+			return true;
+		}
+
+
+		//-------------------------------------------------------------//
+		/*!
 			@brief  TAU ポートの設定
 			@param[in]	per	ペリフェラル型
 			@param[in]	dir	出力の場合「true」
-			@return SAUxx 型では無い場合「false」
+			@return TAUxx 型では無い場合「false」
 		*/
 		//-------------------------------------------------------------//
 		static bool set_tau_port(peripheral per, bool dir)
