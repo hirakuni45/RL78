@@ -8,9 +8,7 @@
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include "G13/system.hpp"
-#include "G13/tau.hpp"
-#include "G13/intr.hpp"
+#include "common/renesas.hpp"
 #include "common/task.hpp"
 
 /// F_CLK はボーレートパラメーター計算で必要、設定が無いとエラーにします。
