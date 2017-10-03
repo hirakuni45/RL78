@@ -3,22 +3,24 @@
 /*!	@file
 	@brief	RL78/G13 グループ・シリアル・インターフェース IICA 定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "common/io_utils.hpp"
+#include "G13/peripheral.hpp"
 
 namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  シリアル・インターフェース IICA クラス
+		@param[in]	PER		ペリフェラル型
 		@param[in]	UOFS	ユニット・オフセット（0x00、0x08）
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <uint32_t UOFS>
+	template <peripheral PER, uint32_t UOFS>
 	struct iica_t {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -154,8 +156,17 @@ namespace device {
         */
         //-----------------------------------------------------------------//
 		uint8_t get_unit_no() const { return UOFS / 0x08; }
+
+
+		//-------------------------------------------------------------//
+		/*!
+			@brief  ペリフェラル種別を取得
+			@return ペリフェラル種別
+		*/
+		//-------------------------------------------------------------//
+		static peripheral get_peripheral() { return PER; }
 	};
 
-	typedef iica_t<0x00> IICA0;
-	typedef iica_t<0x08> IICA1;
+	typedef iica_t<peripheral::IICA0, 0x00> IICA0;
+	typedef iica_t<peripheral::IICA1, 0x08> IICA1;
 }
