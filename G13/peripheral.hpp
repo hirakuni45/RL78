@@ -298,65 +298,85 @@ namespace device {
 				break;
 
 			case peripheral::SAU01:
-				PU7.B3 = 0;
-				PU7.B4 = 0;
+				if(inp) {
+					PU7.B4 = 0;
+					PM7.B4 = 1;  // P7-4 input  (SI01)
+					P7.B4  = 1;   // ポートレジスター (SI01)  切り替え
+				}
+				if(out) {
+					PU7.B3 = 0;
+					PM7.B3 = 0;  // P7-3 output (SO01)
+					P7.B3  = 1;   // ポートレジスター (SO01)  切り替え
+				}
 				PU7.B5 = 0;
-				PM7.B3 = 0;  // P7-3 output (SO01)
-				PM7.B4 = 1;  // P7-4 input  (SI01)
 				PM7.B5 = 0;  // P7-5 output (SCK01)
-				P7.B3 = 1;   // ポートレジスター (SO01)  切り替え
-				P7.B4 = 1;   // ポートレジスター (SI01)  切り替え
-				P7.B5 = 1;   // ポートレジスター (SCK01) 切り替え
+				P7.B5  = 1;   // ポートレジスター (SCK01) 切り替え
 				break;
 
 			case peripheral::SAU02:
-				PU0.B2 = 0;
-				PU0.B3 = 0;
+				if(inp) {
+					PU0.B3  = 0;
+					PM0.B3  = 1;  // P0-3 input  (SI10)
+					PMC0.B3 = 0;  // ポートモードコントロール
+					PIM0.B3 = 1;  // ポート入力モード
+					P0.B3   = 1;  // ポートレジスター SI10  切り替え
+				}
+				if(out) {
+					PU0.B2  = 0;
+					PM0.B2  = 0;  // P0-2 output (SO10)
+					PMC0.B2 = 0;  // ポートモードコントロール
+					P0.B2   = 1;  // ポートレジスター SO10  切り替え
+				}
 				PU0.B4 = 0;
-				PM0.B2  = 0;  // P0-2 output (SO10)
-				PM0.B3  = 1;  // P0-3 input  (SI10)
-				PM0.B4  = 0;  // P0-4 output (SCK10)
-				PMC0.B2 = 0;  // ポートモードコントロール
-				PMC0.B3 = 0;  // ポートモードコントロール
-				PIM0.B3 = 1;  // ポート入力モード
-				P0.B2   = 1;  // ポートレジスター SO10  切り替え
-				P0.B3   = 1;  // ポートレジスター SI10  切り替え
-				P0.B4   = 1;  // ポートレジスター SCK10 切り替え
+				PM0.B4 = 0;  // P0-4 output (SCK10)
+				P0.B4  = 1;  // ポートレジスター SCK10 切り替え
 				break;
 
 			case peripheral::SAU03:
-				PU5.B2 = 0;
-				PU5.B1 = 0;
+				if(inp) {
+					PU5.B1 = 0;
+					PM5.B1 = 0;  // P5-1 output (SO11)
+					P5.B1  = 1;  // ポートレジスター SO11  切り替え
+				}
+				if(out) {
+					PU5.B0 = 0;
+					PM3.B0 = 0;  // P3-0 output (SCK11)
+					P5.B0  = 1;  // ポートレジスター SI11  切り替え
+				}
 				PU3.B0 = 0;
-				PM5.B1 = 0;  // P5-1 output (SO11)
 				PM5.B0 = 1;  // P5-0 input  (SI11)
-				PM3.B0 = 0;  // P3-0 output (SCK11)
-				P5.B1 = 1;   // ポートレジスター SO11  切り替え
-				P5.B0 = 1;   // ポートレジスター SI11  切り替え
-				P3.B0 = 1;   // ポートレジスター SCK11 切り替え
+				P3.B0  = 1;  // ポートレジスター SCK11 切り替え
 				break;
 
 			case peripheral::SAU10:
-				PU1.B3 = 0;
-				PU1.B4 = 0;
+				if(inp) {
+					PU1.B4 = 0;
+					PM1.B4 = 1;	 // P1-4 input  (SI20)
+					P1.B4  = 1;  // ポートレジスター SI20  切り替え
+				}
+				if(out) {
+					PU1.B3 = 0;
+					PM1.B3 = 0;	 // P1-3 output (SO20)
+					P1.B3  = 1;	 // ポートレジスター SO20  切り替え
+				}
 				PU1.B5 = 0;
-				PM1.B3 = 0;	 // P1-3 output (SO20)
-				PM1.B4 = 1;	 // P1-4 input  (SI20)
 				PM1.B5 = 0;  // P1-5 output (SCK20)
-				P1.B3  = 1;	 // ポートレジスター SO20  切り替え
-				P1.B4  = 1;  // ポートレジスター SI20  切り替え
 				P1.B5  = 1;  // ポートレジスター SCK20 切り替え
 				break;
 
 			case peripheral::SAU11:
-				PU7.B2 = 0;
-				PU7.B1 = 0;
+				if(inp) {
+					PU7.B1 = 0;
+					PM7.B1 = 1;  // P7-1 input  (SI21)
+					P7.B1  = 1;  // ポートレジスター SI21  切り替え
+				}
+				if(out) {
+					PU7.B2 = 0;
+					PM7.B2 = 0;  // P7-2 output (SO21)
+					P7.B2  = 1;  // ポートレジスター SO21  切り替え
+				}
 				PU7.B0 = 0;
-				PM7.B2 = 0;  // P7-2 output (SO21)
-				PM7.B1 = 1;  // P7-1 input  (SI21)
 				PM7.B0 = 0;  // P7-0 output (SCK21)
-				P7.B2  = 1;  // ポートレジスター SO21  切り替え
-				P7.B1  = 1;  // ポートレジスター SI21  切り替え
 				P7.B0  = 1;  // ポートレジスター SCK21 切り替え
 				break;
 
