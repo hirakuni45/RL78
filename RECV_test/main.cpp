@@ -12,8 +12,9 @@
 #include "common/itimer.hpp"
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
+#include "common/tau_io.hpp"
 #include "common/format.hpp"
-
+#include "common/command.hpp"
 #include "chip/SEGMENT.hpp"
 
 namespace {
@@ -21,12 +22,14 @@ namespace {
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
 
-	// UART1 の定義（SAU2、SAU3）
+	// UART の定義
 	typedef utils::fifo<uint8_t, 64> BUFFER;
 	typedef device::uart_io<device::SAU00, device::SAU01, BUFFER, BUFFER> UART0;
 	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART1;
+	typedef device::uart_io<device::SAU10, device::SAU11, BUFFER, BUFFER> UART2;
 	UART0	uart0_;
-//	UART1	uart1_;
+	UART1	uart1_;
+	UART2	uart2_;
 
 	typedef device::PORT<device::port_no::P7, device::bitpos::B3> SG1_A;
 	typedef device::PORT<device::port_no::P7, device::bitpos::B2> SG1_B;
@@ -45,6 +48,8 @@ namespace {
 	typedef device::PORT<device::port_no::P7, device::bitpos::B5> SG2_F;
 	typedef device::PORT<device::port_no::P7, device::bitpos::B4> SG2_G;
 	typedef chip::SEGMENT<SG2_A, SG2_B, SG2_C, SG2_D, SG2_E, SG2_F, SG2_G, device::NULL_PORT> SEG2;
+
+	utils::command<64> command_;
 }
 
 
@@ -92,6 +97,42 @@ extern "C" {
 	}
 
 
+	INTERRUPT_FUNC void UART1_TX_intr(void)
+	{
+		uart1_.send_task();
+	}
+
+
+	INTERRUPT_FUNC void UART1_RX_intr(void)
+	{
+		uart1_.recv_task();
+	}
+
+
+	INTERRUPT_FUNC void UART1_ER_intr(void)
+	{
+		uart1_.error_task();
+	}
+
+
+	INTERRUPT_FUNC void UART2_TX_intr(void)
+	{
+		uart2_.send_task();
+	}
+
+
+	INTERRUPT_FUNC void UART2_RX_intr(void)
+	{
+		uart2_.recv_task();
+	}
+
+
+	INTERRUPT_FUNC void UART2_ER_intr(void)
+	{
+		uart2_.error_task();
+	}
+
+
 	INTERRUPT_FUNC void ITM_intr(void)
 	{
 		itm_.task();
@@ -115,6 +156,17 @@ int main(int argc, char* argv[])
 		uart0_.start(115200, intr_level);
 	}
 
+	// UART1 の開始
+	{
+		uint8_t intr_level = 1;
+		uart1_.start(19200, intr_level);
+	}
+	// UART2 の開始
+	{
+		uint8_t intr_level = 1;
+		uart2_.start(19200, intr_level);
+	}
+
 
 	utils::format("Start Digital MIC Reciver\n");
 
@@ -130,6 +182,8 @@ int main(int argc, char* argv[])
 	SEG1::start();
 	SEG2::start();
 
+	command_.set_prompt("# ");
+
 	uint8_t	n = 0;
 	uint8_t t = 0;
 	while(1) {
@@ -138,13 +192,23 @@ int main(int argc, char* argv[])
 		SEG1::decimal(t / 10);
 		SEG2::decimal(t % 10);
 
+		// コマンド入力と、コマンド解析
+		if(command_.service()) {
+			uint8_t cmdn = command_.get_words();
+			if(cmdn >= 1) {
+				if(command_.cmp_word(0, "help")) {
+					utils::format("---\n");
+				}
+			}
+		}
+
 		++n;
 		if(n >= 60) {
 			n = 0;
 			++t;
 			if(t >= 100) t = 0;
 
-			utils::format("%d\n") % static_cast<uint16_t>(t);
+//			utils::format("%d\n") % static_cast<uint16_t>(t);
 
 		}
 		if(n < 20) {
