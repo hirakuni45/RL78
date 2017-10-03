@@ -13,6 +13,7 @@
 #include "common/fifo.hpp"
 #include "common/uart_io.hpp"
 #include "common/tau_io.hpp"
+#include "common/iica_io.hpp"
 #include "common/format.hpp"
 #include "common/command.hpp"
 #include "chip/SEGMENT.hpp"
