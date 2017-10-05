@@ -146,11 +146,14 @@ namespace device {
 			@brief  ボーレートを設定して、UART を有効にする
 			@param[in]	baud	ボーレート
 			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
+			@param[in]	sec		セカンド・ポート選択の場合「true」
 			@param[in]	parity	パリティ・ビット
+			@param[in]	stop	ストップ・ビット
 			@return エラーなら「false」
 		*/
 		//-----------------------------------------------------------------//
-		bool start(uint32_t baud, uint8_t level = 0, PARITY parity = PARITY::NONE, STOP stop = STOP::ONE) noexcept
+		bool start(uint32_t baud, uint8_t level = 0, bool sec = false,
+			PARITY parity = PARITY::NONE, STOP stop = STOP::ONE) noexcept
 		{
 			intr_level_ = level;
 
@@ -213,8 +216,8 @@ namespace device {
 			SAUtx::SOE = 1;	// シリアル出力許可(Txd)
 
 			// 対応するポートの設定
-			manage::set_uart_port(SAUtx::get_peripheral());
-			manage::set_uart_port(SAUrx::get_peripheral());
+			manage::set_uart_port(SAUtx::get_peripheral(), sec);
+			manage::set_uart_port(SAUrx::get_peripheral(), sec);
 
 			send_stall_ = true;
 

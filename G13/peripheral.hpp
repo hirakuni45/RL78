@@ -202,11 +202,12 @@ namespace device {
 		/*!
 			@brief  UART ポートの設定
 			@param[in]	per	ペリフェラル型
+			@param[in]	sec	セカンド候補ポートの場合「true」
 			@param[in]	sck	UART クロック入出力型
 			@return SAUxx 型では無い場合「false」
 		*/
 		//-------------------------------------------------------------//
-		static bool set_uart_port(peripheral per, uart_sck sck = uart_sck::NONE)
+		static bool set_uart_port(peripheral per, bool sec = false, uart_sck sck = uart_sck::NONE)
 		{
 			switch(per) {
 
@@ -222,16 +223,28 @@ namespace device {
 				break;
 
 			case peripheral::SAU02:  // UART1-TX TxD1 (P02)
-				PM0.B2 = 0;	// output
-				PU0.B2 = 0; // pullup offline
-				PMC0.B2 = 0;  // ポートモードコントロール
-				P0.B2  = 1;	// ポートレジスター TxD 切り替え
+				if(sec) {
+					PM0.B0 = 0;	// output
+					PU0.B0 = 0; // pullup offline
+					P0.B0  = 1;	// ポートレジスター TxD 切り替え
+				} else {
+					PM0.B2 = 0;	// output
+					PU0.B2 = 0; // pullup offline
+					PMC0.B2 = 0;  // ポートモードコントロール
+					P0.B2  = 1;	// ポートレジスター TxD 切り替え
+				}
 				break;
 			case peripheral::SAU03:  // UART1-RX RxD1 (P03)
-				PM0.B3 = 1;	// input
-				PU0.B3 = 0; // pullup offline
-				PMC0.B3 = 0;  // ポートモードコントロール
-				P0.B3  = 1;	// ポートレジスター RxD 切り替え
+				if(sec) {
+					PM0.B1 = 1;	// input
+					PU0.B1 = 0; // pullup offline
+					P0.B1  = 1;	// ポートレジスター RxD 切り替え
+				} else {
+					PM0.B3 = 1;	// input
+					PU0.B3 = 0; // pullup offline
+					PMC0.B3 = 0;  // ポートモードコントロール
+					P0.B3  = 1;	// ポートレジスター RxD 切り替え
+				}
 				break;
 
 			case peripheral::SAU10:  // UART2-TX TxD2 (P13)
