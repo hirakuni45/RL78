@@ -22,8 +22,11 @@
 #include "common/command.hpp"
 
 #include "sw.hpp"
+#include "serial.hpp"
 
 namespace {
+
+	static const uint16_t VERSION = 15;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -33,7 +36,7 @@ namespace {
 	typedef device::uart_io<device::SAU00, device::SAU01, BUFFER, BUFFER> UART0;
 	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART1;
 	UART0	uart0_;
-//	UART1	uart1_;
+	UART1	uart1_;
 
 	typedef device::iica_io<device::IICA0> IICA;
 	IICA 	iica_;
@@ -45,25 +48,30 @@ namespace {
 	typedef device::flash_io FLASH;
 	FLASH	flash_;
 
-//	utils::command<64> command_;
-
 	// MIC 切り替え、入力定義
 	typedef device::PORT<device::port_no::P12, device::bitpos::B2> MIC_SW1;
 	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MIC_SW2;
-	utils::sw2<MIC_SW1, MIC_SW2> sw2_;
+	typedef utils::sw2<MIC_SW1, MIC_SW2> SW2;
+	SW2		sw2_;
 
 	// CH 設定、入力定義
 	typedef device::PORT<device::port_no::P2,  device::bitpos::B1> CH_SW1;
-	typedef device::PORT<device::port_no::P2,  device::bitpos::B0> CH_SW2;
-	typedef device::PORT<device::port_no::P0,  device::bitpos::B1> CH_SW3;
-	typedef device::PORT<device::port_no::P0,  device::bitpos::B0> CH_SW4;
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B6> CH_SW2;  // P20/AIN0 --> P26 
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B5> CH_SW3;
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B4> CH_SW4;
 	typedef device::PORT<device::port_no::P12, device::bitpos::B0> CH_SW5;
-	utils::sw5<CH_SW1, CH_SW2, CH_SW3, CH_SW4, CH_SW5> sw5_;
+	typedef utils::sw5<CH_SW1, CH_SW2, CH_SW3, CH_SW4, CH_SW5> SW5;
+	SW5		sw5_;
 
 	// Volume +/-
 	typedef device::PORT<device::port_no::P3,  device::bitpos::B1> VOL_UP;
 	typedef device::PORT<device::port_no::P7,  device::bitpos::B3> VOL_DN;
 	utils::sw2<VOL_UP, VOL_DN> vol_;
+
+	utils::command<64> command_;
+
+	typedef dmic::serial<UART0, SW5, SW2> SERIAL;
+	SERIAL	serial_(uart0_, sw5_, sw2_);
 }
 
 
@@ -71,25 +79,25 @@ extern "C" {
 
 	void sci_putch(char ch)
 	{
-		uart0_.putch(ch);
+		uart1_.putch(ch);
 	}
 
 
 	void sci_puts(const char* str)
 	{
-		uart0_.puts(str);
+		uart1_.puts(str);
 	}
 
 
 	char sci_getch(void)
 	{
-		return uart0_.getch();
+		return uart1_.getch();
 	}
 
 
 	uint16_t sci_length()
 	{
-		return uart0_.recv_length();
+		return uart1_.recv_length();
 	}
 
 
@@ -108,6 +116,24 @@ extern "C" {
 	INTERRUPT_FUNC void UART0_ER_intr(void)
 	{
 		uart0_.error_task();
+	}
+
+
+	INTERRUPT_FUNC void UART1_TX_intr(void)
+	{
+		uart1_.send_task();
+	}
+
+
+	INTERRUPT_FUNC void UART1_RX_intr(void)
+	{
+		uart1_.recv_task();
+	}
+
+
+	INTERRUPT_FUNC void UART1_ER_intr(void)
+	{
+		uart1_.error_task();
 	}
 
 
@@ -132,20 +158,27 @@ int main(int argc, char* argv[])
 
 	// itimer の開始
 	{
-		uint8_t intr_level = 1;
+		uint8_t intr_level = 2;
 		itm_.start(60, intr_level);
 	}
 
-	// UART0 の開始
+	// UART1 の開始
 	{
 		uint8_t intr_level = 1;
-		uart0_.start(19200, intr_level);
+		// ４０ピン版、セカンドポート選択
+		bool sec = true;
+		uart1_.start(115200, intr_level, sec);
 	}
+
+	ADPC = 0x01; // A/D input All digital port
+
+//	PM2.B3 = 0;  // POWER CTRL (OUTPUT)
+//	P2.B3  = 1;  // Active high (ON)
 
 	// IICA(I2C) の開始
 	{
 		uint8_t intr_level = 0;
-//		if(!iica_.start(IICA::speed::fast, intr_level)) {
+///		if(!iica_.start(IICA::speed::fast, intr_level)) {
 		if(!iica_.start(IICA::speed::standard, intr_level)) {
 			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 		}
@@ -162,58 +195,59 @@ int main(int argc, char* argv[])
 	{
 	}
 
-	ADPC = 0x01; // A/D input All digital port
-
-	PM2.B3 = 0;  // POWER CTRL (OUTPUT)
-	P2.B3  = 1;  // Active high (ON)
-
 	PM1.B5 = 0;  // LED G output
 	PM1.B6 = 0;  // LED R output
 
-	sw2_.start();
-	PMC12 = 0b11111110;  // setup P12_0: digital port
-	sw5_.start();
-
 	vol_.start();
 
-///	utils::format("Start Digital MIC\n");
+	serial_.start();
+
+	utils::format("Start Digital MIC Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
+
+	command_.set_prompt("# ");
 
 	uint8_t cnt = 0;
-	uint8_t vol = 0;
 	while(1) {
 		itm_.sync();
 
+		// コマンド入力と、コマンド解析
+		if(command_.service()) {
+			auto n = command_.get_words();
+			if(command_.cmp_word(0, "sw2")) {
+				utils::format("SW2: %02b\n") % static_cast<uint16_t>(sw2_.get());
+			} else if(command_.cmp_word(0, "sw5")) {
+				utils::format("SW5: %05b\n") % static_cast<uint16_t>(sw5_.get());
+			} else if(command_.cmp_word(0, "vol")) {
+				utils::format("volume: %d\n") % serial_.get_volume();
+			} else if(command_.cmp_word(0, "help") || command_.cmp_word(0, "?")) {
+				utils::format("sw2   list SW2 value\n");
+				utils::format("sw5   list SW5 value\n");
+				utils::format("vol   list VOL value\n");
+			} else {
+				const char* p = command_.get_command();
+				if(p[0]) {
+					utils::format("command error: '%s'\n") % p;
+				}
+			}
+		}
+
 		vol_.service();
+
+		bool volp = false;
 		if(vol_.positive() & 1) {
-			if(vol < 8) {
-				++vol;
-			}
+			volp = true;
 		}
+		bool volm = false;
 		if(vol_.positive() & 2) {
-			if(vol > 0) {
-				--vol;
-			}
+			volm = true;
 		}
+		serial_.service(volp, volm);
 
-		if(uart0_.recv_length() > 0) {
-			char ch = uart0_.getch();
-
-			if(ch == 'C') {  // CH-SW (0 to 31)
-				auto n = sw5_.get();
-				uart0_.putch((n / 10) + '0');
-				uart0_.putch((n % 10) + '0');
-				uart0_.putch('\n');
-			} else if(ch == 'M') {  // MIC-SW (0 to 3)
-				auto n = sw2_.get();
-				uart0_.putch((n % 10) + '0');
-				uart0_.putch('\n');
-			} else if(ch == 'F') {  // 混信フラグ (0 to 1)
-				uart0_.putch('0');
-				uart0_.putch('\n');
-			} else if(ch == 'V') {  // ボリューム値
-				uart0_.putch('0' + vol);
-				uart0_.putch('\n');
-			}
+		if(volp) {
+			utils::format("V+: %d\n") % serial_.get_volume();
+		}
+		if(volm) {
+			utils::format("V-: %d\n") % serial_.get_volume();
 		}
 
 		if(cnt >= 20) {
