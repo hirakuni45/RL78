@@ -23,11 +23,11 @@
 #include "common/switch_man.hpp"
 
 #include "sw.hpp"
-#include "serial.hpp"
+// #include "serial.hpp"
 
 namespace {
 
-	static const uint16_t VERSION = 20;
+	static const uint16_t VERSION = 23;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -87,12 +87,23 @@ namespace {
 	// 充電制御 (0: 非充電、1: 充電)
 	typedef device::PORT<device::port_no::P1, device::bitpos::B0> B_CONT;
 
+	// TI ADC RESET
+	typedef device::PORT<device::port_no::P6, device::bitpos::B2> TRESET;
+
+	// LED Green
+	typedef device::PORT<device::port_no::P1, device::bitpos::B5> LED_G;
+	// LED Red
+	typedef device::PORT<device::port_no::P1, device::bitpos::B6> LED_R;
 
 	void init_switch_()
 	{
 		// ボリューム
 		VOL_UP::DIR = 0;
 		VOL_DN::DIR = 0;
+
+		sw2_.start();
+		device::PMC12 = 0b11111110;  // setup P12_0: digital port
+		sw5_.start();
 
 		// 電源オフ・スイッチ (0: OFF, 1: ON)
 		P_OFF::DIR = 0;
@@ -117,6 +128,11 @@ namespace {
 		// 充電制御 (0: 非充電、1: 充電)
 		B_CONT::DIR = 1;
 		B_CONT::P = 0;
+
+		TRESET::DIR = 1;
+		TRESET::P = 0;
+		utils::delay::milli_second(200);
+		TRESET::P = 1;
 	}
 
 
@@ -133,8 +149,9 @@ namespace {
 	void service_switch_()
 	{
 		uint8_t lvl = 0;
-		if(VOL_UP::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::VOL_P);
-		if(VOL_DN::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::VOL_M);
+
+		if(!VOL_UP::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::VOL_P);
+		if(!VOL_DN::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::VOL_M);
 		if(P_OFF::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::POWER);
 		if(S_SEL::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::SOUND);
 		if(TPS::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::RF_POWER);
@@ -142,11 +159,82 @@ namespace {
 		switch_man_.service(lvl);
 	}
 
-	typedef dmic::serial<UART0, SW5, SW2> SERIAL;
-	SERIAL	serial_(uart0_, sw5_, sw2_);
+//	typedef dmic::serial<UART0, SW5, SW2> SERIAL;
+//	SERIAL	serial_(uart0_, sw5_, sw2_);
 
 	utils::command<64> command_;
 	
+	static const uint8_t volume_limit_ = 100;
+	/// setup > cycle の関係が条件
+	static const uint8_t repeat_setup_ = 45;  ///< リピート開始までの時間
+	static const uint8_t repeat_cycle_ = 10;  ///< リピートサイクル
+	uint8_t		volume_ = 0;
+	uint8_t		repeat_ = 0;
+	uint8_t		sw5_val_ = 0;
+	uint8_t		sw2_val_ = 0;
+
+	void serial_(bool outreq)
+	{
+		bool volp = switch_man_.get_level(SWITCH::VOL_P);
+		bool volm = switch_man_.get_level(SWITCH::VOL_M);
+		if(volp || volm) {
+			if(repeat_ >= repeat_setup_) {
+				repeat_ = repeat_setup_ - repeat_cycle_;
+			} else {
+				++repeat_;
+				volp = switch_man_.get_positive(SWITCH::VOL_P);
+				volm = switch_man_.get_positive(SWITCH::VOL_M);
+			}
+		} else {
+			repeat_ = 0;
+		}
+
+		uint8_t vol = volume_;
+		if(volp) {
+			if(vol < (volume_limit_ - 1)) {
+				++vol;
+			}
+			utils::format("V+: %d\n") % static_cast<uint16_t>(vol);
+		}
+		if(volm) {
+			if(vol > 0) {
+				--vol;
+			}
+			utils::format("V-: %d\n") % static_cast<uint16_t>(vol);
+		}
+		if(outreq || vol != volume_) {
+			uart0_.putch('V');
+			uart0_.putch((vol / 10) + '0');
+			uart0_.putch((vol % 10) + '0');
+			uart0_.putch('\n');
+			volume_ = vol;
+		}
+
+		{
+			auto v = sw5_.get();
+			if(outreq || sw5_val_ != v) {
+				uart0_.putch('C');
+				uart0_.putch((v / 10) + '0');
+				uart0_.putch((v % 10) + '0');
+				uart0_.putch('\n');
+				utils::format("SW5: %d\n") % static_cast<uint16_t>(v);
+				sw5_val_ = v;
+			}
+		}
+		{
+			auto v = sw2_.get();
+			if(outreq || sw2_val_ != v) {
+				uart0_.putch('M');
+				uart0_.putch((v % 10) + '0');
+				uart0_.putch('\n');
+				utils::format("SW2: %d\n") % static_cast<uint16_t>(v);
+				sw2_val_ = v;
+			}
+		}
+	}
+
+	uint8_t	start_i2c_ = 0;
+	uint8_t reset_setup_ = 0;
 }
 
 
@@ -237,6 +325,12 @@ int main(int argc, char* argv[])
 		itm_.start(60, intr_level);
 	}
 
+	// UART0 の開始
+	{
+		uint8_t intr_level = 1;
+		uart0_.start(19200, intr_level);
+	}
+
 	// UART1 の開始
 	{
 		uint8_t intr_level = 1;
@@ -245,20 +339,14 @@ int main(int argc, char* argv[])
 		uart1_.start(115200, intr_level, sec);
 	}
 
-	ADPC = 0x01; // A/D input All digital port
+	ADPC = 0b0010; // A/D AIN0, other digital port
 	init_switch_();
 
-	// IICA(I2C) の開始
-	{
-		uint8_t intr_level = 0;
-///		if(!iica_.start(IICA::speed::fast, intr_level)) {
-		if(!iica_.start(IICA::speed::standard, intr_level)) {
-			utils::format("IICA start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
-		}
-	}
+	LED_G::DIR = 1;
+	LED_R::DIR = 1;
 
 	// A/D の開始
-	if(0) {
+	{
 		device::PM2.B0 = 1;
 		uint8_t intr_level = 1;  // 割り込み設定
 		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
@@ -268,28 +356,24 @@ int main(int argc, char* argv[])
 	{
 	}
 
-	PM1.B5 = 0;  // LED G output
-	PM1.B6 = 0;  // LED R output
-
-	serial_.start();
-
 	utils::format("Start Digital MIC Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
 
 	command_.set_prompt("# ");
 
 	uint8_t cnt = 0;
 	uint8_t pw_cnt = 0;
+	bool outreq = false;
+	bool power = false;
 	while(1) {
 		itm_.sync();
 
+		adc_.start_scan(0);  // AIN00
+
 		service_switch_();
-		bool volp = switch_man_.get_positive(SWITCH::VOL_P);
-		bool volm = switch_man_.get_positive(SWITCH::VOL_M);
-		if(volp) {
-			utils::format("V+: %d\n") % serial_.get_volume();
-		}
-		if(volm) {
-			utils::format("V-: %d\n") % serial_.get_volume();
+
+		if(power) {
+			serial_(outreq);
+			outreq = false;
 		}
 
 		if(switch_man_.get_turn(SWITCH::POWER)) {
@@ -304,8 +388,10 @@ int main(int argc, char* argv[])
 		if(pw_cnt) {
 			--pw_cnt;
 			if(pw_cnt == 0) {
-///				utils::format("POWER enable\n");
-///				P_CONT::P = 1;
+				utils::format("POWER enable / Reset TI (L)\n");
+				P_CONT::P = 1;
+				start_i2c_ = 20;
+				TRESET::P = 0;
 			}
 		}
 
@@ -320,6 +406,33 @@ int main(int argc, char* argv[])
 				% (switch_man_.get_level(SWITCH::RF_POWER) ? "10mW" : "1mW");
 		}
 
+		if(start_i2c_ > 0) {
+			--start_i2c_;
+			if(start_i2c_ == 0) {
+				utils::format("Reset TI (H) OK\n");
+				TRESET::P = 1;
+				reset_setup_ = 10;
+				outreq = true;  // serial all output
+				power = true;
+			}
+		}
+		if(reset_setup_ > 0) {
+			--reset_setup_;
+			if(reset_setup_ == 0) {
+				// IICA(I2C) の開始
+				uint8_t intr_level = 0;
+///				if(!iica_.start(IICA::speed::fast, intr_level)) {
+				if(!iica_.start(IICA::speed::standard, intr_level)) {
+					utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+				} else {
+					utils::format("I2C start OK\n");
+				}
+			}
+		}
+
+		adc_.sync();  // スキャン終了待ち
+		auto adi = adc_.get(0) >> 6;
+
 		// コマンド入力と、コマンド解析
 		if(command_.service()) {
 			auto n = command_.get_words();
@@ -329,7 +442,7 @@ int main(int argc, char* argv[])
 			} else if(command_.cmp_word(0, "sw5")) {
 				utils::format("SW5: %05b\n") % static_cast<uint16_t>(sw5_.get());
 			} else if(command_.cmp_word(0, "vol")) {
-				utils::format("volume: %d\n") % serial_.get_volume();
+				utils::format("volume: %d\n") % static_cast<uint16_t>(volume_);
 			} else if(command_.cmp_word(0, "rf")) {
 				utils::format("RF: %s\n")
 					% (switch_man_.get_level(SWITCH::RF_POWER) ? "10mW" : "1mW");
@@ -363,15 +476,21 @@ int main(int argc, char* argv[])
 				} else {
 					error = true;
 				}
+			} else if(command_.cmp_word(0, "volt")) {
+				// Vref: 310: 3.3V とした場合の電圧
+//				uint32_t vol = static_cast<uint32_t>(adi) * 1024 / 310;
+				uint32_t vol = static_cast<uint32_t>(adi) * 1024 / 155;
+				utils::format("VOLTAGE: %4.2:10y [V]\n") % vol;
 			} else if(command_.cmp_word(0, "help") || command_.cmp_word(0, "?")) {
-				utils::format("sw2              list SW2\n");
-				utils::format("sw5              list SW5\n");
-				utils::format("vol              list Volume value\n");
-				utils::format("rf               list RF SW\n");
-				utils::format("sound            list Sound SW\n");
-				utils::format("power [on, off]  list/ctrl Power SW\n");
-				utils::format("mute on, off     Mute ctrl\n");
-				utils::format("chage on, off    Chage ctrl\n");
+				utils::format("sw2            list SW2\n");
+				utils::format("sw5            list SW5\n");
+				utils::format("vol            list Volume value\n");
+				utils::format("rf             list RF SW\n");
+				utils::format("sound          list Sound SW\n");
+				utils::format("power          list Power SW\n");
+				utils::format("mute on, off   Mute ctrl\n");
+				utils::format("chage on, off  Chage ctrl\n");
+				utils::format("volt           list volatage\n");
 			} else {
 				error = true;
 			}
@@ -384,17 +503,15 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		serial_.service(volp, volm);
-
 		if(cnt >= 20) {
 			cnt = 0;
 		}
 		if(cnt < 10) {
-			P1.B5 = 1;
-			P1.B6 = 0;
+			LED_G::P = 1;
+			LED_R::P = 0;
 		} else {
-			P1.B5 = 0;
-			P1.B6 = 1;
+			LED_G::P = 0;
+			LED_R::P = 1;
 		}
 		++cnt;
 	}

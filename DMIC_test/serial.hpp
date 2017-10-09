@@ -25,11 +25,16 @@ namespace dmic {
 	template <class UART, class SW5, class SW2>
 	class serial {
 
+		static const uint8_t volume_limit_ = 8;
+
 		UART&	uart_;
 		SW5&	sw5_;
 		SW2&	sw2_;
 
 		uint8_t	volume_;
+
+		uint8_t	sw2_val_;
+		uint8_t	sw5_val_;
 
 	public:
         //-----------------------------------------------------------------//
@@ -38,7 +43,7 @@ namespace dmic {
         */
         //-----------------------------------------------------------------//
 		serial(UART& uart, SW5& sw5, SW2& sw2) noexcept : uart_(uart), sw5_(sw5), sw2_(sw2),
-			volume_(0) { }
+			volume_(0), sw2_val_(0), sw5_val_(0) { }
 
 
         //-----------------------------------------------------------------//
@@ -75,18 +80,47 @@ namespace dmic {
         //-----------------------------------------------------------------//
 		void service(bool volp, bool volm) noexcept
 		{
+			uint8_t vol = volume_;
 			if(volp) {
-				if(volume_ < 8) {
+				if(volume_ < volume_limit_) {
 					++volume_;
 				}
+//				utils::format("V+: %d\n") % static_cast<uint16_t>(volume_);
 			}
-
 			if(volm) {
 				if(volume_ > 0) {
 					--volume_;
 				}
+//				utils::format("V-: %d\n") % static_cast<uint16_t>(volume_);
+			}
+			if(vol != volume_) {
+				uart_.putch('V');
+				uart_.putch('0' + volume_);
+				uart_.putch('\n');
 			}
 
+			{
+				auto v = sw5_.get();
+				if(sw5_val_ != v) {
+					uart_.putch('C');
+					uart_.putch((v / 10) + '0');
+					uart_.putch((v % 10) + '0');
+					uart_.putch('\n');
+//					utils::format("SW2: %d\n") % static_cast<uint16_t>(v);
+					sw5_val_ = v;
+				}
+			}
+			{
+				auto v = sw2_.get();
+				if(sw2_val_ != v) {
+					uart_.putch('M');
+					uart_.putch((v % 10) + '0');
+					uart_.putch('\n');
+//					utils::format("SW2: %d\n") % static_cast<uint16_t>(v);
+					sw2_val_ = v;
+				}
+			}
+#if 0
 			if(uart_.recv_length() > 0) {
 				char ch = uart_.getch();
 
@@ -107,6 +141,7 @@ namespace dmic {
 					uart_.putch('\n');
 				}
 			}
+#endif
 		}
 	};
 }
