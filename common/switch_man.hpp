@@ -22,6 +22,7 @@ namespace utils {
 	template <typename BITS, class NAME>
 	class switch_man {
 
+		BITS	value_;
 		BITS	level_;
 		BITS	positive_;
 		BITS	negative_;
@@ -37,7 +38,7 @@ namespace utils {
 			@brief	コンストラクタ
 		*/
 		//-----------------------------------------------------------------//
-		switch_man() noexcept : level_(0), positive_(), negative_() { }
+		switch_man() noexcept : value_(0), level_(0), positive_(), negative_() { }
 
 
 		//-----------------------------------------------------------------//
@@ -99,7 +100,7 @@ namespace utils {
 
 		//-----------------------------------------------------------------//
 		/*!
-			@brief	変化の取得
+			@brief	変化の取得（押した瞬間、離した瞬間）
 			@param[in]	pos	ビット位置
 			@return 変化した場合「true」
 		*/
@@ -118,6 +119,18 @@ namespace utils {
 			positive_ = level & ~level_;
 			negative_ =~level &  level_;
 			level_ = level;
+			value_ = 0;
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	レベルの作成
+			@param[in]	pos	位置
+		*/
+		//-----------------------------------------------------------------//
+		void operator | (NAME pos) noexcept {
+			value_ |= 1 << static_cast<BITS>(pos);
 		}
 	};
 }
