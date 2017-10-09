@@ -24,7 +24,6 @@
 #include "common/itimer.hpp"
 #include "common/adc_io.hpp"
 #include "common/task.hpp"
-#include "common/bitset.hpp"
 #include "common/switch_man.hpp"
 
 namespace {
@@ -49,8 +48,7 @@ namespace {
 		B
 	};
 
-	typedef utils::bitset<uint8_t, SWITCH> SWITCH_BITS;
-	utils::switch_man<SWITCH_BITS> switch_man_;
+	utils::switch_man<uint8_t, SWITCH> switch_man_;
 }
 
 
@@ -149,62 +147,62 @@ int main(int argc, char* argv[])
 		val += 128;  // 閾値のオフセット（1024 / 4(SWITCH) / 2）
 		val /= 256;  // デコード（1024 / 4(SWITCH）
 
-		SWITCH_BITS tmp;
+		uint8_t tmp = 0;
 		if(val < 4) {
-			tmp.set(static_cast<SWITCH>(val));
+			tmp |= 1 << val;
 		}
 
 		// ２つのスイッチ判定（同時押し判定）
 		val = adc_.get(3);
 		val >>= 6;  // 0 to 1023
 		if(val < 256) {
-			tmp.set(SWITCH::A);
-			tmp.set(SWITCH::B);
+			tmp |= 1 << static_cast<uint8_t>(SWITCH::A);
+			tmp |= 1 << static_cast<uint8_t>(SWITCH::B);
 		} else if(val < 594) {
-			tmp.set(SWITCH::A);
+			tmp |= 1 << static_cast<uint8_t>(SWITCH::A);
 		} else if(val < 722) {
-			tmp.set(SWITCH::B);
+			tmp |= 1 << static_cast<uint8_t>(SWITCH::B);
 		}
 
 		switch_man_.service(tmp);
 
-		if(switch_man_.get_positive().get(SWITCH::UP)) {
+		if(switch_man_.get_positive(SWITCH::UP)) {
 			utils::format("UP   : on\n");
 		}
-		if(switch_man_.get_positive().get(SWITCH::DOWN)) {
+		if(switch_man_.get_positive(SWITCH::DOWN)) {
 			utils::format("DOWN : on\n");
 		}
-		if(switch_man_.get_positive().get(SWITCH::LEFT)) {
+		if(switch_man_.get_positive(SWITCH::LEFT)) {
 			utils::format("LEFT : on\n");
 		}
-		if(switch_man_.get_positive().get(SWITCH::RIGHT)) {
+		if(switch_man_.get_positive(SWITCH::RIGHT)) {
 			utils::format("RIGHT: on\n");
 		}
 
-		if(switch_man_.get_positive().get(SWITCH::A)) {
+		if(switch_man_.get_positive(SWITCH::A)) {
 			utils::format("A    : on\n");
 		}
-		if(switch_man_.get_positive().get(SWITCH::B)) {
+		if(switch_man_.get_positive(SWITCH::B)) {
 			utils::format("B    : on\n");
 		}
 
-		if(switch_man_.get_negative().get(SWITCH::UP)) {
+		if(switch_man_.get_negative(SWITCH::UP)) {
 			utils::format("UP   : off\n");
 		}
-		if(switch_man_.get_negative().get(SWITCH::DOWN)) {
+		if(switch_man_.get_negative(SWITCH::DOWN)) {
 			utils::format("DOWN : off\n");
 		}
-		if(switch_man_.get_negative().get(SWITCH::LEFT)) {
+		if(switch_man_.get_negative(SWITCH::LEFT)) {
 			utils::format("LEFT : off\n");
 		}
-		if(switch_man_.get_negative().get(SWITCH::RIGHT)) {
+		if(switch_man_.get_negative(SWITCH::RIGHT)) {
 			utils::format("RIGHT: off\n");
 		}
 
-		if(switch_man_.get_negative().get(SWITCH::A)) {
+		if(switch_man_.get_negative(SWITCH::A)) {
 			utils::format("A    : off\n");
 		}
-		if(switch_man_.get_negative().get(SWITCH::B)) {
+		if(switch_man_.get_negative(SWITCH::B)) {
 			utils::format("B    : off\n");
 		}
 
