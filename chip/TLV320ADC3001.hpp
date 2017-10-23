@@ -313,15 +313,18 @@ namespace chip {
 				if(!f) return false;
 			}
 
+			// 最終的なサンプリング周期：ADC_FS
+			// Figure 28. 参照
+			// CLOCK_GEN: で CODEC_CLKIN: MCLK 
+			// ADC_FS = MCLK / NADC / MADC / AOSR
+			// ※ 256FS
 			// NADC = 1, divider powered on
 			f = set_(CMD_PAGE0::ADC_NADC, 0x81);
 			if(!f) return false;
-
 			// MADC = 2, divider powered on
 			f = set_(CMD_PAGE0::ADC_MADC, 0x82);
 			if(!f) return false;
-
-			// AOSR = 128 (default)
+			// AOSR = 128
 			f = set_(CMD_PAGE0::ADC_AOSR, 0x80);
 			if(!f) return false;
 
@@ -351,12 +354,11 @@ namespace chip {
 
 			// (d) Routing of inputs/common mode to ADC input
 			// (e) Unmute analog PGAs and set analog gain
-			// Left ADC Input selection for Left PGA = IN1L(P) as Single-Ended (0x34(52) 0xfc)
-			f = set_(CMD_PAGE1::LEFT_INPSEL_1, 0xFC);
+			// Left  ADC Input selection for Left PGA  = IN2R(P), IN3R(M)
+			f = set_(CMD_PAGE1::LEFT_INPSEL_2,  0b10110011);
 			if(!f) return false;
-
-			// Right ADC Input selection for Right PGA = IN1R(M) as Single-Ended (0x37(55) 0xfc)
-			f = set_(CMD_PAGE1::RIGHT_INPSEL_1, 0xFC);
+			// Right ADC Input selection for Right PGA = IN2R(P), IN3R(M)
+			f = set_(CMD_PAGE1::RIGHT_INPSEL_2, 0b10110011);
 			if(!f) return false;
 
 			// 4. Program ADC
