@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 24;
+	static const uint16_t VERSION = 25;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -372,29 +372,6 @@ int main(int argc, char* argv[])
 
 	command_.set_prompt("# ");
 
-#if 1
-	P_CONT::P = 1;
-
-	utils::delay::milli_second(500);
-	TRESET::P = 0;
-	utils::delay::milli_second(500);
-	TRESET::P = 1;
-
-	if(!iica_.start(IICA::speed::standard, 0)) {
-		utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
-	} else {
-		utils::format("I2C start: OK\n");
-		if(ti_adc_.start(TI_ADC::INF::I2S_16_MASTER, TI_ADC::TYPE::FS48)) {
-			utils::format("TLV320ADC3001 start: OK\n");
-		} else {
-			utils::format("TLV320ADC3001 start: NG\n");
-		}
-	}
-	while(1) {
-		itm_.sync();
-	}
-#endif
-
 	uint8_t pw_cnt = 0;
 	bool outreq = false;
 	bool power = false;
@@ -411,23 +388,26 @@ int main(int argc, char* argv[])
 		}
 
 		if(first || switch_man_.get_turn(SWITCH::POWER)) {
+
+			TRESET::P = 0;
+
 			utils::format("POWER: %s\n") % (switch_man_.get_level(SWITCH::POWER) ? "ON" : "OFF");
 			if(switch_man_.get_level(SWITCH::POWER)) {
 				pw_cnt = 1;
 				power = true;
 				LED_G::P = 0;
-				TRESET::P = 0;
 			} else {
-				P_CONT::P = 0;
+				pw_cnt = 0;
 				power = false;
 				LED_G::P = 1;
+				P_CONT::P = 0;  // power switch offline
 			}
 			first = false;
 		}
 		if(pw_cnt) {
 			--pw_cnt;
 			if(pw_cnt == 0) {
-				P_CONT::P = 1;
+				P_CONT::P = 1;  // power switch online
 				start_i2c_ = 20;
 			}
 		}
@@ -468,11 +448,8 @@ int main(int argc, char* argv[])
 					utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 				} else {
 					utils::format("I2C start: OK\n");
-					if(ti_adc_.start(TI_ADC::INF::I2S_16_MASTER, TI_ADC::TYPE::FS48)) {
-						utils::format("TLV320ADC3001 start: OK\n");
-					} else {
-						utils::format("TLV320ADC3001 start: NG\n");
-					}
+					auto f = ti_adc_.start(TI_ADC::INF::I2S_16_SLAVE, TI_ADC::FRQ::FS48_0);
+					utils::format("TLV320ADC3001 Slave/16Bits: %s\n") % (f ? "OK" : "NG");
 				}
 			}
 		}
