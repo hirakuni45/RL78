@@ -1,7 +1,7 @@
 #pragma once
 //=====================================================================//
 /*!	@file
-	@brief	TLV320ADC3001 クラス @n
+	@brief	TLV320ADC3001 ドライバー・クラス @n
 			Low-Power Stereo ADC With Embedded miniDSP
     @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
@@ -48,12 +48,13 @@ namespace chip {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
-			@brief  サンプリング・タイプ 形
+			@brief  サンプリング周期形
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		enum class TYPE : uint8_t {
-			FS44_1,		///< 44.1KHz
-			FS48,       ///< 48.0KHz
+		enum class FRQ : uint8_t {
+			FS44_1,		///< 44.1 KHz
+			FS48_0,		///< 48.0 KHz
+			FS96_0,		///< 96.0 KHz
 		};
 
 
@@ -200,7 +201,7 @@ namespace chip {
 		bool set_page_(uint8_t page)
 		{
 			bool ret = true;
-			if(cur_page_ != 0) {
+			if(cur_page_ != page) {
 				ret = write_(PAGE_CTRL, page);
 				if(ret) {
 					cur_page_ = page;
@@ -236,7 +237,6 @@ namespace chip {
 			return write_(static_cast<uint8_t>(cmd), data);
 		}
 
-
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -250,45 +250,18 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	開始
-			@param[in]	inf		インターフェースタイプ
-			@param[in]	type	タイプ
+			@param[in]	inf		インターフェース
+			@param[in]	frq		サンプリング周期
 			@return エラーなら「false」を返す
 		 */
 		//-----------------------------------------------------------------//
-		bool start(INF inf, TYPE type)
+		bool start(INF inf, FRQ frq)
 		{
-			if(!set_page_(0)) {
-				utils::format("set_page_: NG: %d\n") % static_cast<uint16_t>(i2c_io_.get_last_error()); 
-				return false;
-			}
-
-
 			if(!set_(CMD_PAGE0::SW_RESET, 1)) {
 				return false;
 			}
 
-			// In EVM, the ADC3001 receives: MCLK = 11.2896 MHz,
-			// BCLK = 2.8224 MHz, WCLK = 44.1 kHz
-			set_(CMD_PAGE0::CLOCK_GEN, 0x00);
-			set_(CMD_PAGE0::PLL_P_R,   0x11);
-			set_(CMD_PAGE0::PLL_J,     0x04);
-			set_(CMD_PAGE0::PLL_D_MSB, 0x00);
-			set_(CMD_PAGE0::PLL_D_LSB, 0x00);
-
-			// (b) Power up PLL (if PLL is necessary) - Not Used in this Example
-			set_(CMD_PAGE0::PLL_P_R,   0x11);
-
-			//  NADC = 1, divider powered on
-			set_(CMD_PAGE0::ADC_NADC, 0x81);
-
-			// MADC = 2, divider powered on
-			set_(CMD_PAGE0::ADC_MADC, 0x82);
-
-			//  AOSR = 128 (default)
-			set_(CMD_PAGE0::ADC_AOSR, 0x80);
-
-			// mode is i2s, wordlength
-			uint8_t aifc = 0;
+			uint8_t aifc = 0b00000000;
 			switch(inf) {
 			case INF::I2S_16_SLAVE:  aifc = 0b00000000; break;
 			case INF::I2S_16_MASTER: aifc = 0b00001100; break;
@@ -301,66 +274,103 @@ namespace chip {
 			default:
 				break;
 			}
-			set_(CMD_PAGE0::ADC_AIFC, aifc);
+			bool f;
+			if((aifc & 0b00001100) == 0) {
+				// BCLK: MCLK / 4 (TI sample)
+				// BCLK: MCLK / 8
+				// WCLK: MCLK / 256
+				f = set_(CMD_PAGE0::CLOCK_GEN, 0b00000000);
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_P_R,   0b00010001);
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_J,     0b00000100);
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_D_MSB, 0b00000000);
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_D_LSB, 0b00000000);
 
-			// PRB_P1 (0x3D, 01)
-			set_(CMD_PAGE0::ADC_PROC, 0x01);
+				// (b) Power up PLL (if PLL is necessary) - Not Used in this Example
+				f = set_(CMD_PAGE0::PLL_P_R,   0b00010001); 
+				if(!f) return false;
+			} else {
+				f = set_(CMD_PAGE0::CLOCK_GEN, 0b00000000);  // PLL_CLKIN = MCLK, CODEC_CLKIN = MCLK 
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_P_R,   0b10010001);  // PLL is powered up, PLL divide = 2, PLL multiplier = 1
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_J,     0b00000100);  // PLL multiplier J = 4
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_D_MSB, 0b00000000);  // PLL fractional multiplier MSB(B0 to B5)
+				if(!f) return false;
+				f = set_(CMD_PAGE0::PLL_D_LSB, 0b00000000);  // PLL fractional multiplier LSB(B0 to B7)
+				if(!f) return false;
+
+//				set_(CMD_PAGE0::CLKOUT_MUX, 0b00000011);
+				f = set_(CMD_PAGE0::BCLK_N_DIV, 0b10000100);  // BCLK N Divider
+				if(!f) return false;
+
+				// (b) Power up PLL (if PLL is necessary) - Not Used in this Example
+				f = set_(CMD_PAGE0::PLL_P_R,   0b10010001); 
+				if(!f) return false;
+			}
+
+			// NADC = 1, divider powered on
+			f = set_(CMD_PAGE0::ADC_NADC, 0x81);
+			if(!f) return false;
+
+			// MADC = 2, divider powered on
+			f = set_(CMD_PAGE0::ADC_MADC, 0x82);
+			if(!f) return false;
+
+			// AOSR = 128 (default)
+			f = set_(CMD_PAGE0::ADC_AOSR, 0x80);
+			if(!f) return false;
+
+			// mode is i2s, wordlength
+			f = set_(CMD_PAGE0::ADC_AIFC, aifc);
+			if(!f) return false;
+
+			// PRB_P1 (0x3D, 0x01)
+			f = set_(CMD_PAGE0::ADC_PROC, 0x01);
+			if(!f) return false;
 
 			// 3. Program Analog Blocks
-			// (a) Set register Page to 1 (00 01)
+			// (a) Set register Page to 1 (0x00 0x01)
 			// (b) Program MICBIAS if appicable
 			// Not used (default) (0x33(51) 0x00)
-			set_(CMD_PAGE1::MICBIAS_CTRL, 0x00);
+			f = set_(CMD_PAGE1::MICBIAS_CTRL, 0x00);
+			if(!f) return false;
 
 			// (c) Program MicPGA
 			// Left Analog PGA Seeting = 0dB (0x3b(59) 0x00)
-			set_(CMD_PAGE1::LEFT_ANALOG, 0x00);
+			f = set_(CMD_PAGE1::LEFT_ANALOG, 0x00);
+			if(!f) return false;
 
 			// Right Analog PGA Seeting = 0dB (0x3c(60) 0x00)
-			set_(CMD_PAGE1::RIGHT_ANALOG, 0x00);
+			f = set_(CMD_PAGE1::RIGHT_ANALOG, 0x00);
+			if(!f) return false;
 
 			// (d) Routing of inputs/common mode to ADC input
 			// (e) Unmute analog PGAs and set analog gain
 			// Left ADC Input selection for Left PGA = IN1L(P) as Single-Ended (0x34(52) 0xfc)
-			set_(CMD_PAGE1::LEFT_INPSEL_1, 0xFC);
+			f = set_(CMD_PAGE1::LEFT_INPSEL_1, 0xFC);
+			if(!f) return false;
 
 			// Right ADC Input selection for Right PGA = IN1R(M) as Single-Ended (0x37(55) 0xfc)
-			set_(CMD_PAGE1::RIGHT_INPSEL_1, 0xFC);
+			f = set_(CMD_PAGE1::RIGHT_INPSEL_1, 0xFC);
+			if(!f) return false;
 
 			// 4. Program ADC
 			// (a) Set register Page to 0
 			// (b) Power up ADC channel
 			// Power-up Left ADC and Right ADC (0x51 0xc2)
-			set_(CMD_PAGE0::ADC_DIGITAL, 0xC2);
+			f = set_(CMD_PAGE0::ADC_DIGITAL, 0xC2);
+			if(!f) return false;
 
 			// (c) Unmute digital volume control and set gain = 0 dB
 			// UNMUTE (0x52, 0x00)
-			set_(CMD_PAGE0::ADC_FINE_VOLUME, 0x00);
+			f = set_(CMD_PAGE0::ADC_FINE_VOLUME, 0x00);
+			if(!f) return false;
 
-#if 0
-			{
-				uint8_t data;
-				data = get_(CMD_PAGE0::CLOCK_GEN);
-				utils::format("CLOCK_GEN: %02X\n") % static_cast<uint16_t>(data);
-				data = get_(CMD_PAGE0::PLL_P_R);
-				utils::format("PLL_P_R:   %02X\n") % static_cast<uint16_t>(data);
-				data = get_(CMD_PAGE0::PLL_J);
-				utils::format("PLL_J:     %02X\n") % static_cast<uint16_t>(data);
-				data = get_(CMD_PAGE0::PLL_D_MSB);
-				utils::format("PLL_D_MSB: %02X\n") % static_cast<uint16_t>(data);
-				data = get_(CMD_PAGE0::PLL_D_LSB);
-				utils::format("PLL_D_LSB: %02X\n") % static_cast<uint16_t>(data);
-			}
-#endif
-
-#if 0
-			if(type == TYPE::FS48) {
-				utils::format("Sampling: 48.0KHz\n");
-
-			} else if(type == TYPE::FS44_1) {
-				utils::format("Sampling: 44.1KHz\n");
-			}
-#endif
 			return true;
 		}
 	};
