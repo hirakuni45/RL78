@@ -1,7 +1,7 @@
 //=====================================================================//
 /*!	@file
-	@brief	デジタル・マイク制御 (R5F100ECA) 40ピン @n
-			ROM: 32K, RAM: @n
+	@brief	デジタル・マイク制御 RL78/G13 (R5F100ECA) 40ピン @n
+			ROM: 32K, RAM: 2K @n
 			P15: green LED @n
 			P16: red LED @n
     @author 平松邦仁 (hira@rvf-rc45.net)
@@ -21,26 +21,31 @@
 #include "common/flash_io.hpp"
 #include "common/command.hpp"
 #include "common/switch_man.hpp"
+#include "chip/TLV320ADC3001.hpp"
 
 #include "sw.hpp"
 // #include "serial.hpp"
 
 namespace {
 
-	static const uint16_t VERSION = 23;
+	static const uint16_t VERSION = 24;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
 
 	// UART1 の定義（SAU2、SAU3）
-	typedef utils::fifo<uint8_t, 64> BUFFER;
-	typedef device::uart_io<device::SAU00, device::SAU01, BUFFER, BUFFER> UART0;
-	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER, BUFFER> UART1;
+	typedef utils::fifo<uint8_t, 32> BUFFER32;
+	typedef device::uart_io<device::SAU00, device::SAU01, BUFFER32, BUFFER32> UART0;
+	typedef utils::fifo<uint8_t, 64> BUFFER64;
+	typedef device::uart_io<device::SAU02, device::SAU03, BUFFER64, BUFFER64> UART1;
 	UART0	uart0_;
 	UART1	uart1_;
 
 	typedef device::iica_io<device::IICA0> IICA;
 	IICA 	iica_;
+
+	typedef chip::TLV320ADC3001<IICA> TI_ADC;
+	TI_ADC	ti_adc_(iica_);
 
 	// 最終チャネル番号＋１を設定
 	typedef device::adc_io<1, utils::null_task> ADC;
@@ -130,9 +135,8 @@ namespace {
 		B_CONT::P = 0;
 
 		TRESET::DIR = 1;
+		TRESET::PU = 1;
 		TRESET::P = 0;
-		utils::delay::milli_second(200);
-		TRESET::P = 1;
 	}
 
 
@@ -159,9 +163,6 @@ namespace {
 		switch_man_.service(lvl);
 	}
 
-//	typedef dmic::serial<UART0, SW5, SW2> SERIAL;
-//	SERIAL	serial_(uart0_, sw5_, sw2_);
-
 	utils::command<64> command_;
 	
 	static const uint8_t volume_limit_ = 100;
@@ -170,8 +171,8 @@ namespace {
 	static const uint8_t repeat_cycle_ = 10;  ///< リピートサイクル
 	uint8_t		volume_ = 0;
 	uint8_t		repeat_ = 0;
-	uint8_t		sw5_val_ = 0;
-	uint8_t		sw2_val_ = 0;
+///	uint8_t		sw5_val_ = 0;
+///	uint8_t		sw2_val_ = 0;
 
 	void serial_(bool outreq)
 	{
@@ -202,7 +203,7 @@ namespace {
 			}
 			utils::format("V-: %d\n") % static_cast<uint16_t>(vol);
 		}
-		if(outreq || vol != volume_) {
+		if(vol != volume_) {
 			uart0_.putch('V');
 			uart0_.putch((vol / 10) + '0');
 			uart0_.putch((vol % 10) + '0');
@@ -212,23 +213,25 @@ namespace {
 
 		{
 			auto v = sw5_.get();
-			if(outreq || sw5_val_ != v) {
+///			if(outreq || sw5_val_ != v) {
+			if(outreq) {
 				uart0_.putch('C');
 				uart0_.putch((v / 10) + '0');
 				uart0_.putch((v % 10) + '0');
 				uart0_.putch('\n');
 				utils::format("SW5: %d\n") % static_cast<uint16_t>(v);
-				sw5_val_ = v;
+///				sw5_val_ = v;
 			}
 		}
 		{
-			auto v = sw2_.get();
-			if(outreq || sw2_val_ != v) {
+			auto v = sw2_.get() & 1;
+///			if(outreq || sw2_val_ != v) {
+			if(outreq) {
 				uart0_.putch('M');
-				uart0_.putch((v % 10) + '0');
+				uart0_.putch(v + '1');
 				uart0_.putch('\n');
 				utils::format("SW2: %d\n") % static_cast<uint16_t>(v);
-				sw2_val_ = v;
+///				sw2_val_ = v;
 			}
 		}
 	}
@@ -343,7 +346,9 @@ int main(int argc, char* argv[])
 	init_switch_();
 
 	LED_G::DIR = 1;
+	LED_G::P = 1;  // LED off
 	LED_R::DIR = 1;
+	LED_R::P = 1;  // LED off
 
 	// A/D の開始
 	{
@@ -352,15 +357,44 @@ int main(int argc, char* argv[])
 		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
 	}
 
+	utils::format("\nStart Digital MIC Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
+
+	bool first = false;
+	service_switch_();
+	service_switch_();
+	if(switch_man_.get_level(SWITCH::POWER)) {
+		first = true;
+	}
+
 	// data flash の開始
 	{
 	}
 
-	utils::format("Start Digital MIC Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
-
 	command_.set_prompt("# ");
 
-	uint8_t cnt = 0;
+#if 1
+	P_CONT::P = 1;
+
+	utils::delay::milli_second(500);
+	TRESET::P = 0;
+	utils::delay::milli_second(500);
+	TRESET::P = 1;
+
+	if(!iica_.start(IICA::speed::standard, 0)) {
+		utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+	} else {
+		utils::format("I2C start: OK\n");
+		if(ti_adc_.start(TI_ADC::INF::I2S_16_MASTER, TI_ADC::TYPE::FS48)) {
+			utils::format("TLV320ADC3001 start: OK\n");
+		} else {
+			utils::format("TLV320ADC3001 start: NG\n");
+		}
+	}
+	while(1) {
+		itm_.sync();
+	}
+#endif
+
 	uint8_t pw_cnt = 0;
 	bool outreq = false;
 	bool power = false;
@@ -376,32 +410,41 @@ int main(int argc, char* argv[])
 			outreq = false;
 		}
 
-		if(switch_man_.get_turn(SWITCH::POWER)) {
-			utils::format("POWER: %s\n")
-				% (switch_man_.get_level(SWITCH::POWER) ? "ON" : "OFF");
+		if(first || switch_man_.get_turn(SWITCH::POWER)) {
+			utils::format("POWER: %s\n") % (switch_man_.get_level(SWITCH::POWER) ? "ON" : "OFF");
 			if(switch_man_.get_level(SWITCH::POWER)) {
-				pw_cnt = 30;
+				pw_cnt = 1;
+				power = true;
+				LED_G::P = 0;
+				TRESET::P = 0;
 			} else {
 				P_CONT::P = 0;
+				power = false;
+				LED_G::P = 1;
 			}
+			first = false;
 		}
 		if(pw_cnt) {
 			--pw_cnt;
 			if(pw_cnt == 0) {
-				utils::format("POWER enable / Reset TI (L)\n");
 				P_CONT::P = 1;
 				start_i2c_ = 20;
-				TRESET::P = 0;
 			}
 		}
 
-		if(switch_man_.get_turn(SWITCH::SOUND)) {
+		if(power && switch_man_.get_turn(SWITCH::SOUND)) {
 			utils::format("SOUND: %s\n")
 				% (switch_man_.get_level(SWITCH::SOUND) ? "Sharp" : "Mild");
-			S_CONT::P = switch_man_.get_level(SWITCH::SOUND);
+			auto f = switch_man_.get_level(SWITCH::SOUND);
+			S_CONT::P = f;
+			if(f) {
+				LED_R::P = 0;
+			} else {
+				LED_R::P = 1;
+			}
 		}
 
-		if(switch_man_.get_turn(SWITCH::RF_POWER)) {
+		if(power && switch_man_.get_turn(SWITCH::RF_POWER)) {
 			utils::format("RF: %s\n")
 				% (switch_man_.get_level(SWITCH::RF_POWER) ? "10mW" : "1mW");
 		}
@@ -410,10 +453,9 @@ int main(int argc, char* argv[])
 			--start_i2c_;
 			if(start_i2c_ == 0) {
 				utils::format("Reset TI (H) OK\n");
-				TRESET::P = 1;
+				TRESET::P = 1;  // TI Reset open
 				reset_setup_ = 10;
-				outreq = true;  // serial all output
-				power = true;
+				outreq = true;  // このタイミングで、SW5、SW2 データ送信
 			}
 		}
 		if(reset_setup_ > 0) {
@@ -425,7 +467,12 @@ int main(int argc, char* argv[])
 				if(!iica_.start(IICA::speed::standard, intr_level)) {
 					utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 				} else {
-					utils::format("I2C start OK\n");
+					utils::format("I2C start: OK\n");
+					if(ti_adc_.start(TI_ADC::INF::I2S_16_MASTER, TI_ADC::TYPE::FS48)) {
+						utils::format("TLV320ADC3001 start: OK\n");
+					} else {
+						utils::format("TLV320ADC3001 start: NG\n");
+					}
 				}
 			}
 		}
@@ -502,17 +549,5 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-
-		if(cnt >= 20) {
-			cnt = 0;
-		}
-		if(cnt < 10) {
-			LED_G::P = 1;
-			LED_R::P = 0;
-		} else {
-			LED_G::P = 0;
-			LED_R::P = 1;
-		}
-		++cnt;
 	}
 }
