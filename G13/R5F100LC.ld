@@ -38,7 +38,7 @@ ENTRY(_start)
    __DYNAMIC = 0;    */
 
 /* This is for an RL78/G13, 32K Flash, 2K RAM, 4K Data-Flash */
-/* R5F100LCAFB:  32K (0x00000 - 0x03FFF) /  2K (0xFF700 - 0xFFEFF) / 4K (0xF1000 - 0xF1FFF) */
+/* R5F100LCAFB:  32K (0x00000 - 0x07FFF) /  2K (0xFF700 - 0xFFEFF) / 4K (0xF1000 - 0xF1FFF) */
 /* stack */
 MEMORY {
 	VEC (r)   : ORIGIN = 0x00000, LENGTH = 0x00002
