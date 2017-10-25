@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 26;
+	static const uint16_t VERSION = 27;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -448,8 +448,9 @@ int main(int argc, char* argv[])
 					utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 				} else {
 					utils::format("I2C start: OK\n");
-					auto f = ti_adc_.start(TI_ADC::INF::I2S_16_SLAVE, TI_ADC::FRQ::FS48_0);
-					utils::format("TLV320ADC3001 Slave/16Bits: %s\n") % (f ? "OK" : "NG");
+					auto f = ti_adc_.start(TI_ADC::INSEL::IN2R_3R, TI_ADC::INSEL::IN2R_3R,
+								TI_ADC::INF::LJF_16_SLAVE, TI_ADC::FRQ::FS48_0);
+					utils::format("TLV320ADC3001 LJF/16Bits/Slave: %s\n") % (f ? "OK" : "NG");
 				}
 			}
 		}
