@@ -31,24 +31,51 @@ namespace chip {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
-			@brief  Interface 形
+			@brief  Interface 型
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		enum class INF : uint8_t {
-			I2S_16_SLAVE,		///< I2S/16Bits, BCLK:inp, WCLK:inp
-			I2S_16_MASTER,		///< I2S/16Bits, BCLK:out, WCLK:out
-			I2S_20_SLAVE,		///< I2S/20Bits, BCLK:inp, WCLK:inp
-			I2S_20_MASTER,		///< I2S/20Bits, BCLK:out, WCLK:out
-			I2S_24_SLAVE,		///< I2S/16Bits, BCLK:inp, WCLK:inp
-			I2S_24_MASTER,		///< I2S/16Bits, BCLK:out, WCLK:out
-			I2S_32_SLAVE,		///< I2S/16Bits, BCLK:inp, WCLK:inp
-			I2S_32_MASTER,		///< I2S/16Bits, BCLK:out, WCLK:out
+			I2S_16_SLAVE  = 0b00000000,	///< I2S/16Bits, BCLK:inp, WCLK:inp
+			I2S_16_MASTER = 0b00001100,	///< I2S/16Bits, BCLK:out, WCLK:out
+			I2S_20_SLAVE  = 0b00010000,	///< I2S/20Bits, BCLK:inp, WCLK:inp
+			I2S_20_MASTER = 0b00011100,	///< I2S/20Bits, BCLK:out, WCLK:out
+			I2S_24_SLAVE  = 0b00100000,	///< I2S/16Bits, BCLK:inp, WCLK:inp
+			I2S_24_MASTER = 0b00101100,	///< I2S/16Bits, BCLK:out, WCLK:out
+			I2S_32_SLAVE  = 0b00110000,	///< I2S/16Bits, BCLK:inp, WCLK:inp
+			I2S_32_MASTER = 0b00111100,	///< I2S/16Bits, BCLK:out, WCLK:out
+
+			DSP_16_SLAVE  = 0b01000000,	///< DSP/16Bits, BCLK:inp, WCLK:inp
+			DSP_16_MASTER = 0b01001100,	///< DSP/16Bits, BCLK:out, WCLK:out
+			DSP_20_SLAVE  = 0b01010000,	///< DSP/20Bits, BCLK:inp, WCLK:inp
+			DSP_20_MASTER = 0b01011100,	///< DSP/20Bits, BCLK:out, WCLK:out
+			DSP_24_SLAVE  = 0b01100000,	///< DSP/16Bits, BCLK:inp, WCLK:inp
+			DSP_24_MASTER = 0b01101100,	///< DSP/16Bits, BCLK:out, WCLK:out
+			DSP_32_SLAVE  = 0b01110000,	///< DSP/16Bits, BCLK:inp, WCLK:inp
+			DSP_32_MASTER = 0b01111100,	///< DSP/16Bits, BCLK:out, WCLK:out
+
+			RJF_16_SLAVE  = 0b10000000,	///< RJF/16Bits, BCLK:inp, WCLK:inp
+			RJF_16_MASTER = 0b10001100,	///< RJF/16Bits, BCLK:out, WCLK:out
+			RJF_20_SLAVE  = 0b10010000,	///< RJF/20Bits, BCLK:inp, WCLK:inp
+			RJF_20_MASTER = 0b10011100,	///< RJF/20Bits, BCLK:out, WCLK:out
+			RJF_24_SLAVE  = 0b10100000,	///< RJF/16Bits, BCLK:inp, WCLK:inp
+			RJF_24_MASTER = 0b10101100,	///< RJF/16Bits, BCLK:out, WCLK:out
+			RJF_32_SLAVE  = 0b10110000,	///< RJF/16Bits, BCLK:inp, WCLK:inp
+			RJF_32_MASTER = 0b10111100,	///< RJF/16Bits, BCLK:out, WCLK:out
+
+			LJF_16_SLAVE  = 0b11000000,	///< LJF/16Bits, BCLK:inp, WCLK:inp
+			LJF_16_MASTER = 0b11001100,	///< LJF/16Bits, BCLK:out, WCLK:out
+			LJF_20_SLAVE  = 0b11010000,	///< LJF/20Bits, BCLK:inp, WCLK:inp
+			LJF_20_MASTER = 0b11011100,	///< LJF/20Bits, BCLK:out, WCLK:out
+			LJF_24_SLAVE  = 0b11100000,	///< LJF/16Bits, BCLK:inp, WCLK:inp
+			LJF_24_MASTER = 0b11101100,	///< LJF/16Bits, BCLK:out, WCLK:out
+			LJF_32_SLAVE  = 0b11110000,	///< LJF/16Bits, BCLK:inp, WCLK:inp
+			LJF_32_MASTER = 0b11111100,	///< LJF/16Bits, BCLK:out, WCLK:out
 		};
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
-			@brief  サンプリング周期形
+			@brief  サンプリング周期型
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		enum class FRQ : uint8_t {
@@ -58,8 +85,25 @@ namespace chip {
 		};
 
 
-		static const uint8_t PAGE_CTRL = 0x00;  ///< PAGE CTRL command
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  アナログ入力選択型
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class INSEL : uint8_t {
+			IN1L,		///< IN1L(P) SINGLE-ENDED (Left or Right)
+			IN2L,		///< IN2L(P) SINGLE-ENDED for Left only
+			IN2R,		///< IN2R(P) SINGLE-ENDED for Right only
+			IN3L,		///< IN3L(M) SINGLE-ENDED for Left only
+			IN3R,		///< IN3R(M) SINGLE-ENDED for Right only
+			IN1R,		///< IN1R(M) SINGLE-ENDED (Left or Right)
+			IN1L_1R,	///< IN1L(P)/IN1R(M) DIFFERENTIAL (Left or Right)
+			IN2L_3L,	///< IN2L(P)/IN3L(M) DIFFERENTIAL (Left or Right)
+			IN2R_3R,	///< IN2R(P)/IN3R(M) DIFFERENTIAL (Left or Right)
+		};
 
+
+		static const uint8_t PAGE_CTRL = 0x00;  ///< PAGE CTRL command
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -237,6 +281,43 @@ namespace chip {
 			return write_(static_cast<uint8_t>(cmd), data);
 		}
 
+
+		bool select_inputs_(INSEL insel, CMD_PAGE1 reg1, CMD_PAGE1 reg2)
+		{
+			switch(insel) {
+			case INSEL::IN1L:     // IN1L(P) SINGLE-ENDED (Left or Right)
+
+				break;
+			case INSEL::IN2L:     // IN2L(P) SINGLE-ENDED for Left only
+
+				break;
+			case INSEL::IN2R:     // IN2R(P) SINGLE-ENDED for Right only
+
+				break;
+			case INSEL::IN3L:     // IN3L(M) SINGLE-ENDED for Left only
+
+				break;
+			case INSEL::IN3R:     // IN3R(M) SINGLE-ENDED for Right only
+
+				break;
+			case INSEL::IN1R:     // IN1R(M) SINGLE-ENDED (Left or Right)
+
+				break;
+			case INSEL::IN1L_1R:  // IN1L(P)/IN1R(M) DIFFERENTIAL (Left or Right)
+
+				break;
+			case INSEL::IN2L_3L:  // IN2L(P)/IN3L(M) DIFFERENTIAL (Left or Right)
+
+				break;
+			case INSEL::IN2R_3R:  // IN2R(P)/IN3R(M) DIFFERENTIAL (Left or Right)
+
+				break;
+			default:
+				return false;
+			}
+			return true;
+		}
+
 	public:
 		//-----------------------------------------------------------------//
 		/*!
@@ -250,32 +331,21 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	開始
+			@param[in]	left	Left  チャネル選択
+			@param[in]	right	Right チャネル選択
 			@param[in]	inf		インターフェース
 			@param[in]	frq		サンプリング周期
 			@return エラーなら「false」を返す
 		 */
 		//-----------------------------------------------------------------//
-		bool start(INF inf, FRQ frq)
+		bool start(INSEL left, INSEL right, INF inf, FRQ frq)
 		{
 			if(!set_(CMD_PAGE0::SW_RESET, 1)) {
 				return false;
 			}
 
-			uint8_t aifc = 0b00000000;
-			switch(inf) {
-			case INF::I2S_16_SLAVE:  aifc = 0b00000000; break;
-			case INF::I2S_16_MASTER: aifc = 0b00001100; break;
-			case INF::I2S_20_SLAVE:  aifc = 0b00010000; break;
-			case INF::I2S_20_MASTER: aifc = 0b00011100; break;
-			case INF::I2S_24_SLAVE:  aifc = 0b00100000; break;
-			case INF::I2S_24_MASTER: aifc = 0b00101100; break;
-			case INF::I2S_32_SLAVE:  aifc = 0b00110000; break;
-			case INF::I2S_32_MASTER: aifc = 0b00111100; break;
-			default:
-				break;
-			}
 			bool f;
-			if((aifc & 0b00001100) == 0) {
+			if((static_cast<uint8_t>(inf) & 0b00001100) == 0) {  // slave (BCLK, WCLK input)
 				// BCLK: MCLK / 4 (TI sample)
 				// BCLK: MCLK / 8
 				// WCLK: MCLK / 256
@@ -328,8 +398,8 @@ namespace chip {
 			f = set_(CMD_PAGE0::ADC_AOSR, 0x80);
 			if(!f) return false;
 
-			// mode is i2s, wordlength
-			f = set_(CMD_PAGE0::ADC_AIFC, aifc);
+			// Audio Interface Control 1
+			f = set_(CMD_PAGE0::ADC_AIFC, static_cast<uint8_t>(inf));
 			if(!f) return false;
 
 			// PRB_P1 (0x3D, 0x01)
@@ -355,16 +425,18 @@ namespace chip {
 			// (d) Routing of inputs/common mode to ADC input
 			// (e) Unmute analog PGAs and set analog gain
 			// Left  ADC Input selection for Left PGA  = IN2R(P), IN3R(M)
+			f = select_inputs_(left, CMD_PAGE1::LEFT_INPSEL_1, CMD_PAGE1::LEFT_INPSEL_2);
 			f = set_(CMD_PAGE1::LEFT_INPSEL_2,  0b10110011);
 			if(!f) return false;
 			// Right ADC Input selection for Right PGA = IN2R(P), IN3R(M)
+			f = select_inputs_(right, CMD_PAGE1::RIGHT_INPSEL_1, CMD_PAGE1::RIGHT_INPSEL_2);
 			f = set_(CMD_PAGE1::RIGHT_INPSEL_2, 0b10110011);
 			if(!f) return false;
 
 			// 4. Program ADC
 			// (a) Set register Page to 0
 			// (b) Power up ADC channel
-			// Power-up Left ADC and Right ADC (0x51 0xc2)
+			// Power-up Left ADC and Right ADC (0x51 0xC2)
 			f = set_(CMD_PAGE0::ADC_DIGITAL, 0xC2);
 			if(!f) return false;
 
