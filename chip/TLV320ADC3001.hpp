@@ -415,7 +415,7 @@ namespace chip {
 
 			// (c) Program MicPGA
 			// Left Analog PGA Seeting = 0dB (0x3b(59) 0x00)
-			f = set_(CMD_PAGE1::LEFT_ANALOG, 0x00);
+			f = set_(CMD_PAGE1::LEFT_ANALOG,  0x00);
 			if(!f) return false;
 
 			// Right Analog PGA Seeting = 0dB (0x3c(60) 0x00)
@@ -425,23 +425,25 @@ namespace chip {
 			// (d) Routing of inputs/common mode to ADC input
 			// (e) Unmute analog PGAs and set analog gain
 			// Left  ADC Input selection for Left PGA  = IN2R(P), IN3R(M)
-			f = select_inputs_(left, CMD_PAGE1::LEFT_INPSEL_1, CMD_PAGE1::LEFT_INPSEL_2);
-			f = set_(CMD_PAGE1::LEFT_INPSEL_2,  0b10110011);
+			f = select_inputs_(left,  CMD_PAGE1::LEFT_INPSEL_1,  CMD_PAGE1::LEFT_INPSEL_2);
+///			f = set_(CMD_PAGE1::LEFT_INPSEL_2,  0b10110011);
+			f = set_(CMD_PAGE1::LEFT_INPSEL_1,  0b11110011);
 			if(!f) return false;
 			// Right ADC Input selection for Right PGA = IN2R(P), IN3R(M)
 			f = select_inputs_(right, CMD_PAGE1::RIGHT_INPSEL_1, CMD_PAGE1::RIGHT_INPSEL_2);
-			f = set_(CMD_PAGE1::RIGHT_INPSEL_2, 0b10110011);
+///			f = set_(CMD_PAGE1::RIGHT_INPSEL_2, 0b00111111);
+			f = set_(CMD_PAGE1::RIGHT_INPSEL_1, 0b11110011);
 			if(!f) return false;
 
 			// 4. Program ADC
 			// (a) Set register Page to 0
 			// (b) Power up ADC channel
 			// Power-up Left ADC and Right ADC (0x51 0xC2)
-			f = set_(CMD_PAGE0::ADC_DIGITAL, 0xC2);
+			f = set_(CMD_PAGE0::ADC_DIGITAL, 0b11000010);
 			if(!f) return false;
 
 			// (c) Unmute digital volume control and set gain = 0 dB
-			// UNMUTE (0x52, 0x00)
+			// UNMUTE (0x52(82), 0x00)
 			f = set_(CMD_PAGE0::ADC_FINE_VOLUME, 0x00);
 			if(!f) return false;
 
