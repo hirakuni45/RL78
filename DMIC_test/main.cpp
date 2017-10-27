@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 27;
+	static const uint16_t VERSION = 28;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -359,11 +359,14 @@ int main(int argc, char* argv[])
 
 	utils::format("\nStart Digital MIC Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
 
-	bool first = false;
 	service_switch_();
 	service_switch_();
+	bool pon_first = false;
+	bool poff_first = false;
 	if(switch_man_.get_level(SWITCH::POWER)) {
-		first = true;
+		pon_first = true;
+	} else {
+		poff_first = true;
 	}
 
 	// data flash の開始
@@ -372,9 +375,10 @@ int main(int argc, char* argv[])
 
 	command_.set_prompt("# ");
 
-	uint8_t pw_cnt = 0;
-	bool outreq = false;
 	bool power = false;
+	uint8_t pw_off_cnt = 0;
+	uint8_t serial_delay = 0;
+	uint8_t mute_delay = 0;
 	while(1) {
 		itm_.sync();
 
@@ -382,45 +386,62 @@ int main(int argc, char* argv[])
 
 		service_switch_();
 
-		if(power) {
-			serial_(outreq);
-			outreq = false;
+		if(pon_first || switch_man_.get_positive(SWITCH::POWER)) {
+			utils::format("POWER: ON\n");
+			TRESET::P = 0;
+			P_CONT::P = 1;  // power switch online
+			utils::format("P_CONT: online\n");
+			start_i2c_ = 20;
+			pw_off_cnt = 0;
+			serial_delay = 30;  // 500ms
+			mute_delay = 42;  // 700ms
+			pon_first = false;
+			power = true;
+		}
+		if(poff_first || switch_man_.get_negative(SWITCH::POWER)) {
+			utils::format("POWER: OFF\n");
+			pw_off_cnt = 30;
+			serial_delay = 0;
+			mute_delay = 42;  // 700ms
+			poff_first = false;
+			power = false;
 		}
 
-		if(first || switch_man_.get_turn(SWITCH::POWER)) {
+		if(serial_delay > 0) {
+			--serial_delay;
+			if(serial_delay == 0) {
+				serial_(true);
+			}
+		}
 
-			TRESET::P = 0;
-
-			utils::format("POWER: %s\n") % (switch_man_.get_level(SWITCH::POWER) ? "ON" : "OFF");
-			if(switch_man_.get_level(SWITCH::POWER)) {
-				pw_cnt = 1;
-				power = true;
-				LED_G::P = 0;
-			} else {
-				pw_cnt = 0;
-				power = false;
-				LED_G::P = 1;
+		if(pw_off_cnt > 0) {
+			--pw_off_cnt;
+			if(pw_off_cnt == 0) {
+				utils::format("P_CONT: offline\n");
 				P_CONT::P = 0;  // power switch offline
 			}
-			first = false;
 		}
-		if(pw_cnt) {
-			--pw_cnt;
-			if(pw_cnt == 0) {
-				P_CONT::P = 1;  // power switch online
-				start_i2c_ = 20;
+
+		if(mute_delay > 0) {
+			--mute_delay;
+			if(mute_delay == 0) {
+				MUTE::P = power;
 			}
 		}
 
-		if(power && switch_man_.get_turn(SWITCH::SOUND)) {
-			utils::format("SOUND: %s\n")
-				% (switch_man_.get_level(SWITCH::SOUND) ? "Sharp" : "Mild");
+		if(power) {
+			if(switch_man_.get_turn(SWITCH::SOUND)) {
+				utils::format("SOUND: %s\n")
+					% (switch_man_.get_level(SWITCH::SOUND) ? "Sharp" : "Mild");
+			}
 			auto f = switch_man_.get_level(SWITCH::SOUND);
 			S_CONT::P = f;
 			if(f) {
 				LED_R::P = 0;
+				LED_G::P = 0;
 			} else {
 				LED_R::P = 1;
+				LED_G::P = 0;
 			}
 		}
 
@@ -435,7 +456,6 @@ int main(int argc, char* argv[])
 				utils::format("Reset TI (H) OK\n");
 				TRESET::P = 1;  // TI Reset open
 				reset_setup_ = 10;
-				outreq = true;  // このタイミングで、SW5、SW2 データ送信
 			}
 		}
 		if(reset_setup_ > 0) {
