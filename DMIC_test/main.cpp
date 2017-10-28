@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 28;
+	static const uint16_t VERSION = 29;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -394,7 +394,7 @@ int main(int argc, char* argv[])
 			start_i2c_ = 20;
 			pw_off_cnt = 0;
 			serial_delay = 30;  // 500ms
-			mute_delay = 42;  // 700ms
+			mute_delay = 42;  // 電源 ON 時は 700ms 後 MUTE
 			pon_first = false;
 			power = true;
 		}
@@ -402,7 +402,7 @@ int main(int argc, char* argv[])
 			utils::format("POWER: OFF\n");
 			pw_off_cnt = 30;
 			serial_delay = 0;
-			mute_delay = 42;  // 700ms
+			mute_delay = 1;  // 電源 OFF 時は即時 MUTE
 			poff_first = false;
 			power = false;
 		}
@@ -436,13 +436,16 @@ int main(int argc, char* argv[])
 			}
 			auto f = switch_man_.get_level(SWITCH::SOUND);
 			S_CONT::P = f;
-			if(f) {
-				LED_R::P = 0;
-				LED_G::P = 0;
-			} else {
+			if(f) {  // H: 緑 LED、L: 緑、赤 LED
 				LED_R::P = 1;
 				LED_G::P = 0;
+			} else {
+				LED_R::P = 0;
+				LED_G::P = 0;
 			}
+		} else {  // 電源 OFF 時は即時消灯
+			LED_R::P = 1;
+			LED_G::P = 1;
 		}
 
 		if(power && switch_man_.get_turn(SWITCH::RF_POWER)) {
