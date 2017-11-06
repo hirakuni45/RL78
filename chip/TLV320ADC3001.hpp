@@ -73,6 +73,7 @@ namespace chip {
 		};
 
 
+#if 0
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
 			@brief  サンプリング周期型
@@ -83,6 +84,7 @@ namespace chip {
 			FS48_0,		///< 48.0 KHz
 			FS96_0,		///< 96.0 KHz
 		};
+#endif
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -334,11 +336,12 @@ namespace chip {
 			@param[in]	left	Left  チャネル選択
 			@param[in]	right	Right チャネル選択
 			@param[in]	inf		インターフェース
-			@param[in]	frq		サンプリング周期
+//			@param[in]	frq		サンプリング周期
 			@return エラーなら「false」を返す
 		 */
 		//-----------------------------------------------------------------//
-		bool start(INSEL left, INSEL right, INF inf, FRQ frq)
+//		bool start(INSEL left, INSEL right, INF inf, FRQ frq)
+		bool start(INSEL left, INSEL right, INF inf)
 		{
 			if(!set_(CMD_PAGE0::SW_RESET, 1)) {
 				return false;
@@ -387,15 +390,15 @@ namespace chip {
 			// Figure 28. 参照
 			// CLOCK_GEN: で CODEC_CLKIN: MCLK 
 			// ADC_FS = MCLK / NADC / MADC / AOSR
-			// ※ 256FS
+			// ※ 384FS
 			// NADC = 1, divider powered on
 			f = set_(CMD_PAGE0::ADC_NADC, 0x81);
 			if(!f) return false;
 			// MADC = 2, divider powered on
 			f = set_(CMD_PAGE0::ADC_MADC, 0x82);
 			if(!f) return false;
-			// AOSR = 128
-			f = set_(CMD_PAGE0::ADC_AOSR, 0x80);
+			// AOSR = 192
+			f = set_(CMD_PAGE0::ADC_AOSR, 192);
 			if(!f) return false;
 
 			// Audio Interface Control 1
