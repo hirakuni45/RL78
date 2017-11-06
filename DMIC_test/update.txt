@@ -1,0 +1,176 @@
+
+Version 0.28:
+
+------------------------------------------------------------------
+(11-1)の修正
+要求／現状：
+171027
+Pin35/P22/POFFがL→H
+500mS後に
+修正：UART0を出力（現状340mS）
+理由：モジュール側仕様要求による。
+
+修正内容：
+電源ON、500mS後にUART0を出力
+
+
+------------------------------------------------------------------
+(14)の修正
+要求／現状：
+171024修正内容
+Mild　入力Pin17=1、出力Pin23=1、Pin24=0　（緑のLED点灯）
+Sharp　入力Pin17=0、出力Pin23=0、Pin24=0（緑/赤のLED点灯)
+仕様変更の為、上記変更にしてください。
+171026　Ver.0.27
+・Mild/Sharp　点灯色逆、171024修正内容を適用願います。
+・ハードRESETするとPin17の0/1に関係無くSharp点灯、Pin17の0/1に合わせた
+点灯処理に修正願います。
+　参考：電源SWのON/OFFでは復帰しません、Pin17を0から1にすると正常復帰
+
+修正内容：
+Mild　入力Pin17=1、出力Pin23=1、Pin24=0　（緑のLED点灯）
+Sharp　入力Pin17=0、出力Pin23=0、Pin24=0（緑/赤のLED点灯)
+
+
+------------------------------------------------------------------
+(16)の修正
+要求：
+171020
+Ver 0.24 の ソ フト ト で 確 認
+電源スイッチOFF時の制御に関して、
+Pin35/P22/POFF　が　H→Lのとき
+Pin34/P23/P_CONT　が瞬時に　H→L　となっています。
+
+修正内容：
+電源スイッチ OFF 時、500mS 待ってから、P_CONTをLに修正
+
+
+------------------------------------------------------------------
+(17)の修正
+要求／現状：
+171027
+電源スイッチON時の制御に関して、
+Pin35/P22/POFF　が　H→Lのとき
+700ms後に
+Pin22/P17/MUTE　が　L→H
+としてください。
+電源スイッチOFF時の制御に関して、
+Pin35/P22/POFF　が　H→Lのとき
+同じタイミングで
+Pin22/P17/MUTE　が　H→L
+としてください。
+
+修正内容：
+電源スイッチ ON/OFF 時に MUTE をそれぞれ制御。
+・電源スイッチ ON  ---> 700mS ---> MUTE を H
+・電源スイッチ OFF ---> 700mS ---> MUTE を L
+
+
+------------------------------------------------------------------
+(18)の修正
+要求／現状：
+171021
+ADC 入 力 は 下 記 を ア ク ティブ にしてください。各L/R出力
+ADC Pin7 IN2L(P)
+ADC Pin12 IN2R(P)
+Differential（ディファレンシャルモード）⇒Single-Ended（シングルエンドモード）
+で処理願います。
+
+修正内容：
+IN2L(P)、IN2R(P) Single-Ended に修正
+
+
+------------------------------------------------------------------
+(19)の修正
+要求／現状：
+171021
+DACはフルスケール(0dBfs)入力した時、約900mVrmsが出力が仕様です。
+ADCオーディオ入力にフルスケールとなる電圧を入力したとき、DAC出力は約
+9dB減衰した電圧が出力されNGとなっています。
+ADCのソフト制御で9dB減衰設定になってませんか？
+
+対応確認：
+・Left、Rightの減衰設定で、9dB減衰は確認できない、又、そのような設定
+項目も確認できない為、現状維持。
+※TLV320ADC のレジスターマップの説明を全て確認して、減衰が発生しそうな項目を
+洗い出して下さい。
+
+現状の設定：
+・Page 0 / Register 82: ADC fine volume control <----- 0x00
+    D7    R/W   1   0: Left ADC channel not muted
+    D6–D4 R/W 000 000: Left ADC channel fine gain = 0 dB
+    D3    R/W   1   0: Right ADC channel not muted
+    D2–D0 R/W 000 000: Right ADC channel fine gain = 0 dB
+    ※マニュアルでは「Left」となっているが、「Right」の誤植と思われる。
+・Page 0 / Register 83: Left ADC Volume Control <----- 0x00 (RESET VALUE)
+    D6–D0 R/W 000 0000 000 0000: Left ADC channel volume = –0.0 dB
+・Page 0 / Register 84: Right ADC Volume Control <----- 0x00（RESET VALUE)
+    D6–D0 R/W 000 0000 000 0000: Right ADC channel volume = –0.0 dB
+・Page 1 / Register 59: Left Analog PGA Settings <----- 0x00
+    D7    R/W        1        0: Left PGA is not muted.
+    D6–D0 R/W 000 0000 000 0000: Left PGA gain = 0 dB
+・Page 1 / Register 60: Right Analog PGA Settings <----- 0x00
+    D7    R/W        1        0: Right PGA is not muted.
+    D6–D0 R/W 000 0000 000 0000: Right PGA gain = 0 dB
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Version 0.29:
+
+------------------------------------------------------------------
+(14)の修正
+要求／現状：
+171024修正内容　⇒　Ver.0.28　NG・・現状LEDは　Mild：緑/赤 、 Sharp：緑　が
+点灯
+Mild　入力Pin17=1、出力Pin23=1、Pin24=0　（緑のLED点灯）
+Sharp　入力Pin17=0、出力Pin23=0、Pin24=0（緑/赤のLED点灯)
+
+171028処理追加
+Pin35=L　時は（H→L移行時は即時）
+Pin23=H、Pin24=H　に移行してください。
+理由：電源SW OFF時即時LED消灯としたい。
+
+修正内容：
+・LED の点灯、Mild：緑、Sharp：緑/赤　に修正（点灯表示の入れ替え）
+・電源 OFF 時に LED 制御をオフラインにする。
+
+
+------------------------------------------------------------------
+(17)の修正
+要求／現状：
+
+171028　Ver.0.28　NG
+電源スイッチOFF時の制御に関して、
+Pin35/P22/POFF　が　H→Lのとき
+同じタイミングで（遅延なし） 即 時（現状700mS遅延）
+Pin22/P17/MUTE　を　H→L
+としてください。
+
+修正内容：
+電源 OFF 時、即時 MUTE L
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Version 0.30:
+
+(1)の修正
+要求／現状：
+
+171106
+モジュール内デジタル処理都合によりDACの設定を変更願います。
+Sampling Frequency　　　　　　　48kHz　⇒　32kHz　(変更）
+Master Clock　　　　　　　　　　　256fs　⇒　384fs　（変更）
+System Clock Frequency　　　　12.288MHz
+Bit　　　　　　　　　　　　　　　　　　16bit
+Audio Data Format　　　　　　　　Left-Justified
+
+修正内容：
+// 最終的なサンプリング周期：ADC_FS
+// Figure 28. 参照
+// CLOCK_GEN: で CODEC_CLKIN: MCLK 
+// ADC_FS = MCLK / NADC / MADC / AOSR
+NADC = 1
+MADC = 2
+AOSR = 192
+※（384FS）とした。
