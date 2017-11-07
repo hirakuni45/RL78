@@ -20,6 +20,8 @@
 
 namespace {
 
+	static const uint16_t VERSION = 10;
+
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
 
@@ -193,7 +195,7 @@ int main(int argc, char* argv[])
 	LED_M3::DIR = 1;
 	LED_M4::DIR = 1;
 
-	utils::format("Start Digital MIC Reciver\n");
+	utils::format("\nStart Digital MIC Reciver Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
 	command_.set_prompt("# ");
 
 	uint8_t	n = 0;
