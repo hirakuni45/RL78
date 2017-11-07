@@ -189,11 +189,12 @@ namespace device {
 		/*!
 			@brief  UART ポートの設定
 			@param[in]	per	ペリフェラル型
+			@param[in]	sec	セカンド候補ポートの場合「true」
 			@param[in]	sck	UART クロック入出力型
 			@return SAUxx 型では無い場合「false」
 		*/
 		//-------------------------------------------------------------//
-		static bool set_uart_port(peripheral per, uart_sck sck = uart_sck::NONE)
+		static bool set_uart_port(peripheral per, bool sec, uart_sck sck = uart_sck::NONE)
 		{
 			switch(per) {
 
