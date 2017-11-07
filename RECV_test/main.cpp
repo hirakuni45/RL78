@@ -50,6 +50,15 @@ namespace {
 	typedef device::PORT<device::port_no::P7, device::bitpos::B4> SG2_G;
 	typedef chip::SEGMENT<SG2_A, SG2_B, SG2_C, SG2_D, SG2_E, SG2_F, SG2_G, device::NULL_PORT> SEG2;
 
+	typedef device::PORT<device::port_no::P1, device::bitpos::B0> LED_M1;
+	typedef device::PORT<device::port_no::P2, device::bitpos::B7> LED_M2;
+	typedef device::PORT<device::port_no::P2, device::bitpos::B4> LED_M3;
+	typedef device::PORT<device::port_no::P2, device::bitpos::B3> LED_M4;
+
+	typedef device::PORT<device::port_no::P4, device::bitpos::B6> CH_SEL;
+	typedef device::PORT<device::port_no::P4, device::bitpos::B5> IR_TEST;
+	typedef device::PORT<device::port_no::P4, device::bitpos::B4> CH_SCAN;
+
 	utils::command<64> command_;
 }
 
@@ -168,10 +177,6 @@ int main(int argc, char* argv[])
 		uart2_.start(19200, intr_level);
 	}
 
-
-	utils::format("Start Digital MIC Reciver\n");
-
-
 	device::PFSEG0 = 0x00;
 	device::PFSEG1 = 0x00;
 	device::PFSEG2 = 0x00;
@@ -183,12 +188,29 @@ int main(int argc, char* argv[])
 	SEG1::start();
 	SEG2::start();
 
+	LED_M1::DIR = 1;
+	LED_M2::DIR = 1;
+	LED_M3::DIR = 1;
+	LED_M4::DIR = 1;
+
+	utils::format("Start Digital MIC Reciver\n");
 	command_.set_prompt("# ");
 
 	uint8_t	n = 0;
 	uint8_t t = 0;
 	while(1) {
 		itm_.sync();
+
+		if(CH_SEL::P()) {
+			utils::format("CH_SEL\n");
+		}
+		if(IR_TEST::P()) {
+			utils::format("IR_TEST\n");
+		}
+		if(CH_SCAN::P()) {
+			utils::format("CH_SCAN\n");
+		}
+
 
 		SEG1::decimal(t / 10);
 		SEG2::decimal(t % 10);
@@ -209,13 +231,10 @@ int main(int argc, char* argv[])
 			++t;
 			if(t >= 100) t = 0;
 
-//			utils::format("%d\n") % static_cast<uint16_t>(t);
-
-		}
-		if(n < 20) {
-//			SEG1::decimal(4);
-		} else {
-//			SEG1::decimal(7);
+			LED_M1::P = (t & 1) != 0;
+			LED_M2::P = (t & 1) == 0;
+			LED_M3::P = (t & 2) != 0;
+			LED_M4::P = (t & 2) == 0;
 		}
 	}
 }
