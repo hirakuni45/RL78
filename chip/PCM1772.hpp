@@ -11,7 +11,7 @@
 */
 //=====================================================================//
 #include <cstdint>
-#include "common/format.hpp"
+#include "common/delay.hpp"
 
 namespace chip {
 
@@ -20,9 +20,10 @@ namespace chip {
 		@brief  PCM1772 テンプレートクラス
 		@param[in]	CSI_IO	CSI(SPI) 制御クラス
 		@param[in]	SEL	デバイス選択
+		@param[in]	PD	パワー・ダウン選択
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class CSI_IO, class SEL>
+	template <class CSI_IO, class SEL, class PD>
 	class PCM1772 {
 
 		CSI_IO&	csi_;
@@ -42,6 +43,18 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		void start()
 		{
+			PD::DIR = 1;    // output /PD (power down)
+			PD::P = 0;      // power down (assert reset)
+			SEL::DIR = 1;	// output /MS (device select)
+			SEL::P = 1;		// device disable
+
+			utils::delay::milli_second(100);
+
+			PD::P = 1;		// disable power down
+
+
+
+
 		}
 	};
 }
