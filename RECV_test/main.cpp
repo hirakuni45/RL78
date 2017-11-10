@@ -24,7 +24,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 10;
+	static const uint16_t VERSION = 11;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -237,12 +237,12 @@ int main(int argc, char* argv[])
 	// UART1 の開始
 	{
 		uint8_t intr_level = 1;
-		uart1_.start(19200, intr_level);
+		uart1_.start(9600, intr_level);
 	}
 	// UART2 の開始
 	{
 		uint8_t intr_level = 1;
-		uart2_.start(19200, intr_level);
+		uart2_.start(9600, intr_level);
 	}
 
 	device::PFSEG0 = 0x00;
@@ -278,6 +278,8 @@ int main(int argc, char* argv[])
 	pcm_.start();
 
 	command_.set_prompt("# ");
+
+	MUTE::P = 0;  // MUTE 0ff
 
 	uint8_t	n = 0;
 	uint8_t t = 0;
@@ -315,10 +317,8 @@ int main(int argc, char* argv[])
 			utils::format("MSEL: %d\n") % input_.get_level(INPUT_TYPE::MSEL);
 		}
 
-
-
-		SEG1::decimal(t / 10);
-		SEG2::decimal(t % 10);
+		SEG1::decimal(0);
+		SEG2::decimal(0);
 
 		// コマンド入力と、コマンド解析
 		if(command_.service()) {
@@ -330,16 +330,26 @@ int main(int argc, char* argv[])
 			}
 		}
 
+		while(uart1_.recv_length() > 0) {
+			uint8_t d = uart1_.getch();
+			utils::format("UART1: 0x%02X\n") % static_cast<uint16_t>(d);
+		}
+		while(uart2_.recv_length() > 0) {
+			uint8_t d = uart2_.getch();
+			utils::format("UART2: 0x%02X\n") % static_cast<uint16_t>(d);
+		}
+
+
 		++n;
 		if(n >= 60) {
 			n = 0;
 			++t;
 			if(t >= 100) t = 0;
 
-			LED_M1::P = (t & 1) != 0;
-			LED_M2::P = (t & 1) == 0;
-			LED_M3::P = (t & 2) != 0;
-			LED_M4::P = (t & 2) == 0;
+			LED_M1::P = 1;
+			LED_M2::P = 1;
+			LED_M3::P = 1;
+			LED_M4::P = 1;
 		}
 	}
 }
