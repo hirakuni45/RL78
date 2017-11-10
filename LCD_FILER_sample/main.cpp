@@ -99,9 +99,7 @@ namespace {
 		A,
 		B
 	};
-
-	typedef utils::bitset<uint8_t, SWITCH> switch_bits;
-	utils::switch_man<switch_bits> switch_man_;
+	utils::switch_man<uint8_t, SWITCH> switch_man_;
 #endif
 
 }
@@ -261,27 +259,27 @@ int main(int argc, char* argv[])
 
 		adc_.sync();
 
-		switch_bits lvl;
 		// ４つのスイッチ判定（排他的）
 		auto val = adc_.get(2);
 		val >>= 6;   // 0 to 1023
 		val += 128;  // 閾値のオフセット（1024 / 4(SWITCH) / 2）
 		val /= 256;  // デコード（1024 / 4(SWITCH）
 
+		uint8_t lvl = 0;
 		if(val < 4) {
-			lvl.set(static_cast<SWITCH>(val));
+			lvl |= 1 << val;
 		}
 
 		// ２つのスイッチ判定（同時押し判定）
 		val = adc_.get(3);
 		val >>= 6;  // 0 to 1023
 		if(val < 256) {
-			lvl.set(SWITCH::A);
-			lvl.set(SWITCH::B);
+			lvl |= 1 << static_cast<uint8_t>(SWITCH::A);
+			lvl |= 1 << static_cast<uint8_t>(SWITCH::B);
 		} else if(val < 594) {
-			lvl.set(SWITCH::A);
+			lvl |= 1 << static_cast<uint8_t>(SWITCH::A);
 		} else if(val < 722) {
-			lvl.set(SWITCH::B);
+			lvl |= 1 << static_cast<uint8_t>(SWITCH::B);
 		}
 
 		switch_man_.service(lvl);
@@ -304,11 +302,11 @@ int main(int argc, char* argv[])
 		}
 
 #ifdef ADC_SWITCH
-		if(switch_man_.get_positive().get(SWITCH::A)) ch = ' ';
-		else if(switch_man_.get_positive().get(SWITCH::UP)) ch = 'a';
-		else if(switch_man_.get_positive().get(SWITCH::DOWN)) ch = 'z';
-		else if(switch_man_.get_positive().get(SWITCH::RIGHT)) ch = '\r';
-		else if(switch_man_.get_positive().get(SWITCH::LEFT)) ch = 0x08;
+		if(switch_man_.get_positive(SWITCH::A)) ch = ' ';
+		else if(switch_man_.get_positive(SWITCH::UP)) ch = 'a';
+		else if(switch_man_.get_positive(SWITCH::DOWN)) ch = 'z';
+		else if(switch_man_.get_positive(SWITCH::RIGHT)) ch = '\r';
+		else if(switch_man_.get_positive(SWITCH::LEFT)) ch = 0x08;
 #endif
 		if(ch == ' ') {
 			if(filer_.ready()) {
