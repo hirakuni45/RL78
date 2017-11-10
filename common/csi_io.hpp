@@ -103,7 +103,9 @@ namespace device {
 			div &= 0xfe;
 
 			// 対応するユニットを有効にする
-			manage::enable(SAU::get_peripheral());
+			if(!manage::enable(SAU::get_peripheral())) {
+				return false;
+			}
 
 			// 各ユニットで、チャネル０、１、２、３で共有の為、
 			// ０、１：PRS0、２、３：PRS1 を使う
@@ -131,7 +133,9 @@ namespace device {
 			SAU::SOE = 1;	// シリアル出力許可
 
 			// 対応するポートの設定
-			manage::set_csi_port(SAU::get_peripheral(), manage::csi_port::INOUT);
+			if(!manage::set_csi_port(SAU::get_peripheral(), manage::csi_port::INOUT)) {
+				return false;
+			}
 
 ///			send_stall_ = true;
 
