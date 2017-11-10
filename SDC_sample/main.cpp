@@ -16,6 +16,7 @@
 #include "common/itimer.hpp"
 #include "common/format.hpp"
 #include "common/delay.hpp"
+#include "common/iica_io.hpp"
 #include "common/csi_io.hpp"
 #include "common/sdc_io.hpp"
 #include "common/command.hpp"
