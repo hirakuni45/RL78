@@ -91,9 +91,10 @@ namespace device {
 			@brief  ペリフェラル許可
 			@param[in]	per	ペリフェラル型
 			@param[in]	ena	不許可の場合「false」
+			@return 有効なペリフェラル型では無い場合
 		*/
 		//-------------------------------------------------------------//
-		static void enable(peripheral per, bool ena = true)
+		static bool enable(peripheral per, bool ena = true)
 		{
 			static uint8_t sau_refc = 0;
 			static uint8_t tau_refc = 0;
@@ -165,8 +166,10 @@ namespace device {
 				}
 
 			default:
+				return false;
 				break;
 			}
+			return true;
 		}
 
 
@@ -391,6 +394,22 @@ namespace device {
 				PU7.B0 = 0;
 				PM7.B0 = 0;  // P7-0 output (SCK21)
 				P7.B0  = 1;  // ポートレジスター SCK21 切り替え
+				break;
+
+			case peripheral::SAU12:  // CSI30: P33:SCK30, P34:SI30, P35:SO30
+				if(inp) {
+					PU3.B4 = 0;
+					PM3.B4 = 1;  // P3-3 input  (SI30)
+					P3.B4  = 1;  // ポートレジスター SI30  切り替え
+				}
+				if(out) {
+					PU3.B5 = 0;
+					PM3.B5 = 0;  // P3-5 output (SO30)
+					P3.B5  = 1;  // ポートレジスター SO30  切り替え
+				}
+				PU3.B3 = 0;
+				PM3.B3 = 0;  // P3-3 output (SCK30)
+				P3.B3  = 1;  // ポートレジスター SCK30 切り替え
 				break;
 
 			default:
