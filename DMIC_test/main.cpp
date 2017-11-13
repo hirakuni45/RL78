@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 30;
+	static const uint16_t VERSION = 31;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
