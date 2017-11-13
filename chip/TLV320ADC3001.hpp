@@ -404,6 +404,10 @@ namespace chip {
 			// Audio Interface Control 1
 			f = set_(CMD_PAGE0::ADC_AIFC, static_cast<uint8_t>(inf));
 			if(!f) return false;
+			// Audio Interface I2S_TDM
+			// Default: 0b00000010
+			f = set_(CMD_PAGE0::I2S_TDM, 0b00000011);
+			if(!f) return false;
 
 			// PRB_P1 (0x3D, 0x01)
 			f = set_(CMD_PAGE0::ADC_PROC, 0x01);
