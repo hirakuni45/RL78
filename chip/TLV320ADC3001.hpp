@@ -406,9 +406,13 @@ namespace chip {
 			if(!f) return false;
 			// Audio Interface I2S_TDM
 			// Default: 0b00000010
+#ifdef BETA_VERSION
+			f = set_(CMD_PAGE0::ADC_IFC_2, 0b00001010);
+			if(!f) return false;
+#else
 			f = set_(CMD_PAGE0::I2S_TDM, 0b00000011);
 			if(!f) return false;
-
+#endif
 			// PRB_P1 (0x3D, 0x01)
 			f = set_(CMD_PAGE0::ADC_PROC, 0x01);
 			if(!f) return false;

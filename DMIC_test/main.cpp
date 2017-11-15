@@ -26,9 +26,15 @@
 #include "sw.hpp"
 // #include "serial.hpp"
 
+// #define BETA_VERSION
+
 namespace {
 
+#ifdef BETA_VERSION
+	static const uint16_t VERSION = 30;
+#else
 	static const uint16_t VERSION = 31;
+#endif
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -357,7 +363,13 @@ int main(int argc, char* argv[])
 		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
 	}
 
-	utils::format("\nStart Digital MIC Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
+#ifdef BETA_VERSION
+	utils::format("\nStart Digital MIC Version: %d.%02d / BETA-01\n")
+		% (VERSION / 100) % (VERSION % 100);
+#else
+	utils::format("\nStart Digital MIC Version: %d.%02d\n")
+		% (VERSION / 100) % (VERSION % 100);
+#endif
 
 	service_switch_();
 	service_switch_();
