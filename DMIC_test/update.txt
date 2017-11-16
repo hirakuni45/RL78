@@ -209,3 +209,16 @@ Version 0.30 / BETA-01:
 			f = set_(CMD_PAGE0::ADC_IFC_2, 0b00001010);
 を追加。
 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Version 0.32
+
+修正内容：
+・TLV320ADC3001 のクロック設定の修正
+
+Page0/Register18：NADC =　1
+Page0/Register19：MADC =　3
+Page0/Register20：AOSR =　128
+
+
