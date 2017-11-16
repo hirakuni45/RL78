@@ -394,11 +394,11 @@ namespace chip {
 			// NADC = 1, divider powered on
 			f = set_(CMD_PAGE0::ADC_NADC, 0x81);
 			if(!f) return false;
-			// MADC = 2, divider powered on
-			f = set_(CMD_PAGE0::ADC_MADC, 0x82);
+			// MADC = 3, divider powered on
+			f = set_(CMD_PAGE0::ADC_MADC, 0x83);
 			if(!f) return false;
-			// AOSR = 192
-			f = set_(CMD_PAGE0::ADC_AOSR, 192);
+			// AOSR = 128
+			f = set_(CMD_PAGE0::ADC_AOSR, 128);
 			if(!f) return false;
 
 			// Audio Interface Control 1
