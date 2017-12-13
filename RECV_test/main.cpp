@@ -95,6 +95,12 @@ namespace {
 	typedef utils::switch_man<uint16_t, INPUT_TYPE> INPUT;
 	INPUT	input_;
 
+	// ノイズ・キャンセル操作用ポート
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B1> NC_OUT0;
+	typedef device::PORT<device::port_no::P13, device::bitpos::B0> NC_OUT1;
+	typedef device::PORT<device::port_no::P0,  device::bitpos::B3> NC_IN0;
+	typedef device::PORT<device::port_no::P15, device::bitpos::B2> NC_IN1;
+
 	void service_input_()
 	{
 		uint16_t lvl = 0;
@@ -113,6 +119,8 @@ namespace {
 		if(MSEL::P()) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::MSEL);
 
 		input_.service(lvl);
+
+
 	}
 
 	// CSI(SPI) の定義、CSI30 の通信では、「SAU12」を利用、１ユニット、チャネル２
