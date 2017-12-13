@@ -33,7 +33,7 @@ namespace {
 #ifdef BETA_VERSION
 	static const uint16_t VERSION = 30;
 #else
-	static const uint16_t VERSION = 32;
+	static const uint16_t VERSION = 33;
 #endif
 
 	typedef device::itimer<uint8_t> ITM;
