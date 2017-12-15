@@ -24,7 +24,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 11;
+	static const uint16_t VERSION = 12;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -90,37 +90,76 @@ namespace {
 		S_M4,
 
 		MSEL,	///< モジュール選択、L:1個、H:2個
+
+		PNC_IN0,	///< ポップノイズキャンセル、入力０(P03)
+		PNC_IN1,	///< ポップノイズキャンセル、入力１(P152)
 	};
 
 	typedef utils::switch_man<uint16_t, INPUT_TYPE> INPUT;
 	INPUT	input_;
 
-	// ノイズ・キャンセル操作用ポート
-	typedef device::PORT<device::port_no::P2,  device::bitpos::B1> NC_OUT0;
-	typedef device::PORT<device::port_no::P13, device::bitpos::B0> NC_OUT1;
-	typedef device::PORT<device::port_no::P0,  device::bitpos::B3> NC_IN0;
-	typedef device::PORT<device::port_no::P15, device::bitpos::B2> NC_IN1;
+	// ポップ・ノイズ解消用ポート
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B1> PNC_CTL0;
+	typedef device::PORT<device::port_no::P13, device::bitpos::B0> PNC_CTL1;
+	typedef device::PORT<device::port_no::P0,  device::bitpos::B3> PNC_IN0;
+	typedef device::PORT<device::port_no::P15, device::bitpos::B2> PNC_IN1;
+
+	uint8_t	pnc_ctl0_count_;
+	uint8_t	pnc_ctl1_count_;
+
+	// 仕様
+	// P03/Low（L）で　⇒　P21/Lに遷移
+	// P03/Hi （H）で　⇒　50ms後にP21/Hに遷移
+
+	// P152/L      で　⇒　P130/Lに遷移
+	// P152/H      で　⇒　50ms後にP130/Hに遷移
+	void service_pop_noise_cancel_()
+	{
+		if(!input_.get_level(INPUT_TYPE::PNC_IN0)) {
+			PNC_CTL0::P = 0;
+		} else if(input_.get_positive(INPUT_TYPE::PNC_IN0)) {
+			pnc_ctl0_count_ = 3;
+		}
+		if(pnc_ctl0_count_ > 0) {
+			--pnc_ctl0_count_;
+		} else {
+			PNC_CTL0::P = 1;
+		}
+
+		if(!input_.get_level(INPUT_TYPE::PNC_IN1)) {
+			PNC_CTL1::P = 0;
+		} else if(input_.get_positive(INPUT_TYPE::PNC_IN1)) {
+			pnc_ctl1_count_ = 3;
+		}
+		if(pnc_ctl1_count_ > 0) {
+			--pnc_ctl1_count_;
+		} else {
+			PNC_CTL1::P = 1;
+		}
+	}
+
 
 	void service_input_()
 	{
 		uint16_t lvl = 0;
 
-		if(CH_SEL::P() ) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::CH_SEL);
-		if(IR_TEST::P()) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::IR_TEST);
-		if(CH_SCAN::P()) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::CH_SCAN);
+		if(CH_SEL::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::CH_SEL);
+		if(IR_TEST::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::IR_TEST);
+		if(CH_SCAN::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::CH_SCAN);
 
-		if(L_M::P()) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::L_M);
+		if(L_M::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::L_M);
 
-		if(S_M1::P() ) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::S_M1);
-		if(S_M2::P() ) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::S_M2);
-		if(S_M3::P() ) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::S_M3);
-		if(S_M4::P() ) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::S_M4);
+		if(S_M1::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::S_M1);
+		if(S_M2::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::S_M2);
+		if(S_M3::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::S_M3);
+		if(S_M4::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::S_M4);
 
-		if(MSEL::P()) lvl |= 1 << static_cast<uint8_t>(INPUT_TYPE::MSEL);
+		if(MSEL::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::MSEL);
+
+		if(PNC_IN0::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::PNC_IN0);
+		if(PNC_IN1::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::PNC_IN1);
 
 		input_.service(lvl);
-
-
 	}
 
 	// CSI(SPI) の定義、CSI30 の通信では、「SAU12」を利用、１ユニット、チャネル２
@@ -272,6 +311,10 @@ int main(int argc, char* argv[])
 	MUTE::DIR = 1;
 	MUTE::P = 1;
 
+	device::ADPC = 0b001; // A/D input all digital port
+	PNC_CTL0::DIR = 1; 
+	PNC_CTL1::DIR = 1; 
+
 	utils::format("\nStart Digital MIC Reciver Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
 
 	// CSI 開始
@@ -295,6 +338,7 @@ int main(int argc, char* argv[])
 		itm_.sync();
 
 		service_input_();
+		service_pop_noise_cancel_();
 
 		if(input_.get_positive(INPUT_TYPE::CH_SEL)) {
 			utils::format("CH_SEL\n");
