@@ -33,7 +33,7 @@ namespace {
 #ifdef BETA_VERSION
 	static const uint16_t VERSION = 30;
 #else
-	static const uint16_t VERSION = 33;
+	static const uint16_t VERSION = 34;
 #endif
 
 	typedef device::itimer<uint8_t> ITM;
@@ -405,8 +405,8 @@ int main(int argc, char* argv[])
 			utils::format("P_CONT: online\n");
 			start_i2c_ = 20;
 			pw_off_cnt = 0;
-			serial_delay = 30;  // 500ms
-			mute_delay = 42;  // 電源 ON 時は 700ms 後 MUTE
+			serial_delay = 6;  // 100ms
+			mute_delay = 12;  // 電源 ON 時は 200ms 後 MUTE
 			pon_first = false;
 			power = true;
 		}
