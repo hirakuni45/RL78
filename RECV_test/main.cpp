@@ -24,7 +24,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 12;
+	static const uint16_t VERSION = 13;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -57,7 +57,7 @@ namespace {
 	typedef device::PORT<device::port_no::P7, device::bitpos::B4> SG2_G;
 	typedef chip::SEGMENT<SG2_A, SG2_B, SG2_C, SG2_D, SG2_E, SG2_F, SG2_G, device::NULL_PORT> SEG2;
 
-	typedef device::PORT<device::port_no::P2,device::bitpos::B1> MUTE;
+//	typedef device::PORT<device::port_no::P2,device::bitpos::B1> MUTE;
 
 	// 入力ポート定義
 	typedef device::PORT<device::port_no::P1, device::bitpos::B0> LED_M1;
@@ -308,12 +308,14 @@ int main(int argc, char* argv[])
 	LED_M3::DIR = 1;
 	LED_M4::DIR = 1;
 
-	MUTE::DIR = 1;
-	MUTE::P = 1;
+//	MUTE::DIR = 1;
+//	MUTE::P = 1;
 
 	device::ADPC = 0b001; // A/D input all digital port
 	PNC_CTL0::DIR = 1; 
-	PNC_CTL1::DIR = 1; 
+	PNC_CTL0::PMC = 0;  // digital in/out
+//	PNC_CTL1::DIR = 1;  // only output
+
 
 	utils::format("\nStart Digital MIC Reciver Version: %d.%02d\n") % (VERSION / 100) % (VERSION % 100);
 
@@ -330,7 +332,7 @@ int main(int argc, char* argv[])
 
 	command_.set_prompt("# ");
 
-	MUTE::P = 0;  // MUTE 0ff
+//	MUTE::P = 0;  // MUTE 0ff
 
 	uint8_t	n = 0;
 	uint8_t t = 0;
