@@ -390,12 +390,12 @@ namespace chip {
 			// Figure 28. 参照
 			// CLOCK_GEN: で CODEC_CLKIN: MCLK 
 			// ADC_FS = MCLK / NADC / MADC / AOSR
-			// ※ 384FS
+			// ※ 256FS (clock: 11.2896MHz, 44.1KHz)
 			// NADC = 1, divider powered on
 			f = set_(CMD_PAGE0::ADC_NADC, 0x81);
 			if(!f) return false;
-			// MADC = 3, divider powered on
-			f = set_(CMD_PAGE0::ADC_MADC, 0x83);
+			// MADC = 2, divider powered on
+			f = set_(CMD_PAGE0::ADC_MADC, 0x82);
 			if(!f) return false;
 			// AOSR = 128
 			f = set_(CMD_PAGE0::ADC_AOSR, 128);
