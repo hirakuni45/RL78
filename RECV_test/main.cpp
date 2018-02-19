@@ -2,7 +2,7 @@
 /*!	@file
 	@brief	デジタル・マイク・レシーバー
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017, 2018 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -24,7 +24,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 13;
+	static const uint16_t VERSION = 14;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -168,8 +168,8 @@ namespace {
 
 	// PCM1772 デバイス選択（P34 ---> PCM1772:/MS(15)）
 	typedef device::PORT<device::port_no::P3, device::bitpos::B4> PCM_SEL;
-	// PCM1772 パワー・ダウン（P30 ---> PCM1772:/PD(?))
-	typedef device::PORT<device::port_no::P3, device::bitpos::B0> PCM_PD;
+	// PCM1772 パワー・ダウン（P32 ---> PCM1772:/PD)
+	typedef device::PORT<device::port_no::P3, device::bitpos::B2> PCM_PD;
 
 	typedef chip::PCM1772<CSI, PCM_SEL, PCM_PD> PCM;
 	PCM		pcm_(csi_);
