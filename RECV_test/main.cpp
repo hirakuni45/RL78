@@ -29,7 +29,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 16;
+	static const uint16_t VERSION = 17;
 
 	static const uint8_t SD1X_DELAY = 6;  // 100ms
 	static const uint8_t SD2X_DELAY = 6;  // 100ms
@@ -437,7 +437,7 @@ int main(int argc, char* argv[])
 
 	// チャネル関係
 	ch_no_[0] = 0;
-	ch_no_[1] = 0;
+	ch_no_[1] = 16;
 	fw_delay_ = 0;
 	read_flash_();
 	for(uint8_t i = 0; i < SEND_CH_DELAY; ++i) {
