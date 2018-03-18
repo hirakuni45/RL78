@@ -4,7 +4,7 @@
 	@brief	RL78 (G13/L1C) グループ SAU/CSI 制御 @n
 			※現状では、割り込みに対応していない、ポーリングのみ動作可能
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2018 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -23,9 +23,10 @@ namespace device {
 	/*!
 		@brief  CSI 制御クラス・テンプレート
 		@param[in]	SAUtx	シリアル・アレイ・ユニット・クラス
+		@param[in]	PORT	ポート型（標準では、IN, OUT）
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class SAU>
+	template <class SAU, manage::csi_port PORT = manage::csi_port::INOUT>
 	class csi_io {
 	public:
 
@@ -133,7 +134,7 @@ namespace device {
 			SAU::SOE = 1;	// シリアル出力許可
 
 			// 対応するポートの設定
-			if(!manage::set_csi_port(SAU::get_peripheral(), manage::csi_port::INOUT)) {
+			if(!manage::set_csi_port(SAU::get_peripheral(), PORT)) {
 				return false;
 			}
 
@@ -166,6 +167,7 @@ namespace device {
 				return 0;
 			} else {
 				SAU::SDR_L = ch;
+// utils::delay::micro_second(200);
 				while(intr::get_request(SAU::get_peripheral()) == 0) sleep_();
 				intr::set_request(itm::get_peripheral(), 0);
 				return SAU::SDR_L();
