@@ -637,7 +637,8 @@ namespace device {
 			case peripheral::SAU11:  // UART2-RX
 				return IF0H.SRIF2();
 			case peripheral::SAU12:  // UART3-TX
-				return IF1H.STIF3();
+///				return IF1H.STIF3();
+				return IF1H.CSIIF30();
 			case peripheral::SAU13:  // UART3-RX
 				return IF1H.SRIF3();
 
@@ -705,7 +706,8 @@ namespace device {
 				IF0H.SRIF2 = ena;
 				break;
 			case peripheral::SAU12:  // UART3-TX
-				IF1H.STIF3 = ena;
+///				IF1H.STIF3 = ena;
+				IF1H.CSIIF30 = ena;
 				break;
 			case peripheral::SAU13:  // UART3-RX
 				IF1H.SRIF3 = ena;
