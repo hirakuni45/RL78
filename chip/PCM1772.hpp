@@ -48,14 +48,13 @@ namespace chip {
 			SEL::DIR = 1;	// output /MS (device select)
 			SEL::P = 1;		// device disable
 
-			utils::delay::milli_second(50);
+			utils::delay::milli_second(20);
 
 			PD::P = 1;		// disable power down
 
 			utils::delay::milli_second(5);
 
 			SEL::P = 0;		// enable device
-
 			csi_.xchg(0x01);  		// Register 1
 			csi_.xchg(0b00111111);	// B7:MUTR, B6:MUTL, B5-B0:ATL
 									// MUTR = 0 Soft Mute Control R (0:disable)
@@ -67,7 +66,8 @@ namespace chip {
 									// ATR = 111111 --->  Digital Attenuation Level Setting, R (0dB) 
 
 			csi_.xchg(0x03);  		// Register 3
-			csi_.xchg(0b00000000);	// B7:OVER, B6:RINV, B5:AMIX, B4:DEM, B3-B0:FMT
+			csi_.xchg(0b10000000);	// B7:OVER, B6:RINV, B5:AMIX, B4:DEM, B3-B0:FMT
+									// B7 = 1 ---> 44.1KHz 256Fs
 									// AMIX = 0 ---> Analog Mixing Control for External Analog Signal, AIN
 									// DEM = 0 --->  44.1-kHz De-Emphasis Control (Disable)
 									// FMT = 000 ---> 16- to 24-bit, left-justified format (000)
@@ -76,7 +76,6 @@ namespace chip {
 			csi_.xchg(0b00000000);	// B7-B5:RSV, B4:ZCAT, B3-B1:RSV, B0:PWRD 
 									// ZCAT = 0 --->  Zero Cross Attenuation (0:Normal attenuation)
 									// PWRD = 0 ---> Power Down Control (0:Normal operation)
-
 			SEL::P = 1;		// disable device
 		}
 	};
