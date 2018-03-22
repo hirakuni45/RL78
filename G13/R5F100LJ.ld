@@ -47,6 +47,7 @@ MEMORY {
 	SEC_ID (r): ORIGIN = 0x000C4, LENGTH = 0x0000A
 	ROM (r)   : ORIGIN = 0x000D8, LENGTH = 0x3FF28
 	RAM (w)   : ORIGIN = 0xFAF88, LENGTH = 0x04E98
+	DATAF (W) : ORIGIN = 0xF1000, LENGTH = 0x02000
 	STACK (w) : ORIGIN = 0xFFE20, LENGTH = 0x00002
 }
 
@@ -157,6 +158,9 @@ SECTIONS
     KEEP (*(SORT(.fini_array.*)))
     PROVIDE (__fini_array_end = .);
     LONG(0); /* Sentinel.  */
+
+	PROVIDE (__dataflashsize = .);
+	SHORT(LENGTH(DATAF));
 
     /* gcc uses crtbegin.o to find the start of the constructors, so
        we make sure it is first.  Because this is a wildcard, it
