@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 	{
 		if(flash_.start()) {
 			utils::format("Data Flash Start (FDL T4): OK\n");
-			utils::format("Data Flash Size: 0x%04X\n") % FLASH::data_flash_size;
+			utils::format("Data Flash Size: 0x%04X\n") % flash_.size();
 		} else {
 			utils::format("Data Flash Start (FDL T4): NG\n");
 		}
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
 				if(command_.get_word(1, sizeof(buff), buff)) {
 					int bank = 0;
 					if((utils::input("%d", buff) % bank).status()) {
-						if(static_cast<uint32_t>(bank) < FLASH::data_flash_bank) {
+						if(static_cast<uint32_t>(bank) < flash_.bank()) {
 							f = flash_.erase(bank);
 							if(!f) {
 								utils::format("Erase error: bank %d\n") % bank;
@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
 					}
 				}
 			} else if(command_.cmp_word(0, "?") || command_.cmp_word(0, "help")) {
-				utils::format("erase [bank] (erase 0 to %d)\n") % FLASH::data_flash_bank;
+				utils::format("erase [bank] (erase 0 to %d)\n") % flash_.bank();
 				utils::format("r org [end] (read)\n");
 				utils::format("write org data... (write)\n");
 			} else {
