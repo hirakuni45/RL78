@@ -56,7 +56,7 @@ namespace {
 		uint8_t		ch1_;
 		uint8_t		ch2_;
 
-		frec_t() : ch1_(0), ch2_(0) { }
+		frec_t() : ch1_(0), ch2_(16) { }
 	};
 	typedef utils::flash_man<frec_t>  FLASH_MAN;
 	FLASH_MAN	flash_man_(flash_);
@@ -358,6 +358,7 @@ int main(int argc, char* argv[])
 		uint8_t intr_level = 1;
 		itm_.start(60, intr_level);
 	}
+	uint8_t torg = itm_.get_counter();
 
 	// UART0 の開始
 	{
@@ -368,11 +369,13 @@ int main(int argc, char* argv[])
 	// UART1 の開始
 	{
 		uint8_t intr_level = 1;
+		uart1_.auto_crlf(false);
 		uart1_.start(19200, intr_level);
 	}
 	// UART2 の開始
 	{
 		uint8_t intr_level = 1;
+		uart2_.auto_crlf(false);
 		uart2_.start(19200, intr_level);
 	}
 
@@ -419,7 +422,7 @@ int main(int argc, char* argv[])
 	// フラッシュ開始
 	if(flash_.start()) {
 		utils::format("Flash I/O start: size: %d bytes, bank: %d\n")
-			% FLASH::data_flash_size % FLASH::data_flash_bank;
+			% flash_.size() % flash_.bank();
 		flash_man_.start();
 	} else {
 		utils::format("Flash I/O start error\n");
@@ -440,7 +443,7 @@ int main(int argc, char* argv[])
 	ch_no_[1] = 16;
 	fw_delay_ = 0;
 	read_flash_();
-	for(uint8_t i = 0; i < SEND_CH_DELAY; ++i) {
+	while(itm_.get_counter() < (torg + SEND_CH_DELAY)) {
 		itm_.sync();
 	}
 	send_ch_();
@@ -485,13 +488,6 @@ int main(int argc, char* argv[])
 		{
 			bool sd11 = input_.get_level(INPUT_TYPE::SD11);
 			bool sd12 = input_.get_level(INPUT_TYPE::SD12);
-			if(sd11 == 1 && sd12 == 1) {
-				LED_M1::P = 1;
-				MUT1::P   = 0;
-			} else if(sd11_ != sd11 || sd12_ != sd12) {
-				sd1x_count_ = SD1X_DELAY;
-				utils::format("SD1x trigger\n");
-			}
 			if(sd1x_count_ > 0) {
 				sd1x_count_--;
 				if(sd1x_count_ == 0) {
@@ -506,6 +502,13 @@ int main(int argc, char* argv[])
 						MUT1::P   = 1;
 					}
 				}
+			}
+			if(sd11 == 1 && sd12 == 1) {
+				LED_M1::P = 1;
+				MUT1::P   = 0;
+			} else if(sd11_ != sd11 || sd12_ != sd12) {
+				sd1x_count_ = SD1X_DELAY;
+				utils::format("SD1x trigger\n");
 			}
 			sd11_ = sd11;
 			sd12_ = sd12;
