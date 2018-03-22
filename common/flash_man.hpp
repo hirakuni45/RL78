@@ -41,13 +41,13 @@ namespace utils {
 		uint16_t scan_free_()
 		{
 			uint16_t adr = 0;
-			for(uint16_t i = 0; i < IO::data_flash_size; i += pacs_) {
+			for(uint16_t i = 0; i < io_.size(); i += pacs_) {
 				adr = i;
 				if(io_.erase_check(adr, sizeof(stt_t))) {
 					return adr;
 				}
 			}
-			return IO::data_flash_size;  // full !
+			return io_.size();  // full !
 		}
 
 	public:
@@ -94,7 +94,7 @@ namespace utils {
 		bool write(const ST& st)
 		{
 			uint16_t adr = scan_free_();
-			if(adr >= IO::data_flash_size) return false;
+			if(adr >= io_.size()) return false;
 			stt_.magic_ = magic_;
 			stt_.st_ = st;
 			bool ret = io_.write(adr, &stt_, sizeof(stt_t));
@@ -115,7 +115,7 @@ namespace utils {
 		{
 			bool ret = false;
 			uint16_t adr;
-			for(adr = 0; adr < IO::data_flash_size; adr += pacs_) {
+			for(adr = 0; adr < io_.size(); adr += pacs_) {
 				if(io_.erase_check(adr, sizeof(stt_t))) {
 					break;
 				}
@@ -126,9 +126,9 @@ namespace utils {
 					ret = true;
 				}
 			}
-			utils::format("Read Flash: %04X at %d bytes (%d)\n")
-				% adr % sizeof(stt_t) % static_cast<int>(ret);
 			if(ret) {
+				utils::format("Read Flash: %04X at %d bytes (%d)\n")
+					% adr % sizeof(stt_t) % static_cast<int>(ret);
 				if(stt_.magic_ == magic_) {
 					st = stt_.st_;
 				} else {

@@ -3,17 +3,15 @@
 /*!	@file
 	@brief	RL78 グループ・データ・フラッシュ制御
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017, 2018 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "data_flash_lib/data_flash_util.h"
 
-/// DEVICE_SIG はデータ・フラッシュ・メモリーの容量定義に必要で、設定が無ければエラーとする
-#ifndef DEVICE_SIG
-#  error "flash_io.hpp requires DEVICE_SIG to be defined"
-#endif
+/// リンカースクリプトで、データ・フラッシュの容量を設定
+extern const uint16_t _dataflashsize;
 
 namespace device {
 
@@ -32,16 +30,7 @@ namespace device {
 		*/
 		//-----------------------------------------------------------------//
 		static const uint16_t data_flash_block = 1024;	///< データ・フラッシュのブロックサイズ
-#if (DEVICE_SIG == R5F100LC) || (DEVICE_SIG == R5F100LE)
-		static const uint16_t data_flash_size  = 4096;	///< データ・フラッシュの容量
-		static const uint16_t data_flash_bank  = 4;		///< データ・フラッシュのバンク数
-#elif (DEVICE_SIG == R5F100LG) || (DEVICE_SIG == R5F100LJ)
-		static const uint16_t data_flash_size  = 8192;	///< データ・フラッシュの容量
-		static const uint16_t data_flash_bank  = 8;		///< データ・フラッシュのバンク数
-#else
-		static const uint16_t data_flash_size  = 0;	    ///< データ・フラッシュの容量
-		static const uint16_t data_flash_bank  = 0;		///< データ・フラッシュのバンク数
-#endif
+
 
 		//-----------------------------------------------------------------//
 		/*!
@@ -56,6 +45,8 @@ namespace device {
 		};
 
 	private:
+		uint16_t	size_;
+		uint16_t	bank_;
 		error		error_;
 
 	public:
@@ -64,7 +55,26 @@ namespace device {
 			@brief  コンストラクター
 		*/
 		//-----------------------------------------------------------------//
-		flash_io() : error_(error::NONE) { }
+		flash_io() : size_(_dataflashsize), bank_(_dataflashsize / data_flash_block),
+			error_(error::NONE) { }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  データ・フラッシュ・サイズ取得
+			@return データ・フラッシュ・サイズ
+		*/
+		//-----------------------------------------------------------------//
+		uint16_t size() const { return size_; }
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  データ・フラッシュ・バンク取得
+			@return データ・フラッシュ・バンク
+		*/
+		//-----------------------------------------------------------------//
+		uint16_t bank() const { return bank_; }
 
 
 		//-----------------------------------------------------------------//
@@ -74,7 +84,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool start()
 		{
-			if(data_flash_size == 0) return false;
+			if(size() == 0) return false;
 
 			error_ = error::NONE;
 			return pfdl_open() == PFDL_OK;
@@ -103,12 +113,12 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool read(uint16_t org, void* dst, uint16_t len)
 		{
-			if(org >= data_flash_size) {
+			if(org >= size()) {
 				error_ = error::ADDRESS;
 				return false;
 			}
-			if((org + len) > data_flash_size) {
-				len = data_flash_size - org;
+			if((org + len) > size()) {
+				len = size() - org;
 			}
 
 			return pfdl_read(org, static_cast<uint8_t*>(dst), len) == PFDL_OK;
@@ -142,7 +152,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool erase_check(uint16_t org, uint16_t len = data_flash_block)
 		{
-			if(org >= data_flash_size) {
+			if(org >= size()) {
 				error_ = error::ADDRESS;
 				return false;
 			}
@@ -160,7 +170,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool erase(uint16_t org)
 		{
-			if(org >= data_flash_size) {
+			if(org >= size()) {
 				error_ = error::ADDRESS;
 				return false;
    			}
@@ -177,7 +187,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool erase_all()
 		{
-			for(uint16_t pos = 0; pos < data_flash_size; pos += data_flash_block) {
+			for(uint16_t pos = 0; pos < size(); pos += data_flash_block) {
 				if(!erase_check(pos)) {
 					auto ret = erase(pos);
 					if(!ret) {
@@ -202,7 +212,7 @@ namespace device {
 		//-----------------------------------------------------------------//
 		bool write(uint16_t org, const void* src, uint16_t len)
 		{
-			if(org >= data_flash_size) {
+			if(org >= size()) {
 				error_ = error::ADDRESS;
 				return false;
 			}
