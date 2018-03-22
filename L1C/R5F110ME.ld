@@ -47,6 +47,7 @@ MEMORY {
 	SEC_ID (r): ORIGIN = 0x000C4, LENGTH = 0x0000A
 	ROM (r)   : ORIGIN = 0x000D8, LENGTH = 0x0FF28
 	RAM (w)   : ORIGIN = 0xFDF00, LENGTH = 0x01F20
+	DATAF (W) : ORIGIN = 0xF1000, LENGTH = 0x02000
 	STACK (w) : ORIGIN = 0xFFE20, LENGTH = 0x00002
 }
 
@@ -136,7 +137,8 @@ SECTIONS
     *(.stack)
   }
 
-	.rodata (MAX(__romdatastart + __romdatacopysize, 0x3000)) : {
+  .rodata (MAX(__romdatastart + __romdatacopysize, 0x3000)) :
+  {
     . = ALIGN(2);
     *(.plt)
     *(.rodata C C_2 C_1 .rodata.* .gnu.linkonce.r.*)
@@ -157,6 +159,9 @@ SECTIONS
     KEEP (*(SORT(.fini_array.*)))
     PROVIDE (__fini_array_end = .);
     LONG(0); /* Sentinel.  */
+
+	PROVIDE (__dataflashsize = .);
+	SHORT(LENGTH(DATAF));
 
     /* gcc uses crtbegin.o to find the start of the constructors, so
        we make sure it is first.  Because this is a wildcard, it
