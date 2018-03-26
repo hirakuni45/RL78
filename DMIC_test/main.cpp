@@ -5,7 +5,7 @@
 			P15: green LED @n
 			P16: red LED @n
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017, 2018 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -33,7 +33,7 @@ namespace {
 #ifdef BETA_VERSION
 	static const uint16_t VERSION = 30;
 #else
-	static const uint16_t VERSION = 34;
+	static const uint16_t VERSION = 35;
 #endif
 
 	typedef device::itimer<uint8_t> ITM;
@@ -221,6 +221,7 @@ namespace {
 			auto v = sw5_.get();
 ///			if(outreq || sw5_val_ != v) {
 			if(outreq) {
+				++v;
 				uart0_.putch('C');
 				uart0_.putch((v / 10) + '0');
 				uart0_.putch((v % 10) + '0');
@@ -233,9 +234,10 @@ namespace {
 			auto v = sw2_.get() & 1;
 ///			if(outreq || sw2_val_ != v) {
 			if(outreq) {
-				uart0_.putch('M');
-				uart0_.putch(v + '1');
-				uart0_.putch('\n');
+/// Version 0.35 で、出力廃止となった
+///				uart0_.putch('M');
+///				uart0_.putch(v + '1');
+///				uart0_.putch('\n');
 				utils::format("SW2: %d\n") % static_cast<uint16_t>(v);
 ///				sw2_val_ = v;
 			}
