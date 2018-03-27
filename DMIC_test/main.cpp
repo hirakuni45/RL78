@@ -33,7 +33,7 @@ namespace {
 #ifdef BETA_VERSION
 	static const uint16_t VERSION = 30;
 #else
-	static const uint16_t VERSION = 35;
+	static const uint16_t VERSION = 36;
 #endif
 
 	typedef device::itimer<uint8_t> ITM;
@@ -419,6 +419,7 @@ int main(int argc, char* argv[])
 			mute_delay = 1;  // 電源 OFF 時は即時 MUTE
 			poff_first = false;
 			power = false;
+			ti_adc_.mute();  // ADC にミュート設定
 		}
 
 		if(serial_delay > 0) {
