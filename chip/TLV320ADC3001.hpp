@@ -471,8 +471,8 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		bool mute()
 		{
-			f = set_(CMD_PAGE0::ADC_FINE_VOLUME, 0x88);
-			if(!f) return false;
+			bool f = set_(CMD_PAGE0::ADC_FINE_VOLUME, 0x88);
+			return f;
 		}
 	};
 }
