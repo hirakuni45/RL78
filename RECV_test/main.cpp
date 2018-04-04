@@ -29,12 +29,14 @@
 
 namespace {
 
-	static const uint16_t VERSION = 17;
+	static const uint16_t VERSION = 18;
 
-	static const uint8_t SD1X_DELAY = 6;  // 100ms
-	static const uint8_t SD2X_DELAY = 6;  // 100ms
+	static const uint8_t SD1X_DELAY = 12;  // 200ms
+	static const uint8_t SD2X_DELAY = 12;  // 200ms
 
 	static const uint8_t SEND_CH_DELAY = 6;  // 100ms
+
+	static const uint8_t FLASH_WRITE_HOLD = 30;  // 0.5 sec
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -557,7 +559,7 @@ int main(int argc, char* argv[])
 			SEG2::decimal(no % 10);
 		}
 		if(ch_pad[0] != ch_no_[0] || ch_pad[1] != ch_no_[1]) {
-			fw_delay_ = 180;
+			fw_delay_ = FLASH_WRITE_HOLD;
 		}
 		if(fw_delay_ > 0) {
 			fw_delay_--;
