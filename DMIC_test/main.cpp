@@ -26,15 +26,9 @@
 #include "sw.hpp"
 // #include "serial.hpp"
 
-// #define BETA_VERSION
-
 namespace {
 
-#ifdef BETA_VERSION
-	static const uint16_t VERSION = 30;
-#else
-	static const uint16_t VERSION = 36;
-#endif
+	static const uint16_t VERSION = 37;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -365,13 +359,8 @@ int main(int argc, char* argv[])
 		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
 	}
 
-#ifdef BETA_VERSION
-	utils::format("\nStart Digital MIC Version: %d.%02d / BETA-01\n")
-		% (VERSION / 100) % (VERSION % 100);
-#else
 	utils::format("\nStart Digital MIC Version: %d.%02d\n")
 		% (VERSION / 100) % (VERSION % 100);
-#endif
 
 	service_switch_();
 	service_switch_();
@@ -405,7 +394,7 @@ int main(int argc, char* argv[])
 			TRESET::P = 0;
 			P_CONT::P = 1;  // power switch online
 			utils::format("P_CONT: online\n");
-			start_i2c_ = 20;
+			start_i2c_ = 3;
 			pw_off_cnt = 0;
 			serial_delay = 6;  // 100ms
 			mute_delay = 12;  // 電源 ON 時は 200ms 後 MUTE
@@ -413,13 +402,13 @@ int main(int argc, char* argv[])
 			power = true;
 		}
 		if(poff_first || switch_man_.get_negative(SWITCH::POWER)) {
-			utils::format("POWER: OFF\n");
 			pw_off_cnt = 30;
 			serial_delay = 0;
 			mute_delay = 1;  // 電源 OFF 時は即時 MUTE
 			poff_first = false;
 			power = false;
 			ti_adc_.mute();  // ADC にミュート設定
+			utils::format("POWER: OFF\n");
 		}
 
 		if(serial_delay > 0) {
@@ -473,7 +462,7 @@ int main(int argc, char* argv[])
 			if(start_i2c_ == 0) {
 				utils::format("Reset TI (H) OK\n");
 				TRESET::P = 1;  // TI Reset open
-				reset_setup_ = 10;
+				reset_setup_ = 2;
 			}
 		}
 		if(reset_setup_ > 0) {
