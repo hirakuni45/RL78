@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 37;
+	static const uint16_t VERSION = 38;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -134,6 +134,7 @@ namespace {
 		B_CONT::DIR = 1;
 		B_CONT::P = 0;
 
+		// TI/ADC /RESET (/PowerDown)
 		TRESET::DIR = 1;
 		TRESET::PU = 1;
 		TRESET::P = 0;
@@ -240,6 +241,7 @@ namespace {
 
 	uint8_t	start_i2c_ = 0;
 	uint8_t reset_setup_ = 0;
+	uint8_t adc_setup_inh_ = 0;
 }
 
 
@@ -402,13 +404,19 @@ int main(int argc, char* argv[])
 			power = true;
 		}
 		if(poff_first || switch_man_.get_negative(SWITCH::POWER)) {
-			pw_off_cnt = 30;
+			adc_setup_inh_ = 6;  // A/D の初期化禁止期間(100ms)
+			pw_off_cnt = 1;  // 0406 変更（500ms→0ms）
 			serial_delay = 0;
 			mute_delay = 1;  // 電源 OFF 時は即時 MUTE
 			poff_first = false;
 			power = false;
-			ti_adc_.mute();  // ADC にミュート設定
+// 0406 A/D Mute 設定を無効
+//			ti_adc_.mute();  // ADC にミュート設定
 			utils::format("POWER: OFF\n");
+		}
+
+		if(adc_setup_inh_ > 0) {
+			--adc_setup_inh_;
 		}
 
 		if(serial_delay > 0) {
@@ -467,7 +475,7 @@ int main(int argc, char* argv[])
 		}
 		if(reset_setup_ > 0) {
 			--reset_setup_;
-			if(reset_setup_ == 0) {
+			if(reset_setup_ == 0 && adc_setup_inh_ == 0) {
 				// IICA(I2C) の開始
 				uint8_t intr_level = 0;
 ///				if(!iica_.start(IICA::speed::fast, intr_level)) {
