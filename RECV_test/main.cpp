@@ -29,7 +29,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 18;
+	static const uint16_t VERSION = 19;
 
 	static const uint8_t SD1X_DELAY = 12;  // 200ms
 	static const uint8_t SD2X_DELAY = 12;  // 200ms
