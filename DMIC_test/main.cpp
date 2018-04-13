@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 38;
+	static const uint16_t VERSION = 39;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -99,6 +99,9 @@ namespace {
 	typedef device::PORT<device::port_no::P1, device::bitpos::B5> LED_G;
 	// LED Red
 	typedef device::PORT<device::port_no::P1, device::bitpos::B6> LED_R;
+
+	// External MUTE Ctrl input
+	typedef device::PORT<device::port_no::P5, device::bitpos::B1> MUTE_IN;
 
 	void init_switch_()
 	{
@@ -174,6 +177,7 @@ namespace {
 	uint8_t		repeat_ = 0;
 ///	uint8_t		sw5_val_ = 0;
 ///	uint8_t		sw2_val_ = 0;
+	bool		mute_in_ = false;
 
 	void serial_(bool outreq)
 	{
@@ -378,6 +382,11 @@ int main(int argc, char* argv[])
 	{
 	}
 
+	// MUTE in の初期化
+	MUTE_IN::DIR = 0;
+	// TI/ADC Mute Ctrl Input (H->L: MUTE ON, L->H: MUTE OFF) 
+	mute_in_ = !MUTE_IN::P();
+
 	command_.set_prompt("# ");
 
 	bool power = false;
@@ -412,7 +421,8 @@ int main(int argc, char* argv[])
 			power = false;
 // 0406 A/D Mute 設定を無効
 //			ti_adc_.mute();  // ADC にミュート設定
-			utils::format("POWER: OFF\n");
+// pw_off_cnt の制御に余分な処理を行わない
+//			utils::format("POWER: OFF\n");
 		}
 
 		if(adc_setup_inh_ > 0) {
@@ -488,6 +498,18 @@ int main(int argc, char* argv[])
 					utils::format("TLV320ADC3001 LJF/16Bits/Slave: %s\n") % (f ? "OK" : "NG");
 				}
 			}
+		}
+
+		// TI/ADC Mute Ctrl Input (H->L: MUTE ON, L->H: MUTE OFF) 
+		{
+			bool mute = MUTE_IN::P();
+			if( mute_in_ && !mute) {  // H->L
+				ti_adc_.mute();
+			}
+			if(!mute_in_ &&  mute) {  // L->H
+				ti_adc_.mute(false);
+			}
+			mute_in_ = mute;
 		}
 
 		adc_.sync();  // スキャン終了待ち
