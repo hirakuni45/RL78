@@ -66,7 +66,7 @@ namespace chip {
 									// ATR = 111111 --->  Digital Attenuation Level Setting, R (0dB) 
 
 			csi_.xchg(0x03);  		// Register 3
-			csi_.xchg(0b10000000);	// B7:OVER, B6:RINV, B5:AMIX, B4:DEM, B3-B0:FMT
+			csi_.xchg(0b10100000);	// B7:OVER, B6:RSV, B5:RINV, B4:AMIX, B3:DEM, B2-B0:FMT
 									// B7 = 1 ---> 44.1KHz 256Fs
 									// AMIX = 0 ---> Analog Mixing Control for External Analog Signal, AIN
 									// DEM = 0 --->  44.1-kHz De-Emphasis Control (Disable)
