@@ -466,13 +466,15 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	ミュート
+			@param[in]	ena	「false」なら、ミュートＯＦＦ
 			@return エラーなら「false」を返す
 		 */
 		//-----------------------------------------------------------------//
-		bool mute()
+		bool mute(bool ena = true)
 		{
-			bool f = set_(CMD_PAGE0::ADC_FINE_VOLUME, 0x88);
-			return f;
+			uint8_t vol = 0x00;
+			if(ena) vol = 0x88;
+			return set_(CMD_PAGE0::ADC_FINE_VOLUME, vol);
 		}
 	};
 }
