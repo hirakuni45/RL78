@@ -307,3 +307,17 @@ Version 0.39
 　　5ms以下で変動なしの処理は可能でしょうか？
 　　20msよりで電源OFF時、「ボツ」音が発生するため
 ※時間計測は行っていないが、処理を最適化した。
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Version 0.40
+
+・TLV320ADC3001 レジスタ設定変更
+  LEFT_INPSEL_1  (PAGE1/52) Left ADC input selection for left PGA
+  :0b11111111
+  LEFT_INPSEL_2  (PAGE1/54) Left ADC input selection for left PGA
+  :0b00110011
+  RIGHT_INPSEL_1 (PAGE1/55) Right ADC input selection for right PGA
+  :0b00111111
+
