@@ -437,14 +437,16 @@ namespace chip {
 			// (d) Routing of inputs/common mode to ADC input
 			// (e) Unmute analog PGAs and set analog gain
 			// Left  ADC Input selection for Left PGA  = IN2R(P), IN3R(M)
-			f = select_inputs_(left,  CMD_PAGE1::LEFT_INPSEL_1,  CMD_PAGE1::LEFT_INPSEL_2);
-///			f = set_(CMD_PAGE1::LEFT_INPSEL_2,  0b10110011);
-			f = set_(CMD_PAGE1::LEFT_INPSEL_1,  0b11110011);
+//			f = set_(CMD_PAGE1::LEFT_INPSEL_1,  0b11110011);
+			f = set_(CMD_PAGE1::LEFT_INPSEL_1,  0b11111111);
 			if(!f) return false;
+
+			f = set_(CMD_PAGE1::LEFT_INPSEL_2,  0b00110011);
+			if(!f) return false;
+
 			// Right ADC Input selection for Right PGA = IN2R(P), IN3R(M)
-			f = select_inputs_(right, CMD_PAGE1::RIGHT_INPSEL_1, CMD_PAGE1::RIGHT_INPSEL_2);
-///			f = set_(CMD_PAGE1::RIGHT_INPSEL_2, 0b00111111);
-			f = set_(CMD_PAGE1::RIGHT_INPSEL_1, 0b11110011);
+//			f = set_(CMD_PAGE1::RIGHT_INPSEL_1, 0b11110011);
+			f = set_(CMD_PAGE1::RIGHT_INPSEL_1, 0b00111111);
 			if(!f) return false;
 
 			// 4. Program ADC
