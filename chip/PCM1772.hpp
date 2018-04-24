@@ -36,6 +36,7 @@ namespace chip {
 		//-----------------------------------------------------------------//
 		PCM1772(CSI_IO& csi) : csi_(csi) { }
 
+
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  開始
@@ -76,6 +77,27 @@ namespace chip {
 			csi_.xchg(0b00000000);	// B7-B5:RSV, B4:ZCAT, B3-B1:RSV, B0:PWRD 
 									// ZCAT = 0 --->  Zero Cross Attenuation (0:Normal attenuation)
 									// PWRD = 0 ---> Power Down Control (0:Normal operation)
+			SEL::P = 1;		// disable device
+		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief  Register1,4 設定
+			@param[in]	data1	データ１
+			@param[in]	data4	データ４
+		*/
+		//-----------------------------------------------------------------//
+		void reg1_4(uint8_t data1, uint8_t data4)
+		{
+			SEL::P = 0;		// enable device
+			csi_.xchg(0x01);  	// Register 1
+			csi_.xchg(data1);	// B7:MUTR, B6:MUTL, B5-B0:ATL
+
+			csi_.xchg(0x04);  	// Register 4
+			csi_.xchg(data4);	// B7-B5:RSV, B4:ZCAT, B3-B1:RSV, B0:PWRD 
+								// ZCAT = 0 --->  Zero Cross Attenuation (0:Normal attenuation)
+								// PWRD = 0 ---> Power Down Control (0:Normal operation)
 			SEL::P = 1;		// disable device
 		}
 	};
