@@ -478,5 +478,26 @@ namespace chip {
 			if(ena) vol = 0x88;
 			return set_(CMD_PAGE0::ADC_FINE_VOLUME, vol);
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	Dither 制御
+			@param[in]	lofs	left offset (+0 to +7, 0, -1 to -7)
+			@param[in]	rofs	right offset (+0 to +7, 0, -1 to -7)
+			@return エラーなら「false」を返す
+		 */
+		//-----------------------------------------------------------------//
+		bool set_dither(int8_t lofs, int8_t rofs)
+		{
+			uint8_t reg = 0;
+			if(lofs < 0) reg  = (8 - static_cast<uint8_t>(lofs)) & 0x0f;
+			else reg = lofs & 7;
+			reg <<= 4;
+			if(rofs < 0) reg |= (8 - static_cast<uint8_t>(rofs)) & 0x0f;
+			else reg |= rofs & 7;
+
+			return set_(CMD_PAGE1::DITHER_CTRL, reg);
+		}
 	};
 }
