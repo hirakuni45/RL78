@@ -28,7 +28,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 40;
+	static const uint16_t VERSION = 41;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -103,6 +103,10 @@ namespace {
 	// External MUTE Ctrl input
 	typedef device::PORT<device::port_no::P5, device::bitpos::B1> MUTE_IN;
 
+	// ADC 制御ポート
+	typedef device::PORT<device::port_no::P3, device::bitpos::B1> VUP;
+	typedef device::PORT<device::port_no::P7, device::bitpos::B3> VDN;
+
 	void init_switch_()
 	{
 		// ボリューム
@@ -150,6 +154,8 @@ namespace {
 		POWER,		///< 電源センス
 		SOUND,		///< 音質入力
 		RF_POWER,	///< 10mW/1mW 切り替え
+		VUP,		///< For Debug
+		VDN,		///< For Debug
 	};
 
 	utils::switch_man<uint8_t, SWITCH> switch_man_;
@@ -163,6 +169,9 @@ namespace {
 		if(P_OFF::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::POWER);
 		if(S_SEL::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::SOUND);
 		if(TPS::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::RF_POWER);
+
+		if(VUP::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::VUP);
+		if(VDN::P()) lvl |= 1 << static_cast<uint8_t>(SWITCH::VDN);
 
 		switch_man_.service(lvl);
 	}
@@ -200,13 +209,13 @@ namespace {
 			if(vol < (volume_limit_ - 1)) {
 				++vol;
 			}
-			utils::format("V+: %d\n") % static_cast<uint16_t>(vol);
+///			utils::format("V+: %d\n") % static_cast<uint16_t>(vol);
 		}
 		if(volm) {
 			if(vol > 0) {
 				--vol;
 			}
-			utils::format("V-: %d\n") % static_cast<uint16_t>(vol);
+///			utils::format("V-: %d\n") % static_cast<uint16_t>(vol);
 		}
 		if(vol != volume_) {
 			uart0_.putch('V');
@@ -225,7 +234,7 @@ namespace {
 				uart0_.putch((v / 10) + '0');
 				uart0_.putch((v % 10) + '0');
 				uart0_.putch('\n');
-				utils::format("SW5: %d\n") % static_cast<uint16_t>(v);
+///				utils::format("SW5: %d\n") % static_cast<uint16_t>(v);
 ///				sw5_val_ = v;
 			}
 		}
@@ -246,6 +255,9 @@ namespace {
 	uint8_t	start_i2c_ = 0;
 	uint8_t reset_setup_ = 0;
 	uint8_t adc_setup_inh_ = 0;
+
+	bool ti_adc_state_ = false;
+	int8_t dither_ = 0;
 }
 
 
@@ -365,8 +377,8 @@ int main(int argc, char* argv[])
 		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
 	}
 
-	utils::format("\nStart Digital MIC Version: %d.%02d\n")
-		% (VERSION / 100) % (VERSION % 100);
+///	utils::format("\nStart Digital MIC Version: %d.%02d\n")
+///		% (VERSION / 100) % (VERSION % 100);
 
 	service_switch_();
 	service_switch_();
@@ -401,10 +413,10 @@ int main(int argc, char* argv[])
 		service_switch_();
 
 		if(pon_first || switch_man_.get_positive(SWITCH::POWER)) {
-			utils::format("POWER: ON\n");
+///			utils::format("POWER: ON\n");
 			TRESET::P = 0;
 			P_CONT::P = 1;  // power switch online
-			utils::format("P_CONT: online\n");
+///			utils::format("P_CONT: online\n");
 			start_i2c_ = 3;
 			pw_off_cnt = 0;
 			serial_delay = 6;  // 100ms
@@ -439,7 +451,7 @@ int main(int argc, char* argv[])
 		if(pw_off_cnt > 0) {
 			--pw_off_cnt;
 			if(pw_off_cnt == 0) {
-				utils::format("P_CONT: offline\n");
+///				utils::format("P_CONT: offline\n");
 				P_CONT::P = 0;  // power switch offline
 			}
 		}
@@ -453,8 +465,8 @@ int main(int argc, char* argv[])
 
 		if(power) {
 			if(switch_man_.get_turn(SWITCH::SOUND)) {
-				utils::format("SOUND: %s\n")
-					% (switch_man_.get_level(SWITCH::SOUND) ? "Sharp" : "Mild");
+///				utils::format("SOUND: %s\n")
+///					% (switch_man_.get_level(SWITCH::SOUND) ? "Sharp" : "Mild");
 			}
 			auto f = switch_man_.get_level(SWITCH::SOUND);
 			S_CONT::P = f;
@@ -471,14 +483,14 @@ int main(int argc, char* argv[])
 		}
 
 		if(power && switch_man_.get_turn(SWITCH::RF_POWER)) {
-			utils::format("RF: %s\n")
-				% (switch_man_.get_level(SWITCH::RF_POWER) ? "10mW" : "1mW");
+///			utils::format("RF: %s\n")
+///				% (switch_man_.get_level(SWITCH::RF_POWER) ? "10mW" : "1mW");
 		}
 
 		if(start_i2c_ > 0) {
 			--start_i2c_;
 			if(start_i2c_ == 0) {
-				utils::format("Reset TI (H) OK\n");
+///				utils::format("Reset TI (H) OK\n");
 				TRESET::P = 1;  // TI Reset open
 				reset_setup_ = 2;
 			}
@@ -490,18 +502,19 @@ int main(int argc, char* argv[])
 				uint8_t intr_level = 0;
 ///				if(!iica_.start(IICA::speed::fast, intr_level)) {
 				if(!iica_.start(IICA::speed::standard, intr_level)) {
-					utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
+///					utils::format("I2C start error (%d)\n") % static_cast<uint32_t>(iica_.get_last_error());
 				} else {
-					utils::format("I2C start: OK\n");
-					auto f = ti_adc_.start(TI_ADC::INSEL::IN2R_3R, TI_ADC::INSEL::IN2R_3R,
+///					utils::format("I2C start: OK\n");
+					ti_adc_state_ = ti_adc_.start(TI_ADC::INSEL::IN2R_3R, TI_ADC::INSEL::IN2R_3R,
 								TI_ADC::INF::LJF_16_SLAVE);
-					utils::format("TLV320ADC3001 LJF/16Bits/Slave: %s\n") % (f ? "OK" : "NG");
+///					utils::format("TLV320ADC3001 LJF/16Bits/Slave: %s\n")
+///						% (ti_adc_state_ ? "OK" : "NG");
 				}
 			}
 		}
 
 		// TI/ADC Mute Ctrl Input (H->L: MUTE ON, L->H: MUTE OFF) 
-		{
+		if(ti_adc_state_) {
 			bool mute = MUTE_IN::P();
 			if( mute_in_ && !mute) {  // H->L
 				ti_adc_.mute();
@@ -510,11 +523,32 @@ int main(int argc, char* argv[])
 				ti_adc_.mute(false);
 			}
 			mute_in_ = mute;
+
+			// Dither CTRL
+			auto dither = dither_;
+			if(switch_man_.get_negative(SWITCH::VUP)) {
+				if(dither_ < 7) {
+					++dither_;
+				}
+			}
+			if(switch_man_.get_negative(SWITCH::VDN)) {
+				if(dither_ > -7) {
+					--dither_;
+				}
+			}
+			if(!switch_man_.get_level(SWITCH::VUP) && !switch_man_.get_level(SWITCH::VDN)) {
+				dither_ = 0;
+			}
+			if(dither != dither_) {
+				ti_adc_.set_dither(dither_, dither_);
+///				utils::format("Dither: %d\n") % static_cast<int16_t>(dither_);
+			}
 		}
 
 		adc_.sync();  // スキャン終了待ち
 		auto adi = adc_.get(0) >> 6;
 
+#if 1
 		// コマンド入力と、コマンド解析
 		if(command_.service()) {
 			auto n = command_.get_words();
@@ -584,5 +618,6 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
+#endif
 	}
 }

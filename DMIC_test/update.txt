@@ -321,3 +321,19 @@ Version 0.40
   RIGHT_INPSEL_1 (PAGE1/55) Right ADC input selection for right PGA
   :0b00111111
 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Version 0.41
+
+・マイコン入力ポート追加
+    Pin14／P31／VUP
+    Pin15／P73／VDN
+・TLV320ADC3001 Dither レジスタ制御
+    VUP　入力L　⇒　ADC　D7-D0データ　「1111 1111b」-「0111 0111b」の範囲で1ステップUP
+    VDN　入力L　⇒　ADC　D7-D0データ　「1111 1111b」-「0111 0111b」の範囲で1ステップDOWN
+    VUP／VDN　各入力L　⇒　ADC　D7-D0データ　「0000 0000b」　設定解除用
+    VUP　入力H　⇒　NoAction
+    VDN　入力H　⇒　NoAction
+    ※通常「H」で、H->L のトリガで、それぞれ、VUP、VDN を行う。
+    ※「L」は、16.6 ms 以上保持する事。
