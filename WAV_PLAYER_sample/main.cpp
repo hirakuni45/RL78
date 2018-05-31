@@ -566,6 +566,7 @@ namespace {
 			} else if(ch == '<') {  // '<'
 				fpos = 0;
 				f_lseek(&fil, wav_.get_top());
+				btime = 0;
 			} else if(ch == ' ') {  // [space]
 				if(pause) {
 					master_.at_task().pause(skip);
