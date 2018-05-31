@@ -29,7 +29,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 19;
+	static const uint16_t VERSION = 20;
 
 	static const uint8_t SD1X_DELAY = 12;  // 200ms
 	static const uint8_t SD2X_DELAY = 12;  // 200ms
@@ -100,6 +100,9 @@ namespace {
 	typedef device::PORT<device::port_no::P12, device::bitpos::B2> SD22;
 
 	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MSEL;
+
+	typedef device::PORT<device::port_no::P0, device::bitpos::B7> HOW1;
+	typedef device::PORT<device::port_no::P0, device::bitpos::B5> HOW2;
 
 	enum class INPUT_TYPE : uint8_t {
 		CH_SEL_U,
@@ -222,6 +225,8 @@ namespace {
 
 	uint8_t	fw_delay_;
 
+	bool	how1_;
+	bool	how2_;
 
 	void write_flash_()
 	{
@@ -486,10 +491,30 @@ int main(int argc, char* argv[])
 
 		service_pop_noise_cancel_();
 
-		// LED_M1, MUT1 制御（100ms遅延）
+		// LED_M1, MUT1 制御（200ms遅延）
 		{
 			bool sd11 = input_.get_level(INPUT_TYPE::SD11);
 			bool sd12 = input_.get_level(INPUT_TYPE::SD12);
+
+			if(sd11 == 1 && sd12 == 1) {
+				LED_M1::P = 1;
+				MUT1::P   = 0;
+			} else if(sd11_ != sd11 || sd12_ != sd12) {
+				sd1x_count_ = SD1X_DELAY;
+				utils::format("SD1x trigger\n");
+			}
+
+			bool how1 = HOW1::P();
+			if(how1 != how1_) {
+				if(how1) {
+					pcm_.reg1_4(0b11111111, 0b00010000);
+				} else {
+					pcm_.reg1_4(0b00111111, 0b00000000);
+					sd1x_count_ = 1;
+				}
+			}
+			how1_ = how1;
+
 			if(sd1x_count_ > 0) {
 				sd1x_count_--;
 				if(sd1x_count_ == 0) {
@@ -505,13 +530,6 @@ int main(int argc, char* argv[])
 					}
 				}
 			}
-			if(sd11 == 1 && sd12 == 1) {
-				LED_M1::P = 1;
-				MUT1::P   = 0;
-			} else if(sd11_ != sd11 || sd12_ != sd12) {
-				sd1x_count_ = SD1X_DELAY;
-				utils::format("SD1x trigger\n");
-			}
 			sd11_ = sd11;
 			sd12_ = sd12;
 
@@ -524,6 +542,18 @@ int main(int argc, char* argv[])
 				sd2x_count_ = SD2X_DELAY;
 				utils::format("SD2x trigger\n");
 			}
+
+			bool how2 = HOW2::P();
+			if(how2 != how2_) {
+				if(how2) {
+					pcm_.reg1_4(0b11111111, 0b00010000);
+				} else {
+					pcm_.reg1_4(0b00111111, 0b00000000);
+					sd1x_count_ = 1;
+				}
+			}
+			how2_ = how2;
+
 			if(sd2x_count_ > 0) {
 				sd2x_count_--;
 				if(sd2x_count_ == 0) {
