@@ -7,7 +7,7 @@
 #=======================================================================
 TARGET		=	dmic_sample
 
-DEVICE		=	R5F100LC
+DEVICE		=	R5F100LE
 
 BUILD		=	release
 
