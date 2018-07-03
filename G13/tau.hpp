@@ -102,7 +102,7 @@ namespace device {
 			bit_rw_t<T, bitpos::B11>	 SPLIT;  ///< Split: 1, 3
 
 			bit_rw_t<T, bitpos::B12>	 CCS;
-			bits_rw_t<T, bitpos::B14, 3> CKS;
+			bits_rw_t<T, bitpos::B14, 2> CKS;
 		};
 		static tmr_t< rw16_t<0xF0190 + UOFS + CHOFS> > TMR;
 

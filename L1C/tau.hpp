@@ -92,17 +92,17 @@ namespace device {
 			using T::operator |=;
 			using T::operator &=;
 
-			bit_rw_t<T, bitpos::B0>	 	 MD0;
+			bit_rw_t <T, bitpos::B0>	 MD0;
 			bits_rw_t<T, bitpos::B1, 3>	 MD;
 			bits_rw_t<T, bitpos::B6, 2>	 CIS;
 			bits_rw_t<T, bitpos::B8, 3>	 STS;
 
-			bit_rw_t<T, bitpos::B11>	 MAS;  ///< Master chanel: 2, 4, 6
+			bit_rw_t <T, bitpos::B11>	 MAS;  ///< Master chanel: 2, 4, 6
 
-			bit_rw_t<T, bitpos::B11>	 SPLIT;  ///< Split: 1, 3
+			bit_rw_t <T, bitpos::B11>	 SPLIT;  ///< Split: 1, 3
 
-			bit_rw_t<T, bitpos::B12>	 CCS;
-			bits_rw_t<T, bitpos::B14, 3> CKS;
+			bit_rw_t <T, bitpos::B12>	 CCS;
+			bits_rw_t<T, bitpos::B14, 2> CKS;
 		};
 		static tmr_t< rw16_t<0xF0190 + UOFS + CHOFS> > TMR;
 
@@ -203,6 +203,22 @@ namespace device {
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		static bits_rw_t<rw8_t<0xF0074>, bitpos::B0, 3> TIS;
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  タイマ入力選択レジスタ（TIS4）
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		static bit_rw_t<rw8_t<0xF0074>, bitpos::B4> TIS4;
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  タイマ出力選択レジスタ(TOS)
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		static bit_rw_t<rw8_t<0xF0079>, bitpos::B0> TOS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
