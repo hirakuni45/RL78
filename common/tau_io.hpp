@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/(G13/L1C) グループ タイマ・アレイ・ユニット制御
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2018 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -133,7 +133,8 @@ namespace device {
 				cks = 2;
 			}
 
-			TAU::TMR = TAU::TMR.CKS.b(cks) | TAU::TMR.MD.b(static_cast<uint8_t>(mode_)) | TAU::TMR.MD0.b(1);
+			TAU::TMR = TAU::TMR.CKS.b(cks) | TAU::TMR.MD.b(static_cast<uint8_t>(mode_))
+					 | TAU::TMR.MD0.b(1);
 			TAU::TDR = div - 1;
 
 			return true;
@@ -165,10 +166,11 @@ namespace device {
 			}
 
 			TAU::TOM = 0;  // タイマ出力モード（マスター）
-			TAU::TO = 0;  // 出力初期値
+///			TAU::TO = 0;  // 出力初期値
+			TAU::TO = 1;  // 出力初期値
 			TAU::TOE = outena;
 
-			TAU::TS = 1;  // タイマースタート
+///			TAU::TS = 1;  // タイマースタート
 
 			set_interrupt_();
 
@@ -228,11 +230,12 @@ namespace device {
 			@param[in]	master	マスター・チャネル
 			@param[in]	val		初期値
 			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
+			@param[in]	outena	出力ポートに信号を出す
 			@return エラーなら「false」
 		 */
 		//-----------------------------------------------------------------//
 		template <class MASTER>
-		bool start_pwm(uint16_t val, uint8_t level)
+		bool start_pwm(uint16_t val, uint8_t level, bool outena)
 		{
 			if(MASTER::get_unit_no() != TAU::get_unit_no()) {
 				return false;
@@ -259,20 +262,35 @@ namespace device {
 				| TAU::TMR.MD.b(static_cast<uint8_t>(mode::ONE_COUNT)) | TAU::TMR.MD0.b(1);
 			TAU::TDR = val;
 
-			manage::set_tau_port(TAU::get_peripheral(), true);
+			if(outena) {
+				manage::set_tau_port(TAU::get_peripheral(), true);
+			}
 
 			TAU::TOM = 1;  // タイマ出力モード（スレーブ）
-			TAU::TO = 0;  // 出力初期値
+///			TAU::TO = 0;  // 出力初期値
+			TAU::TO = 1;  // 出力初期値
+///			TAU::TOE = outena;
 			TAU::TOE = 1;
 
-			TAU::TS = 1;  // タイマースタート
+///			TAU::TS = 1;  // タイマースタート
 
 			set_interrupt_();
 
 			return true;
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	リモコン機能有効
+		 */
+		//-----------------------------------------------------------------//
+		void enable_remocon()
+		{
+			TAU::TOS = 1;
+			TAU::TS_ = 0b111100;
+		}
 	};
 
-	template<class TAU, class TASK>
-		TASK tau_io<TAU, TASK>::task_;
+	template<class TAU, class TASK> TASK tau_io<TAU, TASK>::task_;
 }
