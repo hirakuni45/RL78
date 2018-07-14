@@ -21,9 +21,12 @@
 #include "common/spi_io.hpp"
 #include "common/flash_io.hpp"
 #include "common/flash_man.hpp"
+#include "common/tau_io.hpp"
 
 #include "chip/PCM1772.hpp"
 #include "chip/SEGMENT.hpp"
+
+#include "ir_send.hpp"
 
 #define SOFT_SPI
 
@@ -49,6 +52,83 @@ namespace {
 	UART0	uart0_;
 	UART1	uart1_;
 	UART2	uart2_;
+
+	typedef device::tau_io<device::TAU03> CODEC_SLV;
+	CODEC_SLV	codec_slv_;
+
+	// コーデック割り込み
+	// (NEC Format) Carrier: 38KHz, 1/3 Duty, T(変調単位): 562 uS
+	// Data: 0: 1T(1)-1T(0), 1:1T(1)-3T(0)
+	// Leader, CustomerCode(16bits), Data...
+	// Frame:  Leader[16T(1)-8T(0)], CustomerCode, Data...
+	// Repeat: 16T(1)-4T(0)
+	// Frame to Repeat (108 ms)
+	class output {
+	public:
+		void operator() (bool f) {
+			if(f) {
+				codec_slv_.set_value(0x0000);
+			} else {
+				codec_slv_.set_value(0xffff);
+			}
+		}
+	};
+
+	typedef chip::ir_send<output> IR_SEND;
+	IR_SEND		ir_send_;
+
+	class codec_task {
+	public:
+		void operator() () {
+			ir_send_.service();
+		}
+	};
+
+	// タイマー（リモコン出力）の定義
+	// PWM1: コーデック用、  TAU2:Master, TAU3:Slave
+	// PWM2: キャリア生成用、TAU4:Master, TAU5:Slave
+	typedef device::tau_io<device::TAU02, codec_task> CODEC_MAS;
+	CODEC_MAS	codec_mas_;
+
+	typedef device::tau_io<device::TAU04> CARRIER_MAS;
+	typedef device::tau_io<device::TAU05> CARRIER_SLV;
+	CARRIER_MAS	carrier_mas_;
+	CARRIER_SLV	carrier_slv_;
+
+
+	bool start_remocon_()
+	{
+		uint8_t intr_level = 2;
+		// 1780Hz: 562uS
+		if(!codec_mas_.start_interval(1780, intr_level)) {
+			return false;
+		}
+		intr_level = 0;
+		if(!codec_slv_.start_pwm<CODEC_MAS::tau_type>(0, intr_level, false)) {
+			return false;
+		}
+		if(!carrier_mas_.start_interval(38000, intr_level)) {
+			return false;
+		}
+		if(!carrier_slv_.start_pwm<CARRIER_MAS::tau_type>(0, intr_level, false)) {
+			return false;
+		}
+
+		{
+			auto val = codec_mas_.get_value();
+		}
+		{
+			auto val = carrier_mas_.get_value();
+			carrier_slv_.set_value(val / 3);  // 33%
+		}
+
+		carrier_mas_.enable_remocon();
+		
+		device::manage::enable_remocon_port();
+
+		return true;
+	}
+
 
 	// フラッシュ入出力
 	typedef device::flash_io FLASH;
@@ -135,6 +215,7 @@ namespace {
 	uint8_t	pnc_ctl1_count_;
 
 	uint8_t	ch_no_[2];
+	uint8_t	ir_ch_;
 
 	// 仕様
 	// P03/Low（L）で　⇒　P21/Lに遷移
@@ -353,6 +434,12 @@ extern "C" {
 	{
 		itm_.task();
 	}
+
+
+	INTERRUPT_FUNC void TM02_intr(void)
+	{
+		codec_mas_.task();
+	}
 };
 
 
@@ -435,6 +522,11 @@ int main(int argc, char* argv[])
 		utils::format("Flash I/O start error\n");
 	}
 
+	// リモコン出力開始
+	if(!start_remocon_()) {
+		utils::format("Remocon I/O start error\n");
+	}
+
 	command_.set_prompt("# ");
 
 	// input 関係初期化
@@ -464,6 +556,7 @@ int main(int argc, char* argv[])
 			utils::format("CH_SEL_U\n");
 		}
 		if(input_.get_positive(INPUT_TYPE::IR_TEST)) {
+			ir_send_.send_data(ir_ch_);
 			utils::format("IR_TEST\n");
 		}
 		if(input_.get_positive(INPUT_TYPE::CH_SCAN)) {
@@ -584,6 +677,7 @@ int main(int argc, char* argv[])
 				if(no >= 32) no = 0;
 			}
 			ch_no_[msel] = no;
+			ir_ch_ = no | (msel << 5);
 			++no;
 			SEG1::decimal(no / 10);
 			SEG2::decimal(no % 10);
