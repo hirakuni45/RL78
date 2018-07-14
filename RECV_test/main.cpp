@@ -32,7 +32,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 20;
+	static const uint16_t VERSION = 21;
 
 	static const uint8_t SD1X_DELAY = 12;  // 200ms
 	static const uint8_t SD2X_DELAY = 12;  // 200ms
@@ -67,9 +67,9 @@ namespace {
 	public:
 		void operator() (bool f) {
 			if(f) {
-				codec_slv_.set_value(0x0000);
-			} else {
 				codec_slv_.set_value(0xffff);
+			} else {
+				codec_slv_.set_value(0x0000);
 			}
 		}
 	};
@@ -677,7 +677,11 @@ int main(int argc, char* argv[])
 				if(no >= 32) no = 0;
 			}
 			ch_no_[msel] = no;
-			ir_ch_ = no | (msel << 5);
+			uint8_t ir_ch = no | (msel << 5);
+			if(ir_ch_ != ir_ch) {
+				ir_ch_ = ir_ch;
+				ir_send_.send_data(ir_ch_);
+			}
 			++no;
 			SEG1::decimal(no / 10);
 			SEG2::decimal(no % 10);
