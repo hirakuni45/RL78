@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/L1C グループ・タイマ・アレイ・ユニット定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017, 2018 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -97,9 +97,9 @@ namespace device {
 			bits_rw_t<T, bitpos::B6, 2>	 CIS;
 			bits_rw_t<T, bitpos::B8, 3>	 STS;
 
-			bit_rw_t <T, bitpos::B11>	 MAS;  ///< Master chanel: 2, 4, 6
+			bit_rw_t <T, bitpos::B11>	 MAS;	///< Master chanel: 2, 4, 6
 
-			bit_rw_t <T, bitpos::B11>	 SPLIT;  ///< Split: 1, 3
+			bit_rw_t <T, bitpos::B11>	 SPLIT;	///< Split: 1, 3
 
 			bit_rw_t <T, bitpos::B12>	 CCS;
 			bits_rw_t<T, bitpos::B14, 2> CKS;
@@ -155,6 +155,9 @@ namespace device {
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		static bit_rw_t<rw8_t<0xF01B2 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TS;
+
+
+		static rw8_t<0xF01B2 + UOFS> TS_;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
