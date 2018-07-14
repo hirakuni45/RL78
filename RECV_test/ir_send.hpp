@@ -116,13 +116,18 @@ namespace chip {
 		/*!
 			@brief  ユーザー・データ出力
 			@param[in]	user	ユーザー・データ
+			@return 成功なら「true」
 		*/
 		//-----------------------------------------------------------------//
-		void send_data(uint8_t user)
+		bool send_data(uint8_t user)
 		{
+			if(task_ != TASK::idle) {
+				return false;
+			}
 			user_ = user;
 			count_ = 16;
 			task_ = TASK::LeaderH;
+			return true;
 		}
 
 
@@ -135,6 +140,7 @@ namespace chip {
 		{
 			switch(task_) {
 			case TASK::idle:
+				out_(0);
 				break;
 
 			case TASK::LeaderH:
