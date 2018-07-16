@@ -141,6 +141,8 @@ namespace {
 	typedef device::tau_io<device::TAU02, codec_task> CODEC_MAS;
 	CODEC_MAS	codec_mas_;
 
+	uint8_t		ir_frame_;
+
 
 	void init_switch_()
 	{
@@ -600,6 +602,21 @@ int main(int argc, char* argv[])
 			if(dither != dither_) {
 				ti_adc_.set_dither(dither_, dither_);
 ///				utils::format("Dither: %d\n") % static_cast<int16_t>(dither_);
+			}
+		}
+
+		{  // 赤外線受信データ、チャネル転送
+			auto n = ir_recv_.get_frame_count();
+			if(n != ir_frame_) {
+				if(ir_recv_.get_custom_code() == 0xA153) {
+					ir_frame_ = n;
+					uint8_t v = ir_recv_.get_user_data();
+					v &= 0x1f;
+					uart0_.putch('C');
+					uart0_.putch((v / 10) + '0');
+					uart0_.putch((v % 10) + '0');
+					uart0_.putch('\n');
+				}
 			}
 		}
 
