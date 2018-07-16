@@ -19,16 +19,18 @@
 #include "common/iica_io.hpp"
 #include "common/itimer.hpp"
 #include "common/flash_io.hpp"
+#include "common/tau_io.hpp"
 #include "common/command.hpp"
 #include "common/switch_man.hpp"
+
 #include "chip/TLV320ADC3001.hpp"
 
 #include "sw.hpp"
-// #include "serial.hpp"
+#include "ir_recv.hpp"
 
 namespace {
 
-	static const uint16_t VERSION = 41;
+	static const uint16_t VERSION = 42;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -107,6 +109,39 @@ namespace {
 	typedef device::PORT<device::port_no::P3, device::bitpos::B1> VUP;
 	typedef device::PORT<device::port_no::P7, device::bitpos::B3> VDN;
 
+	// リモコン素子入力
+	typedef device::PORT<device::port_no::P12, device::bitpos::B4> REMOCON0;
+	typedef device::PORT<device::port_no::P12, device::bitpos::B3> REMOCON1;
+	typedef device::PORT<device::port_no::P13, device::bitpos::B7> REMOCON2;
+
+
+	class input_ir {
+	public:
+		bool operator() () {
+			if(!REMOCON0::P() || !REMOCON1::P() || !REMOCON2::P()) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	};
+
+	typedef chip::ir_recv<input_ir> IR_RECV;
+	IR_RECV		ir_recv_;
+
+	class codec_task {
+	public:
+		void operator() () {
+			ir_recv_.service();
+		}
+	};
+
+	// タイマー（リモコン出力）の定義
+	// PWM1: コーデック用、  TAU2:Master, TAU3:Slave
+	typedef device::tau_io<device::TAU02, codec_task> CODEC_MAS;
+	CODEC_MAS	codec_mas_;
+
+
 	void init_switch_()
 	{
 		// ボリューム
@@ -158,7 +193,9 @@ namespace {
 		VDN,		///< For Debug
 	};
 
+
 	utils::switch_man<uint8_t, SWITCH> switch_man_;
+
 
 	void service_switch_()
 	{
@@ -176,7 +213,9 @@ namespace {
 		switch_man_.service(lvl);
 	}
 
+
 	utils::command<64> command_;
+
 	
 	static const uint8_t volume_limit_ = 100;
 	/// setup > cycle の関係が条件
@@ -187,6 +226,7 @@ namespace {
 ///	uint8_t		sw5_val_ = 0;
 ///	uint8_t		sw2_val_ = 0;
 	bool		mute_in_ = false;
+
 
 	void serial_(bool outreq)
 	{
@@ -333,6 +373,12 @@ extern "C" {
 	{
 		itm_.task();
 	}
+
+
+	INTERRUPT_FUNC void TM02_intr(void)
+	{
+		codec_mas_.task();
+	}
 };
 
 
@@ -398,6 +444,18 @@ int main(int argc, char* argv[])
 	MUTE_IN::DIR = 0;
 	// TI/ADC Mute Ctrl Input (H->L: MUTE ON, L->H: MUTE OFF) 
 	mute_in_ = !MUTE_IN::P();
+
+	{
+		REMOCON0::DIR = 0;
+		REMOCON1::DIR = 0;
+		REMOCON2::DIR = 0;
+
+		uint8_t intr_level = 2;
+		// 1780Hz * 2: 562uS / 2
+		if(!codec_mas_.start_interval(1780 * 2, intr_level)) {
+			return false;
+		}
+	}
 
 	command_.set_prompt("# ");
 
@@ -597,6 +655,11 @@ int main(int argc, char* argv[])
 //				uint32_t vol = static_cast<uint32_t>(adi) * 1024 / 310;
 				uint32_t vol = static_cast<uint32_t>(adi) * 1024 / 155;
 				utils::format("VOLTAGE: %4.2:10y [V]\n") % vol;
+			} else if(command_.cmp_word(0, "rmc")) {
+				utils::format("RMC: %d, CID: %04X, User: %02X\n")
+					% static_cast<uint16_t>(ir_recv_.get_frame_count())
+					% ir_recv_.get_custom_code()
+					% static_cast<uint16_t>(ir_recv_.get_user_data());
 			} else if(command_.cmp_word(0, "help") || command_.cmp_word(0, "?")) {
 				utils::format("sw2            list SW2\n");
 				utils::format("sw5            list SW5\n");
@@ -607,6 +670,7 @@ int main(int argc, char* argv[])
 				utils::format("mute on, off   Mute ctrl\n");
 				utils::format("chage on, off  Chage ctrl\n");
 				utils::format("volt           list volatage\n");
+				utils::format("rmc            list ReMoCon data\n");
 			} else {
 				error = true;
 			}
