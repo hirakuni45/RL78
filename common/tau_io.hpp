@@ -147,10 +147,11 @@ namespace device {
 			@param[in]	freq	周波数
 			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
 			@param[in]	outena	出力ポートに信号を出す（周波数の半分）
+			@param[in]	start	タイマーを開始しない場合「false」
 			@return エラーなら「false」（設定周期範囲外）
 		 */
 		//-----------------------------------------------------------------//
-		bool start_interval(uint32_t freq, uint8_t level, bool outena = false)
+		bool start_interval(uint32_t freq, uint8_t level, bool outena = false, bool start = true)
 		{
 			intr_level_ = level;
 
@@ -166,12 +167,12 @@ namespace device {
 			}
 
 			TAU::TOM = 0;  // タイマ出力モード（マスター）
-///			TAU::TO = 0;  // 出力初期値
-			TAU::TO = 1;  // 出力初期値
+			TAU::TO = 0;  // 出力初期値
 			TAU::TOE = outena;
 
-///			TAU::TS = 1;  // タイマースタート
-
+			if(start) {
+				TAU::TS = 1;  // タイマースタート
+			}
 			set_interrupt_();
 
 			return true;
@@ -267,12 +268,55 @@ namespace device {
 			}
 
 			TAU::TOM = 1;  // タイマ出力モード（スレーブ）
-///			TAU::TO = 0;  // 出力初期値
-			TAU::TO = 1;  // 出力初期値
-///			TAU::TOE = outena;
+			TAU::TO = 0;  // 出力初期値
+			TAU::TOE = outena;
+
+			TAU::TS = 1;  // タイマースタート
+
+			set_interrupt_();
+
+			return true;
+		}
+
+
+		template <class MASTER>
+		bool start_pwm_(uint16_t val, uint8_t level)
+		{
+			if(MASTER::get_unit_no() != TAU::get_unit_no()) {
+				return false;
+			}
+
+			switch(MASTER::get_chanel_no()) {
+			case 0:
+			case 2:
+			case 4:
+			case 6:
+				break;
+			default:
+				return false;
+			}
+
+			intr_level_ = level;
+
+			if(MASTER::get_chanel_no() != 0) {
+				MASTER::TMR.MAS = 1;
+			}
+			uint8_t cks = MASTER::TMR.CKS();
+
+			TAU::TMR = TAU::TMR.CKS.b(cks) | TAU::TMR.STS.b(0b100)
+				| TAU::TMR.MD.b(static_cast<uint8_t>(mode::ONE_COUNT)) | TAU::TMR.MD0.b(1);
+			TAU::TDR = val;
+
+//			if(outena) {
+//				manage::set_tau_port(TAU::get_peripheral(), true);
+//			}
+
+			TAU::TOM = 1;  // タイマ出力モード（スレーブ）
+			TAU::TO = 0;  // 出力初期値
+//			TAU::TOE = outena;
 			TAU::TOE = 1;
 
-///			TAU::TS = 1;  // タイマースタート
+//			TAU::TS = 1;  // タイマースタート
 
 			set_interrupt_();
 
