@@ -7,7 +7,8 @@
 			Leader, CustomerCode(16bits), Data... @n
 			Frame:  Leader[16T(1)-8T(0)], CustomerCode, Data... @n
 			Repeat: 16T(1)-4T(0) @n
-			Frame to Repeat (108 ms)
+			Frame to Repeat (108 ms) @n
+			Term: 6T(1)
     @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2018 Kunihito Hiramatsu @n
 				Released under the MIT license @n
@@ -37,6 +38,7 @@ namespace chip {
 			out1_ph1,	// 出力１、フェーズ１
 			out1_ph2,	// 出力１、フェーズ２
 			out1_ph3,	// 出力１、フェーズ３
+			Term,		// ターミネーター
 		};
 
 		enum class MODE : uint8_t {
@@ -44,6 +46,7 @@ namespace chip {
 			custom_l,	// カスタム L
 			custom_h,	// カスタム H
 			user,		// ユーザーデータ
+			term,		// 最終
 		};
 
 		OUTPUT		out_;
@@ -78,7 +81,6 @@ namespace chip {
 		{
 			switch(mode_) {
 			case MODE::none:
-				task_ = TASK::idle;
 				break;
 			case MODE::custom_l:
 				data_ = custom_ >> 8;
@@ -94,6 +96,11 @@ namespace chip {
 			case MODE::user:
 				data_ = user_;
 				bit_mask_ = 0x80;
+				mode_ = MODE::term;
+				break;
+			case MODE::term:
+				count_ = 6;
+				task_ = TASK::Term;
 				mode_ = MODE::none;
 				break;
 			default:
@@ -184,6 +191,14 @@ namespace chip {
 			case TASK::out1_ph3:
 				out_(0);
 				next_bit_();
+				break;
+
+			case TASK::Term:
+				out_(1);
+				--count_;
+				if(count_ == 0) {
+					task_ = TASK::idle;
+				}
 				break;
 
 			default:

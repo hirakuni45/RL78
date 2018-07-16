@@ -100,17 +100,17 @@ namespace {
 	{
 		uint8_t intr_level = 2;
 		// 1780Hz: 562uS
-		if(!codec_mas_.start_interval(1780, intr_level)) {
+		if(!codec_mas_.start_interval(1780, intr_level, false, false)) {
 			return false;
 		}
 		intr_level = 0;
-		if(!codec_slv_.start_pwm<CODEC_MAS::tau_type>(0, intr_level, false)) {
+		if(!codec_slv_.start_pwm_<CODEC_MAS::tau_type>(0, intr_level)) {
 			return false;
 		}
-		if(!carrier_mas_.start_interval(38000, intr_level)) {
+		if(!carrier_mas_.start_interval(38000, intr_level, false, false)) {
 			return false;
 		}
-		if(!carrier_slv_.start_pwm<CARRIER_MAS::tau_type>(0, intr_level, false)) {
+		if(!carrier_slv_.start_pwm_<CARRIER_MAS::tau_type>(0, intr_level)) {
 			return false;
 		}
 
