@@ -32,7 +32,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 21;
+	static const uint16_t VERSION = 22;
 
 	static const uint8_t SD1X_DELAY = 12;  // 200ms
 	static const uint8_t SD2X_DELAY = 12;  // 200ms
@@ -135,10 +135,12 @@ namespace {
 	FLASH	flash_;
 
 	struct frec_t {
-		uint8_t		ch1_;
-		uint8_t		ch2_;
+//		uint8_t		ch1_;
+//		uint8_t		ch2_;
+		uint8_t		ch_;
 
-		frec_t() : ch1_(0), ch2_(16) { }
+//		frec_t() : ch1_(0), ch2_(16) { }
+		frec_t() : ch_(0) { }
 	};
 	typedef utils::flash_man<frec_t>  FLASH_MAN;
 	FLASH_MAN	flash_man_(flash_);
@@ -174,12 +176,12 @@ namespace {
 	typedef device::PORT<device::port_no::P4, device::bitpos::B4> CH_SCAN;
 	typedef device::PORT<device::port_no::P4, device::bitpos::B3> L_M;
 
-	typedef device::PORT<device::port_no::P12, device::bitpos::B4> SD11;
-	typedef device::PORT<device::port_no::P12, device::bitpos::B3> SD12;
-	typedef device::PORT<device::port_no::P13, device::bitpos::B7> SD21;
-	typedef device::PORT<device::port_no::P12, device::bitpos::B2> SD22;
+	typedef device::PORT<device::port_no::P12, device::bitpos::B4> SD11;  // MIC1
+	typedef device::PORT<device::port_no::P12, device::bitpos::B3> SD12;  // MIC2
+	typedef device::PORT<device::port_no::P13, device::bitpos::B7> SD21;  // MIC3
+	typedef device::PORT<device::port_no::P12, device::bitpos::B2> SD22;  // MIC4
 
-	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MSEL;
+//	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MSEL;
 
 	typedef device::PORT<device::port_no::P0, device::bitpos::B7> HOW1;
 	typedef device::PORT<device::port_no::P0, device::bitpos::B5> HOW2;
@@ -196,7 +198,7 @@ namespace {
 
 		L_M,	///< MIC/LINE
 
-		MSEL,	///< モジュール選択、L:1個、H:2個
+//		MSEL,	///< モジュール選択、L:1個、H:2個
 
 		PNC_IN0,	///< ポップノイズキャンセル、入力０(P03)
 		PNC_IN1,	///< ポップノイズキャンセル、入力１(P152)
@@ -214,8 +216,10 @@ namespace {
 	uint8_t	pnc_ctl0_count_;
 	uint8_t	pnc_ctl1_count_;
 
-	uint8_t	ch_no_[2];
-	uint8_t	ir_ch_;
+//	uint8_t	ch_no_[2];
+	uint8_t	ch_no_;
+
+	uint8_t	ir_count_;
 
 	// 仕様
 	// P03/Low（L）で　⇒　P21/Lに遷移
@@ -264,7 +268,7 @@ namespace {
 		if(SD21::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD21);
 		if(SD22::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD22);
 
-		if(MSEL::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::MSEL);
+//		if(MSEL::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::MSEL);
 
 		if(PNC_IN0::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::PNC_IN0);
 		if(PNC_IN1::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::PNC_IN1);
@@ -311,8 +315,9 @@ namespace {
 
 	void write_flash_()
 	{
-		frec_.ch1_ = ch_no_[0];
-		frec_.ch2_ = ch_no_[1];
+//		frec_.ch1_ = ch_no_[0];
+//		frec_.ch2_ = ch_no_[1];
+		frec_.ch_  = ch_no_;
 		flash_man_.write(frec_);
 	}
 
@@ -320,11 +325,12 @@ namespace {
 	void read_flash_()
 	{
 		flash_man_.read(frec_);
-		ch_no_[0] = frec_.ch1_;
-		ch_no_[1] = frec_.ch2_;
+//		ch_no_[0] = frec_.ch1_;
+//		ch_no_[1] = frec_.ch2_;
+		ch_no_ = frec_.ch_;
 	}
 
-
+#if 0
 	void create_ch_msg_(uint8_t ch, char* dst)
 	{
 		++ch;
@@ -335,10 +341,36 @@ namespace {
 		dst[4] = 0x0a;
 		dst[5] = 0x00;
 	}
+#endif
+	void create_ch_msg_(uint8_t ch, char* dst0, char* dst1)
+	{
+		ch &= 15;
+		static const char ch0tbl[] = {
+			 1, 15, 29, 11, 25,  7, 21,  3,
+			17, 31, 13, 27,  9, 23,  5, 19
+		};
+		dst0[0] = 0x43;
+		dst0[1] = (ch0tbl[ch] / 10) + '0';
+		dst0[2] = (ch0tbl[ch] % 10) + '0';
+		dst0[3] = 0x0d;
+		dst0[4] = 0x0a;
+		dst0[5] = 0x00;
+		static const char ch1tbl[] = {
+			 8, 22,  4, 18, 32, 14, 28, 10,
+			24,  6, 20,  2, 16, 30, 12, 26
+		};
+		dst1[0] = 0x43;
+		dst1[1] = (ch1tbl[ch] / 10) + '0';
+		dst1[2] = (ch1tbl[ch] % 10) + '0';
+		dst1[3] = 0x0d;
+		dst1[4] = 0x0a;
+		dst1[5] = 0x00;
+	}
 
 
 	void send_ch_()
 	{
+#if 0
 		char tmp[8];
 		create_ch_msg_(ch_no_[0], tmp);
 		uart1_.puts(tmp);
@@ -346,6 +378,14 @@ namespace {
 		create_ch_msg_(ch_no_[1], tmp);
 		uart2_.puts(tmp);
 		utils::format("Send M1 (UART2): %s") % tmp;
+#endif
+		char tmp0[8];
+		char tmp1[8];
+		create_ch_msg_(ch_no_, tmp0, tmp1);
+		uart1_.puts(tmp0);
+		utils::format("Send M0 (UART1): %s") % tmp0;
+		uart2_.puts(tmp1);
+		utils::format("Send M1 (UART2): %s") % tmp1;
 	}
 }
 
@@ -538,14 +578,17 @@ int main(int argc, char* argv[])
 	sd2x_count_ = 0;
 
 	// チャネル関係
-	ch_no_[0] = 0;
-	ch_no_[1] = 16;
+//	ch_no_[0] = 0;
+//	ch_no_[1] = 16;
+	ch_no_ = 0;
 	fw_delay_ = 0;
 	read_flash_();
 	while(itm_.get_counter() < (torg + SEND_CH_DELAY)) {
 		itm_.sync();
 	}
 	send_ch_();
+
+	ir_count_ = 0;
 
 	while(1) {
 		itm_.sync();
@@ -555,10 +598,10 @@ int main(int argc, char* argv[])
 		if(input_.get_positive(INPUT_TYPE::CH_SEL_U)) {
 			utils::format("CH_SEL_U\n");
 		}
-		if(input_.get_positive(INPUT_TYPE::IR_TEST)) {
-			ir_send_.send_data(ir_ch_);
-			utils::format("IR_TEST\n");
-		}
+//		if(input_.get_positive(INPUT_TYPE::IR_TEST)) {
+//			ir_send_.send_data(ir_ch_);
+//			utils::format("IR_TEST\n");
+//		}
 		if(input_.get_positive(INPUT_TYPE::CH_SCAN)) {
 			utils::format("CH_SCAN\n");
 		}
@@ -578,9 +621,9 @@ int main(int argc, char* argv[])
 		if(input_.get_turn(INPUT_TYPE::SD22)) {
 			utils::format("SD22: %d\n") % input_.get_level(INPUT_TYPE::SD22);
 		}
-		if(input_.get_turn(INPUT_TYPE::MSEL)) {
-			utils::format("MSEL: %d\n") % input_.get_level(INPUT_TYPE::MSEL);
-		}
+//		if(input_.get_turn(INPUT_TYPE::MSEL)) {
+//			utils::format("MSEL: %d\n") % input_.get_level(INPUT_TYPE::MSEL);
+//		}
 
 		service_pop_noise_cancel_();
 
@@ -666,27 +709,46 @@ int main(int argc, char* argv[])
 			sd22_ = sd22;
 		}
 
-		uint8_t ch_pad[2];
-		ch_pad[0] = ch_no_[0];
-		ch_pad[1] = ch_no_[1];
+//		uint8_t ch_pad[2];
+//		ch_pad[0] = ch_no_[0];
+//		ch_pad[1] = ch_no_[1];
+		uint8_t ch_pad;
+		ch_pad = ch_no_;
 		{  // チャネル関係制御
-			uint8_t msel = MSEL::P() & 1;
-			uint8_t no = ch_no_[msel];
+//			uint8_t msel = MSEL::P() & 1;
+//			uint8_t no = ch_no_[msel];
+			uint8_t no = ch_no_;
 			if(input_.get_positive(INPUT_TYPE::CH_SEL_U)) {
 				++no;
-				if(no >= 32) no = 0;
+				if(no >= 16) no = 0;
 			}
-			ch_no_[msel] = no;
-			uint8_t ir_ch = no | (msel << 5);
-			if(ir_ch_ != ir_ch) {
-				ir_ch_ = ir_ch;
-				ir_send_.send_data(ir_ch_);
-			}
+//			ch_no_[msel] = no;
+			ch_no_ = no;
+
+///			uint8_t ir_ch = no | (msel << 5);
+///			if(ir_ch_ != ir_ch) {
+///				ir_ch_ = ir_ch;
+///				ir_send_.send_data(ir_ch_);
+///			}
+
 			++no;
 			SEG1::decimal(no / 10);
 			SEG2::decimal(no % 10);
 		}
-		if(ch_pad[0] != ch_no_[0] || ch_pad[1] != ch_no_[1]) {
+
+		// IR send
+		++ir_count_;
+		if(ir_count_ >= 7) {
+			ir_count_ = 0;
+			uint8_t data = ch_no_ & 0b1111;
+			if(input_.get_level(INPUT_TYPE::SD11)) data |= 0b00100000;
+			if(input_.get_level(INPUT_TYPE::SD12)) data |= 0b00010000;
+			data |= 0b11000000;
+			ir_send_.send_data(data);
+		}
+
+//		if(ch_pad[0] != ch_no_[0] || ch_pad[1] != ch_no_[1]) {
+		if(ch_pad != ch_no_) {
 			fw_delay_ = FLASH_WRITE_HOLD;
 		}
 		if(fw_delay_ > 0) {
