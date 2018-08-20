@@ -499,5 +499,21 @@ namespace chip {
 
 			return set_(CMD_PAGE1::DITHER_CTRL, reg);
 		}
+
+
+		//-----------------------------------------------------------------//
+		/*!
+			@brief	Volume 制御
+			@param[in]	lvol	left volume
+			@param[in]	rvol	right volume
+			@return エラーなら「false」を返す
+		 */
+		//-----------------------------------------------------------------//
+		bool set_dither(uint8_t lvol, uint8_t rvol)
+		{
+			auto f = set_(CMD_PAGE0::LEFT_ADC_VOLUME, lvol);
+			if(!f) return false;
+			return set_(CMD_PAGE0::RIGHT_ADC_VOLUME, rvol);
+		}
 	};
 }
