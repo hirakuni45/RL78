@@ -509,7 +509,7 @@ namespace chip {
 			@return エラーなら「false」を返す
 		 */
 		//-----------------------------------------------------------------//
-		bool set_dither(uint8_t lvol, uint8_t rvol)
+		bool set_volume(uint8_t lvol, uint8_t rvol)
 		{
 			auto f = set_(CMD_PAGE0::LEFT_ADC_VOLUME, lvol);
 			if(!f) return false;
