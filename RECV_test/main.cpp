@@ -32,7 +32,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 22;
+	static const uint16_t VERSION = 23;
 
 	static const uint8_t SD1X_DELAY = 12;  // 200ms
 	static const uint8_t SD2X_DELAY = 12;  // 200ms
@@ -181,10 +181,12 @@ namespace {
 	typedef device::PORT<device::port_no::P13, device::bitpos::B7> SD21;  // MIC3
 	typedef device::PORT<device::port_no::P12, device::bitpos::B2> SD22;  // MIC4
 
-//	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MSEL;
-
 	typedef device::PORT<device::port_no::P0, device::bitpos::B7> HOW1;
 	typedef device::PORT<device::port_no::P0, device::bitpos::B5> HOW2;
+
+	typedef device::PORT<device::port_no::P2,  device::bitpos::B1> S_M1;
+	typedef device::PORT<device::port_no::P14, device::bitpos::B3> S_M2;
+
 
 	enum class INPUT_TYPE : uint8_t {
 		CH_SEL_U,
@@ -198,59 +200,19 @@ namespace {
 
 		L_M,	///< MIC/LINE
 
-//		MSEL,	///< モジュール選択、L:1個、H:2個
-
 		PNC_IN0,	///< ポップノイズキャンセル、入力０(P03)
 		PNC_IN1,	///< ポップノイズキャンセル、入力１(P152)
+
+		S_M1,
+		S_M2,
 	};
 
 	typedef utils::switch_man<uint16_t, INPUT_TYPE> INPUT;
 	INPUT	input_;
 
-	// ポップ・ノイズ解消用ポート
-	typedef device::PORT<device::port_no::P2,  device::bitpos::B1> PNC_CTL0;
-	typedef device::PORT<device::port_no::P13, device::bitpos::B0> PNC_CTL1;
-	typedef device::PORT<device::port_no::P0,  device::bitpos::B3> PNC_IN0;
-	typedef device::PORT<device::port_no::P15, device::bitpos::B2> PNC_IN1;
-
-	uint8_t	pnc_ctl0_count_;
-	uint8_t	pnc_ctl1_count_;
-
-//	uint8_t	ch_no_[2];
 	uint8_t	ch_no_;
 
 	uint8_t	ir_count_;
-
-	// 仕様
-	// P03/Low（L）で　⇒　P21/Lに遷移
-	// P03/Hi （H）で　⇒　50ms後にP21/Hに遷移
-
-	// P152/L      で　⇒　P130/Lに遷移
-	// P152/H      で　⇒　50ms後にP130/Hに遷移
-	void service_pop_noise_cancel_()
-	{
-		if(!input_.get_level(INPUT_TYPE::PNC_IN0)) {
-			PNC_CTL0::P = 0;
-		} else if(input_.get_positive(INPUT_TYPE::PNC_IN0)) {
-			pnc_ctl0_count_ = 3;
-		}
-		if(pnc_ctl0_count_ > 0) {
-			--pnc_ctl0_count_;
-		} else {
-			PNC_CTL0::P = 1;
-		}
-
-		if(!input_.get_level(INPUT_TYPE::PNC_IN1)) {
-			PNC_CTL1::P = 0;
-		} else if(input_.get_positive(INPUT_TYPE::PNC_IN1)) {
-			pnc_ctl1_count_ = 3;
-		}
-		if(pnc_ctl1_count_ > 0) {
-			--pnc_ctl1_count_;
-		} else {
-			PNC_CTL1::P = 1;
-		}
-	}
 
 
 	void service_input_()
@@ -263,15 +225,13 @@ namespace {
 
 		if(L_M::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::L_M);
 
-		if(SD11::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD11);
-		if(SD12::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD12);
-		if(SD21::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD21);
-		if(SD22::P() ) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD22);
+		if(SD11::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD11);
+		if(SD12::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD12);
+		if(SD21::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD21);
+		if(SD22::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::SD22);
 
-//		if(MSEL::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::MSEL);
-
-		if(PNC_IN0::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::PNC_IN0);
-		if(PNC_IN1::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::PNC_IN1);
+		if(S_M1::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::S_M1);
+		if(S_M2::P()) lvl |= 1 << static_cast<uint16_t>(INPUT_TYPE::S_M2);
 
 		input_.service(lvl);
 	}
@@ -530,9 +490,6 @@ int main(int argc, char* argv[])
 	MUT2::DIR = 1;
 
 	device::ADPC = 0b001; // A/D input all digital port
-	PNC_CTL0::DIR = 1; 
-	PNC_CTL0::PMC = 0;  // digital in/out
-//	PNC_CTL1::DIR = 1;  // only output
 
 	utils::format("\nStart Digital MIC Reciver Version: %d.%02d\n")
 		% (VERSION / 100) % (VERSION % 100);
@@ -621,11 +578,12 @@ int main(int argc, char* argv[])
 		if(input_.get_turn(INPUT_TYPE::SD22)) {
 			utils::format("SD22: %d\n") % input_.get_level(INPUT_TYPE::SD22);
 		}
-//		if(input_.get_turn(INPUT_TYPE::MSEL)) {
-//			utils::format("MSEL: %d\n") % input_.get_level(INPUT_TYPE::MSEL);
-//		}
-
-		service_pop_noise_cancel_();
+		if(input_.get_turn(INPUT_TYPE::S_M1)) {
+			utils::format("S_M1: %d\n") % input_.get_level(INPUT_TYPE::S_M1);
+		}
+		if(input_.get_turn(INPUT_TYPE::S_M2)) {
+			utils::format("S_M2: %d\n") % input_.get_level(INPUT_TYPE::S_M2);
+		}
 
 		// LED_M1, MUT1 制御（200ms遅延）
 		{
@@ -741,8 +699,8 @@ int main(int argc, char* argv[])
 		if(ir_count_ >= 7) {
 			ir_count_ = 0;
 			uint8_t data = ch_no_ & 0b1111;
-			if(input_.get_level(INPUT_TYPE::SD11)) data |= 0b00100000;
-			if(input_.get_level(INPUT_TYPE::SD12)) data |= 0b00010000;
+			if(input_.get_level(INPUT_TYPE::S_M1)) data |= 0b00100000;
+			if(input_.get_level(INPUT_TYPE::S_M2)) data |= 0b00010000;
 			data |= 0b11000000;
 			ir_send_.send_data(data);
 		}
