@@ -30,7 +30,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 42;
+	static const uint16_t VERSION = 43;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -57,8 +57,8 @@ namespace {
 	FLASH	flash_;
 
 	// MIC 切り替え、入力定義
-	typedef device::PORT<device::port_no::P12, device::bitpos::B2> MIC_SW1;
-	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MIC_SW2;
+	typedef device::PORT<device::port_no::P12, device::bitpos::B2> MIC_SW1;  // MN01
+	typedef device::PORT<device::port_no::P12, device::bitpos::B1> MIC_SW2;  // MN02
 	typedef utils::sw2<MIC_SW1, MIC_SW2> SW2;
 	SW2		sw2_;
 
@@ -141,7 +141,7 @@ namespace {
 	typedef device::tau_io<device::TAU02, codec_task> CODEC_MAS;
 	CODEC_MAS	codec_mas_;
 
-	uint8_t		ir_frame_;
+	uint16_t		ir_frame_;
 
 
 	void init_switch_()
@@ -225,10 +225,29 @@ namespace {
 	static const uint8_t repeat_cycle_ = 10;  ///< リピートサイクル
 	uint8_t		volume_ = 0;
 	uint8_t		repeat_ = 0;
-///	uint8_t		sw5_val_ = 0;
-///	uint8_t		sw2_val_ = 0;
 	bool		mute_in_ = false;
+	uint8_t		ir_data_ = 0;
+	uint8_t		ir_data_tmp_ = 1;
 
+
+	void out_ch_(uint8_t ch)
+	{
+		ch &= 0b1111;
+		ch <<= 1;
+		if(sw2_.get() & 1) {  // MN01
+			ch |= 1;
+		}
+		static const char swt[] = {
+			 1,  8, 15, 22, 29,  4, 11, 18,
+			25, 32,  7, 14, 21, 28,  3, 10,
+			17, 24, 31,  6, 13, 20, 27,  2,
+			 9, 16, 23, 30,  5, 12, 19, 26
+		};
+		uart0_.putch('C');
+		uart0_.putch((swt[ch] / 10) + '0');
+		uart0_.putch((swt[ch] % 10) + '0');
+		uart0_.putch('\n');
+	}
 
 	void serial_(bool outreq)
 	{
@@ -251,13 +270,13 @@ namespace {
 			if(vol < (volume_limit_ - 1)) {
 				++vol;
 			}
-///			utils::format("V+: %d\n") % static_cast<uint16_t>(vol);
+			utils::format("V+: %d\n") % static_cast<uint16_t>(vol);
 		}
 		if(volm) {
 			if(vol > 0) {
 				--vol;
 			}
-///			utils::format("V-: %d\n") % static_cast<uint16_t>(vol);
+			utils::format("V-: %d\n") % static_cast<uint16_t>(vol);
 		}
 		if(vol != volume_) {
 			uart0_.putch('V');
@@ -269,27 +288,12 @@ namespace {
 
 		{
 			auto v = sw5_.get();
-///			if(outreq || sw5_val_ != v) {
 			if(outreq) {
-				++v;
-				uart0_.putch('C');
-				uart0_.putch((v / 10) + '0');
-				uart0_.putch((v % 10) + '0');
-				uart0_.putch('\n');
-///				utils::format("SW5: %d\n") % static_cast<uint16_t>(v);
-///				sw5_val_ = v;
-			}
-		}
-		{
-			auto v = sw2_.get() & 1;
-///			if(outreq || sw2_val_ != v) {
-			if(outreq) {
-/// Version 0.35 で、出力廃止となった
-///				uart0_.putch('M');
-///				uart0_.putch(v + '1');
-///				uart0_.putch('\n');
-				utils::format("SW2: %d\n") % static_cast<uint16_t>(v);
-///				sw2_val_ = v;
+				if((v & 0b10000) == 0) {
+					v &= 0b1111;
+					out_ch_(v);
+					utils::format("SW5: %d\n") % static_cast<uint16_t>(v);
+				}
 			}
 		}
 	}
@@ -299,7 +303,7 @@ namespace {
 	uint8_t adc_setup_inh_ = 0;
 
 	bool ti_adc_state_ = false;
-	int8_t dither_ = 0;
+	uint8_t vol_lr_ = 0;
 }
 
 
@@ -425,8 +429,8 @@ int main(int argc, char* argv[])
 		adc_.start(ADC::REFP::VDD, ADC::REFM::VSS, intr_level);
 	}
 
-///	utils::format("\nStart Digital MIC Version: %d.%02d\n")
-///		% (VERSION / 100) % (VERSION % 100);
+	utils::format("\nStart Digital MIC Version: %d.%02d\n")
+		% (VERSION / 100) % (VERSION % 100);
 
 	service_switch_();
 	service_switch_();
@@ -524,28 +528,52 @@ int main(int argc, char* argv[])
 		}
 
 		if(power) {
-			if(switch_man_.get_turn(SWITCH::SOUND)) {
-///				utils::format("SOUND: %s\n")
-///					% (switch_man_.get_level(SWITCH::SOUND) ? "Sharp" : "Mild");
-			}
-			auto f = switch_man_.get_level(SWITCH::SOUND);
-			S_CONT::P = f;
-			if(f) {  // H: 緑 LED、L: 緑、赤 LED
-				LED_R::P = 1;
-				LED_G::P = 0;
+			if(sw5_.get() & 0b10000) {
+				uint8_t sm = (ir_data_ >> 4) & 3;
+				bool mn01 = (sw2_.get() ^ 1) & 1;
+				switch(sm) {
+				case 0:
+					LED_R::P = 1;
+					LED_G::P = 0;
+					S_CONT::P = 1;
+					break;
+				case 1:
+					LED_R::P = !mn01;
+					LED_G::P = 0;
+					S_CONT::P = !mn01;
+					break;
+				case 2:
+					LED_R::P = mn01;
+					LED_G::P = 0;
+					S_CONT::P = mn01;
+					break;
+				case 3:
+					LED_R::P = 0;
+					LED_G::P = 0;
+					S_CONT::P = 0;
+					break;
+				}
 			} else {
-				LED_R::P = 0;
-				LED_G::P = 0;
+				auto f = switch_man_.get_level(SWITCH::SOUND);
+				S_CONT::P = f;
+				if(f) {  // H: 緑 LED、L: 緑、赤 LED
+					LED_R::P = 1;
+					LED_G::P = 0;
+				} else {
+					LED_R::P = 0;
+					LED_G::P = 0;
+				}
 			}
 		} else {  // 電源 OFF 時は即時消灯
 			LED_R::P = 1;
 			LED_G::P = 1;
+			S_CONT::P = 0;
 		}
 
-		if(power && switch_man_.get_turn(SWITCH::RF_POWER)) {
+///		if(power && switch_man_.get_turn(SWITCH::RF_POWER)) {
 ///			utils::format("RF: %s\n")
 ///				% (switch_man_.get_level(SWITCH::RF_POWER) ? "10mW" : "1mW");
-		}
+///		}
 
 		if(start_i2c_ > 0) {
 			--start_i2c_;
@@ -584,38 +612,45 @@ int main(int argc, char* argv[])
 			}
 			mute_in_ = mute;
 
-			// Dither CTRL
-			auto dither = dither_;
+			// Volume CTRL
+			auto vol_lr = vol_lr_;
 			if(switch_man_.get_negative(SWITCH::VUP)) {
-				if(dither_ < 7) {
-					++dither_;
+				if(vol_lr < 0b01101000) {
+					++vol_lr;
 				}
 			}
 			if(switch_man_.get_negative(SWITCH::VDN)) {
-				if(dither_ > -7) {
-					--dither_;
+				if(vol_lr > 0b00101000) {
+					--vol_lr;
 				}
 			}
-			if(!switch_man_.get_level(SWITCH::VUP) && !switch_man_.get_level(SWITCH::VDN)) {
-				dither_ = 0;
+			if(switch_man_.get_level(SWITCH::POWER) == 0) {
+				vol_lr = 0;
 			}
-			if(dither != dither_) {
-				ti_adc_.set_dither(dither_, dither_);
-///				utils::format("Dither: %d\n") % static_cast<int16_t>(dither_);
+			if(vol_lr != vol_lr_) {
+				vol_lr_ = vol_lr;
+				ti_adc_.set_volume(vol_lr_, vol_lr_);
+				utils::format("Volume: %d\n") % static_cast<int16_t>(vol_lr_);
 			}
 		}
 
 		{  // 赤外線受信データ、チャネル転送
 			auto n = ir_recv_.get_frame_count();
 			if(n != ir_frame_) {
+				ir_frame_ = n;
 				if(ir_recv_.get_custom_code() == 0xA153) {
-					ir_frame_ = n;
-					uint8_t v = ir_recv_.get_user_data();
-					v &= 0x1f;
-					uart0_.putch('C');
-					uart0_.putch((v / 10) + '0');
-					uart0_.putch((v % 10) + '0');
-					uart0_.putch('\n');
+					auto d = ir_recv_.get_user_data();
+					if(ir_data_tmp_ == d) {
+						if(ir_data_ != d) {
+							ir_data_ = d;
+							utils::format("IR(%d): 0x%02X\n")
+								% ir_frame_ % static_cast<uint16_t>(ir_data_);
+							if(sw5_.get() & 0b10000) {  // 反転してる
+								out_ch_(d);
+							}
+						}
+					}
+					ir_data_tmp_ = d;
 				}
 			}
 		}
@@ -623,7 +658,6 @@ int main(int argc, char* argv[])
 		adc_.sync();  // スキャン終了待ち
 		auto adi = adc_.get(0) >> 6;
 
-#if 1
 		// コマンド入力と、コマンド解析
 		if(command_.service()) {
 			auto n = command_.get_words();
@@ -699,6 +733,5 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-#endif
 	}
 }
