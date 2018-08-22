@@ -44,26 +44,29 @@ namespace chip {
 		uint8_t		count_;
 		uint8_t		data_;
 
-		uint8_t		frame_count_;
+		uint16_t	frame_count_;
 		uint16_t	custom_code_;
 
 		uint8_t		user_data_;
 
 		enum class DATA_STATE : uint8_t {
 			busy,
+			error,
 			low,
 			high,
 		};
 
-
+		// 0: 1100, 1:11000000
 		DATA_STATE data_service_(bool lvl)
 		{
 			data_ <<= 1;
 			if(lvl) data_ |= 1;
-			if((data_ & 0b1111) == 0b1001) {
+			if((data_ & 0b11111) == 0b11001) {
 				return DATA_STATE::low;
-			} else if((data_ & 0b1111) == 0b1000) {
+			} else if(data_ == 0b11000000) {
 				return DATA_STATE::high;
+			} else if((data_ & 0b111) == 101) {
+				return DATA_STATE::error;
 			}
 			return DATA_STATE::busy;
 		}
@@ -85,7 +88,7 @@ namespace chip {
 			@return フレームカウント
 		*/
 		//-----------------------------------------------------------------//
-		uint8_t get_frame_count() const { return frame_count_; }
+		uint16_t get_frame_count() const { return frame_count_; }
 
 
 		//-----------------------------------------------------------------//
@@ -115,11 +118,13 @@ namespace chip {
 		{
 			bool lvl = input_();
 			bool posi = !back_ & lvl;
+			bool back = back_;
 			back_ = lvl;
 			switch(task_) {
 			case TASK::idle:
 				if(posi) {
-					count_ = 16 * 2 - 1;
+					custom_code_ = 0;
+					count_ = 16 * 2 - 1;  // ここが基点なので－１する。
 					task_ = TASK::LeaderH;
 				}
 				break;
@@ -137,23 +142,27 @@ namespace chip {
 				}
 				break;
 			case TASK::LeaderL:
-				if(lvl) {
-					task_ = TASK::idle;  // for Noise ?
-				} else {
+				if(!lvl) {
 					if(count_ > 0) {
 						--count_;
 						if(count_ == 0) {
 							count_ = 16;
+							data_ = 0;
 							task_ = TASK::CustomCode;
 						}
 					}
+				} else {
+					task_ = TASK::idle;  // for Noise ?
 				}
 				break;
 
 			case TASK::CustomCode:
 				{
 					auto st = data_service_(lvl);
-					if(st == DATA_STATE::low) {
+					if(st == DATA_STATE::error) {
+						custom_code_ = 0;
+						task_ = TASK::idle;
+					} else if(st == DATA_STATE::low) {
 						custom_code_ <<= 1;
 						--count_;
 					} else if(st == DATA_STATE::high) {
@@ -171,7 +180,10 @@ namespace chip {
 			case TASK::UserData:
 				{
 					auto st = data_service_(lvl);
-					if(st == DATA_STATE::low) {
+					if(st == DATA_STATE::error) {
+						custom_code_ = 0;
+						task_ = TASK::idle;
+					} else if(st == DATA_STATE::low) {
 						user_data_ <<= 1;
 						--count_;
 					} else if(st == DATA_STATE::high) {
@@ -186,7 +198,7 @@ namespace chip {
 				break;
 
 			case TASK::Term:
-				if(lvl == 0) {
+				if(back && lvl == 0) {
 					++frame_count_;
 					task_ = TASK::idle;
 				}
