@@ -32,7 +32,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 23;
+	static const uint16_t VERSION = 24;
 
 	static const uint8_t SD1X_DELAY = 12;  // 200ms
 	static const uint8_t SD2X_DELAY = 12;  // 200ms
@@ -275,8 +275,6 @@ namespace {
 
 	void write_flash_()
 	{
-//		frec_.ch1_ = ch_no_[0];
-//		frec_.ch2_ = ch_no_[1];
 		frec_.ch_  = ch_no_;
 		flash_man_.write(frec_);
 	}
@@ -285,8 +283,6 @@ namespace {
 	void read_flash_()
 	{
 		flash_man_.read(frec_);
-//		ch_no_[0] = frec_.ch1_;
-//		ch_no_[1] = frec_.ch2_;
 		ch_no_ = frec_.ch_;
 	}
 
@@ -489,6 +485,11 @@ int main(int argc, char* argv[])
 	LED_M2::DIR = 1;
 	MUT2::DIR = 1;
 
+	S_M1::DIR = 0;
+	S_M1::PMC = 0;  // digital I/O
+	S_M2::DIR = 0;
+	S_M2::PMC = 0;  // digital I/O
+
 	device::ADPC = 0b001; // A/D input all digital port
 
 	utils::format("\nStart Digital MIC Reciver Version: %d.%02d\n")
@@ -535,8 +536,6 @@ int main(int argc, char* argv[])
 	sd2x_count_ = 0;
 
 	// チャネル関係
-//	ch_no_[0] = 0;
-//	ch_no_[1] = 16;
 	ch_no_ = 0;
 	fw_delay_ = 0;
 	read_flash_();
@@ -667,27 +666,15 @@ int main(int argc, char* argv[])
 			sd22_ = sd22;
 		}
 
-//		uint8_t ch_pad[2];
-//		ch_pad[0] = ch_no_[0];
-//		ch_pad[1] = ch_no_[1];
 		uint8_t ch_pad;
 		ch_pad = ch_no_;
 		{  // チャネル関係制御
-//			uint8_t msel = MSEL::P() & 1;
-//			uint8_t no = ch_no_[msel];
 			uint8_t no = ch_no_;
 			if(input_.get_positive(INPUT_TYPE::CH_SEL_U)) {
 				++no;
 				if(no >= 16) no = 0;
 			}
-//			ch_no_[msel] = no;
 			ch_no_ = no;
-
-///			uint8_t ir_ch = no | (msel << 5);
-///			if(ir_ch_ != ir_ch) {
-///				ir_ch_ = ir_ch;
-///				ir_send_.send_data(ir_ch_);
-///			}
 
 			++no;
 			SEG1::decimal(no / 10);
