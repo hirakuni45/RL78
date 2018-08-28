@@ -30,7 +30,7 @@
 
 namespace {
 
-	static const uint16_t VERSION = 43;
+	static const uint16_t VERSION = 45;
 
 	typedef device::itimer<uint8_t> ITM;
 	ITM		itm_;
@@ -168,6 +168,7 @@ namespace {
 		S_CONT::DIR = 1;
 		S_CONT::P = 0;
 
+
 		// 音質制御入力 (0: Sharp, 1: Mild) 
 		S_SEL::DIR = 0;
 
@@ -289,10 +290,13 @@ namespace {
 		{
 			auto v = sw5_.get();
 			if(outreq) {
-				if((v & 0b10000) == 0) {
+				if(v & 0b10000) {  // 反転してる
+					out_ch_(ir_data_ & 0b1111);
+					utils::format("IR (CH): %d\n") % static_cast<uint16_t>(ir_data_ & 0b1111);
+				} else {
 					v &= 0b1111;
 					out_ch_(v);
-					utils::format("SW5: %d\n") % static_cast<uint16_t>(v);
+					utils::format("SW5 (CH): %d\n") % static_cast<uint16_t>(v);
 				}
 			}
 		}
@@ -303,7 +307,7 @@ namespace {
 	uint8_t adc_setup_inh_ = 0;
 
 	bool ti_adc_state_ = false;
-	uint8_t vol_lr_ = 0;
+	int8_t vol_lr_ = 0;
 }
 
 
@@ -532,24 +536,24 @@ int main(int argc, char* argv[])
 				uint8_t sm = (ir_data_ >> 4) & 3;
 				bool mn01 = (sw2_.get() ^ 1) & 1;
 				switch(sm) {
-				case 0:
-					LED_R::P = 1;
-					LED_G::P = 0;
+				case 3:  // 11
+					LED_R::P  = 1;
+					LED_G::P  = 0;
 					S_CONT::P = 1;
 					break;
-				case 1:
-					LED_R::P = !mn01;
-					LED_G::P = 0;
+				case 2:  // 10
+					LED_R::P  = !mn01;
+					LED_G::P  = 0;
 					S_CONT::P = !mn01;
 					break;
-				case 2:
-					LED_R::P = mn01;
-					LED_G::P = 0;
+				case 1:  // 01
+					LED_R::P  = mn01;
+					LED_G::P  = 0;
 					S_CONT::P = mn01;
 					break;
-				case 3:
-					LED_R::P = 0;
-					LED_G::P = 0;
+				case 0:  // 00
+					LED_R::P  = 0;
+					LED_G::P  = 0;
 					S_CONT::P = 0;
 					break;
 				}
@@ -615,12 +619,12 @@ int main(int argc, char* argv[])
 			// Volume CTRL
 			auto vol_lr = vol_lr_;
 			if(switch_man_.get_negative(SWITCH::VUP)) {
-				if(vol_lr < 0b01101000) {
+				if(vol_lr < 40) {
 					++vol_lr;
 				}
 			}
 			if(switch_man_.get_negative(SWITCH::VDN)) {
-				if(vol_lr > 0b00101000) {
+				if(vol_lr > -24) {
 					--vol_lr;
 				}
 			}
@@ -629,8 +633,9 @@ int main(int argc, char* argv[])
 			}
 			if(vol_lr != vol_lr_) {
 				vol_lr_ = vol_lr;
-				ti_adc_.set_volume(vol_lr_, vol_lr_);
-				utils::format("Volume: %d\n") % static_cast<int16_t>(vol_lr_);
+				ti_adc_.set_volume(vol_lr_ & 0x7f, vol_lr_ & 0x7f);
+				utils::format("Volume: %d (%07b)\n") % static_cast<int16_t>(vol_lr_)
+					% (static_cast<int16_t>(vol_lr_) & 0x7f);
 			}
 		}
 
@@ -645,9 +650,6 @@ int main(int argc, char* argv[])
 							ir_data_ = d;
 							utils::format("IR(%d): 0x%02X\n")
 								% ir_frame_ % static_cast<uint16_t>(ir_data_);
-							if(sw5_.get() & 0b10000) {  // 反転してる
-								out_ch_(d);
-							}
 						}
 					}
 					ir_data_tmp_ = d;
@@ -702,8 +704,6 @@ int main(int argc, char* argv[])
 					error = true;
 				}
 			} else if(command_.cmp_word(0, "volt")) {
-				// Vref: 310: 3.3V とした場合の電圧
-//				uint32_t vol = static_cast<uint32_t>(adi) * 1024 / 310;
 				uint32_t vol = static_cast<uint32_t>(adi) * 1024 / 155;
 				utils::format("VOLTAGE: %4.2:10y [V]\n") % vol;
 			} else if(command_.cmp_word(0, "rmc")) {
