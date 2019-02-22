@@ -231,12 +231,12 @@ namespace device {
 			@param[in]	master	マスター・チャネル
 			@param[in]	val		初期値
 			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
-			@param[in]	outena	出力ポートに信号を出す
+			@param[in]	outena	出力ポートに信号を出さないばあい「false」
 			@return エラーなら「false」
 		 */
 		//-----------------------------------------------------------------//
 		template <class MASTER>
-		bool start_pwm(uint16_t val, uint8_t level, bool outena)
+		bool start_pwm(uint16_t val, uint8_t level, bool outena = true)
 		{
 			if(MASTER::get_unit_no() != TAU::get_unit_no()) {
 				return false;
