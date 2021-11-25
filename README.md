@@ -326,10 +326,11 @@ OS-X、Linux では、各プロジェクトをビルドする際に、「Makefil
  - USB シリアルチップが、FTDI の場合、OS-X、Linux では、標準のドライバーでは、動作しません。
  - また、OS-X では、OS のバージョンによっては、FTDI のドライバーインストールに工夫が必要です。
  - その他の USB シリアルチップの場合は調査していません。
- - boost はヘッダーのみ利用なので、ビルドの必要はありません、boost_1_60_0.zip を展開するだけです。
+ - boost はヘッダーのみ利用なので、ビルドの必要はありません。
+ - mingw64 環境などに pacman を使い boost をインストールして使っています。
+ 
 ``` 
-    cd /usr/local
-    unzip boost_1_60_0.zip
+    pacman -S mingw-w64-x86_64-boost
 ```
 
  - rl78prog のビルド（MSYS2）
