@@ -1,7 +1,8 @@
+# -*- tab-width : 4 -*-
 #=======================================================================
 #   @brief  RL78 Makefile 
 #   @author 平松邦仁 (hira@rvf-rc45.net)
-#   @copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+#   @copyright	Copyright (C) 2017, 2021 Kunihito Hiramatsu @n
 #				Released under the MIT license @n
 #				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 #=======================================================================
@@ -20,14 +21,26 @@ PSOURCES	=	main.cpp \
 				string_utils.cpp \
 				sjis_utf16.cpp
 
-STDLIBS		=
-OPTLIBS		=
+# Include path for each environment
 ifeq ($(OS),Windows_NT)
-INC_SYS		=	/usr/local/boost_1_60_0
+SYSTEM := WIN
+LOCAL_PATH  =   /mingw64
 else
-INC_SYS		=	/usr/local/include
+  UNAME := $(shell uname -s)
+  ifeq ($(UNAME),Linux)
+    SYSTEM := LINUX
+    LOCAL_PATH = /usr/local
+  endif
+  ifeq ($(UNAME),Darwin)
+    SYSTEM := OSX
+    OSX_VER := $(shell sw_vers -productVersion | sed 's/^\([0-9]*.[0-9]*\).[0-9]*/\1/')
+    LOCAL_PATH = /opt/local
+  endif
 endif
 
+STDLIBS		=
+OPTLIBS		=
+INC_SYS     =   $(LOCAL_PATH)/include
 INC_LIB		=
 
 PINC_APP	=
