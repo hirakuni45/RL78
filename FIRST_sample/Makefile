@@ -1,7 +1,7 @@
 #=======================================================================
 #   @brief  RL78 Makefile 
 #   @author 平松邦仁 (hira@rvf-rc45.net)
-#   @copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+#   @copyright	Copyright (C) 2017, 2021 Kunihito Hiramatsu @n
 #				Released under the MIT license @n
 #				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 #=======================================================================
@@ -21,7 +21,7 @@ CSOURCES	=	common/init.c \
 
 PSOURCES	=	main.cpp
 
-USER_LIBS	=	stdc++
+USER_LIBS	=	supc++
 
 LDSCRIPT	=	../G13/$(DEVICE).ld
 
@@ -33,7 +33,7 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-OPTIMIZE	=	-O2
+OPTIMIZE	=	-O0
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \
