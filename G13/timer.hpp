@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/G13 グループ・１２ビット・インターバル・タイマー定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -18,7 +18,8 @@ namespace device {
 		@brief  インターバル・タイマー・クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	struct itm {
+	template <class _>
+	struct itm_t {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -38,7 +39,8 @@ namespace device {
 
 
 		};
-		static itmc_t< rw16_t<0xFFF90> > ITMC;
+		typedef itmc_t< rw16_t<0xFFF90> > ITMC_;
+		static ITMC_ ITMC;
 
 
 		//-----------------------------------------------------------------//
@@ -49,4 +51,8 @@ namespace device {
 		//-----------------------------------------------------------------//
 		static peripheral get_peripheral() { return peripheral::ITM; }
 	};
+	typedef itm_t<void> itm;
+
+	// テンプレート内、スタティック定義、実態：
+	template<class _> typename itm_t<_>::ITMC_ itm_t<_>::ITMC;
 }

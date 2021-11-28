@@ -3,12 +3,11 @@
 /*!	@file
 	@brief	RL78/G13 グループ・ペリフェラル
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
-#include <cstdint>
 #include "G13/system.hpp"
 
 namespace device {
@@ -52,6 +51,11 @@ namespace device {
 		TAU15,		///< タイマー・アレイ・ユニット１５
 		TAU16,		///< タイマー・アレイ・ユニット１６
 		TAU17,		///< タイマー・アレイ・ユニット１７
+
+		DMA0,		///< ダイレクト・メモリー・アクセス・ユニット０
+		DMA1,		///< ダイレクト・メモリー・アクセス・ユニット１
+		DMA2,		///< ダイレクト・メモリー・アクセス・ユニット２
+		DMA3,		///< ダイレクト・メモリー・アクセス・ユニット３
 	};
 
 
@@ -101,18 +105,18 @@ namespace device {
 
 			switch(per) {
 			case peripheral::ITM:
-				PER0.RTCEN = ena;
+				system::PER0.RTCEN = ena;
 				break;
 
 			case peripheral::ADC:
-				PER0.ADCEN = ena;
+				system::PER0.ADCEN = ena;
 				break;
 
 			case peripheral::IICA0:
-				PER0.IICA0EN = ena;
+				system::PER0.IICA0EN = ena;
 				break;
 			case peripheral::IICA1:
-				PER0.IICA1EN = ena;
+				system::PER0.IICA1EN = ena;
 				break;
 
 			case peripheral::SAU00:
@@ -124,9 +128,9 @@ namespace device {
 					if(ena) sau_refc |= refc;
 					else sau_refc &= ~refc;
 					if(sau_refc & 0b1111) {
-						PER0.SAU0EN = 1;
+						system::PER0.SAU0EN = 1;
 					} else {
-						PER0.SAU0EN = 0;
+						system::PER0.SAU0EN = 0;
 					}
 				}
 				break;
@@ -139,9 +143,9 @@ namespace device {
 					if(ena) sau_refc |= refc;
 					else sau_refc &= ~refc;
 					if(sau_refc & 0b11110000) {
-						PER0.SAU1EN = 1;
+						system::PER0.SAU1EN = 1;
 					} else {
-						PER0.SAU1EN = 0;
+						system::PER0.SAU1EN = 0;
 					}
 				}
 				break;
@@ -159,9 +163,9 @@ namespace device {
 					if(ena) tau_refc |= refc;
 					else tau_refc &= ~refc;
 					if(tau_refc) {
-						PER0.TAU0EN = 1;
+						system::PER0.TAU0EN = 1;
 					} else {
-						PER0.TAU0EN = 0;
+						system::PER0.TAU0EN = 0;
 					}
 				}
 

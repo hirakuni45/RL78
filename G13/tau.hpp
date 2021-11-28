@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/G13 グループ・タイマ・アレイ・ユニット定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -30,7 +30,8 @@ namespace device {
 			@brief  タイマ・カウンタ・レジスタ（TCR）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static ro16_t<0xF0180 + UOFS + CHOFS> TCR;
+		typedef ro16_t<0xF0180 + UOFS + CHOFS> TCR_;
+		static TCR_ TCR;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -38,7 +39,8 @@ namespace device {
 			@brief  タイマ・データ・レジスタ（TDR）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw16_t<DRADR> TDR;
+		typedef rw16_t<DRADR> TDR_;
+		static TDR_ TDR;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -46,7 +48,8 @@ namespace device {
 			@brief  タイマ・データ・レジスタ・下位バイト（TDRL）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<DRADR> TDRL;
+		typedef rw8_t<DRADR> TDRL_;
+		static TDRL_ TDRL;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -54,7 +57,8 @@ namespace device {
 			@brief  タイマ・データ・レジスタ・上位バイト（TDRH）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<DRADR + 1> TDRH;
+		typedef rw8_t<DRADR + 1> TDRH_;
+		static TDRH_ TDRH;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -76,7 +80,8 @@ namespace device {
 			bits_rw_t<T, bitpos::B8,  2>	PRS2;
 			bits_rw_t<T, bitpos::B12, 2>	PRS3;
 		};
-		static tps_t< rw16_t<0xF01B6 + UOFS> > TPS;
+		typedef tps_t< rw16_t<0xF01B6 + UOFS> > TPS_;
+		static TPS_ TPS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -104,7 +109,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B12>	 CCS;
 			bits_rw_t<T, bitpos::B14, 2> CKS;
 		};
-		static tmr_t< rw16_t<0xF0190 + UOFS + CHOFS> > TMR;
+		typedef tmr_t< rw16_t<0xF0190 + UOFS + CHOFS> > TMR_;
+		static TMR_ TMR;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -122,7 +128,8 @@ namespace device {
 
 			bit_rw_t<T, bitpos::B0>	 OVF;
 		};
-		static tsr_t< rw8_t<0xF01A0 + UOFS + CHOFS> > TSR;
+		typedef tsr_t< rw8_t<0xF01A0 + UOFS + CHOFS> > TSR_;
+		static TSR_ TSR;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -130,7 +137,8 @@ namespace device {
 			@brief  タイマ・チャネル許可ステータス・レジスタ（TE）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_ro_t<rw8_t<0xF01B0 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TE;
+		typedef bit_ro_t<rw8_t<0xF01B0 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TE_;
+		static TE_ TE;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -138,7 +146,8 @@ namespace device {
 			@brief  タイマ・チャネル許可ステータス・レジスタ１（TEH1）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_ro_t<rw16_t<0xF01B0 + UOFS>, bitpos::B9> TEH1;
+		typedef bit_ro_t<rw16_t<0xF01B0 + UOFS>, bitpos::B9> TEH1_;
+		static TEH1_ TEH1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -146,7 +155,8 @@ namespace device {
 			@brief  タイマ・チャネル許可ステータス・レジスタ３（TEH3）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_ro_t<rw16_t<0xF01B0 + UOFS>, bitpos::B11> TEH3;
+		typedef bit_ro_t<rw16_t<0xF01B0 + UOFS>, bitpos::B11> TEH3_;
+		static TEH3_ TEH3;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -154,7 +164,8 @@ namespace device {
 			@brief  タイマ・チャネル開始レジスタ（TS）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01B2 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TS;
+		typedef bit_rw_t<rw8_t<0xF01B2 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TS_;
+		static TS_ TS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -162,7 +173,8 @@ namespace device {
 			@brief  タイマ・チャネル開始レジスタ１（TS1）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF01B2 + UOFS>, bitpos::B9> TS1;
+		typedef bit_rw_t<rw16_t<0xF01B2 + UOFS>, bitpos::B9> TS1_;
+		static TS1_ TS1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -170,7 +182,8 @@ namespace device {
 			@brief  タイマ・チャネル開始レジスタ３（TS3）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF01B2 + UOFS>, bitpos::B11> TS3;
+		typedef bit_rw_t<rw16_t<0xF01B2 + UOFS>, bitpos::B11> TS3_;
+		static TS3_ TS3;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -178,7 +191,8 @@ namespace device {
 			@brief  タイマ・チャネル停止レジスタ（TT）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01B4 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TT;
+		typedef bit_rw_t<rw8_t<0xF01B4 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TT_;
+		static TT_ TT;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -186,7 +200,8 @@ namespace device {
 			@brief  タイマ・チャネル停止レジスタ１（TT1）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF01B4 + UOFS>, bitpos::B9> TT1;
+		typedef bit_rw_t<rw16_t<0xF01B4 + UOFS>, bitpos::B9> TT1_;
+		static TT1_ TT1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -194,7 +209,8 @@ namespace device {
 			@brief  タイマ・チャネル停止レジスタ３（TT3）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw16_t<0xF01B4 + UOFS>, bitpos::B11> TT3;
+		typedef bit_rw_t<rw16_t<0xF01B4 + UOFS>, bitpos::B11> TT3_;
+		static TT3_ TT3;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -202,7 +218,8 @@ namespace device {
 			@brief  タイマ入力選択レジスタ（TIS）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bits_rw_t<rw8_t<0xF0074>, bitpos::B0, 3> TIS;
+		typedef bits_rw_t<rw8_t<0xF0074>, bitpos::B0, 3> TIS_;
+		static TIS_ TIS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -210,7 +227,8 @@ namespace device {
 			@brief  タイマ出力許可レジスタ（TOE）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01BA + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOE;
+		typedef bit_rw_t<rw8_t<0xF01BA + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOE_;
+		static TOE_ TOE;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -218,7 +236,8 @@ namespace device {
 			@brief  タイマ出力レジスタ（TO）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01B8 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TO;
+		typedef bit_rw_t<rw8_t<0xF01B8 + UOFS>, static_cast<bitpos>(CHOFS / 2)> TO_;
+		static TO_ TO;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -226,7 +245,8 @@ namespace device {
 			@brief  タイマ出力レベル・レジスタ（TOL）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01BC + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOL;
+		typedef bit_rw_t<rw8_t<0xF01BC + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOL_;
+		static TOL_ TOL;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -234,7 +254,8 @@ namespace device {
 			@brief  タイマ出力モード・レジスタ（TOM）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static bit_rw_t<rw8_t<0xF01BE + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOM;
+		typedef bit_rw_t<rw8_t<0xF01BE + UOFS>, static_cast<bitpos>(CHOFS / 2)> TOM_;
+		static TOM_ TOM;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -253,7 +274,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B0>	 ISC0;
 			bit_rw_t<T, bitpos::B1>	 ISC1;
 		};
-		static isc_t< rw8_t<0xF0073> > ISC;
+		typedef isc_t< rw8_t<0xF0073> > ISC_;
+		static ISC_ ISC;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -271,7 +293,8 @@ namespace device {
 
 			bit_rw_t<T, static_cast<bitpos>(CHOFS)> TNFEN;
 		};
-		static nfen_t< rw8_t<0xF0071 + (UOFS / 0x40)> > NFEN;
+		typedef nfen_t< rw8_t<0xF0071 + (UOFS / 0x40)> > NFEN_;
+		static NFEN_ NFEN;
 
 
         //-----------------------------------------------------------------//
@@ -300,6 +323,54 @@ namespace device {
 		//-------------------------------------------------------------//
 		static peripheral get_peripheral() { return PER; }
 	};
+	// テンプレート内、スタティック定義、実態：
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TCR_ tau_t<PER, UOFS, CHOFS, DRADR>::TCR;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TDR_ tau_t<PER, UOFS, CHOFS, DRADR>::TDR;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TDRL_ tau_t<PER, UOFS, CHOFS, DRADR>::TDRL;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TDRH_ tau_t<PER, UOFS, CHOFS, DRADR>::TDRH;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TPS_ tau_t<PER, UOFS, CHOFS, DRADR>::TPS;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TMR_ tau_t<PER, UOFS, CHOFS, DRADR>::TMR;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TSR_ tau_t<PER, UOFS, CHOFS, DRADR>::TSR;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TE_ tau_t<PER, UOFS, CHOFS, DRADR>::TE;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TEH1_ tau_t<PER, UOFS, CHOFS, DRADR>::TEH1;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TEH3_ tau_t<PER, UOFS, CHOFS, DRADR>::TEH3;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TS_ tau_t<PER, UOFS, CHOFS, DRADR>::TS;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TS1_ tau_t<PER, UOFS, CHOFS, DRADR>::TS1;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TS3_ tau_t<PER, UOFS, CHOFS, DRADR>::TS3;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TT_ tau_t<PER, UOFS, CHOFS, DRADR>::TT;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TT1_ tau_t<PER, UOFS, CHOFS, DRADR>::TT1;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TT3_ tau_t<PER, UOFS, CHOFS, DRADR>::TT3;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TIS_ tau_t<PER, UOFS, CHOFS, DRADR>::TIS;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TOE_ tau_t<PER, UOFS, CHOFS, DRADR>::TOE;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TO_ tau_t<PER, UOFS, CHOFS, DRADR>::TO;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TOL_ tau_t<PER, UOFS, CHOFS, DRADR>::TOL;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::TOM_ tau_t<PER, UOFS, CHOFS, DRADR>::TOM;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::ISC_ tau_t<PER, UOFS, CHOFS, DRADR>::ISC;
+	template <peripheral PER, uint32_t UOFS, uint32_t CHOFS, uint32_t DRADR>
+		typename tau_t<PER, UOFS, CHOFS, DRADR>::NFEN_ tau_t<PER, UOFS, CHOFS, DRADR>::NFEN;
+
 	typedef tau_t<peripheral::TAU00, 0x00, 0x00, 0xFFF18> TAU00;
 	typedef tau_t<peripheral::TAU01, 0x00, 0x02, 0xFFF1A> TAU01;
 	typedef tau_t<peripheral::TAU02, 0x00, 0x04, 0xFFF64> TAU02;

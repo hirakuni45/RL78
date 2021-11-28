@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/G13 グループ・シリアル・インターフェース IICA 定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -28,7 +28,8 @@ namespace device {
 			@brief  IICAシフト・レジスタ（IICA）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<0xFFF50 + (UOFS / 2)> IICA;
+		typedef rw8_t<0xFFF50 + (UOFS / 2)> IICA_;
+		static IICA_ IICA;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -36,7 +37,8 @@ namespace device {
 			@brief  スレーブ・アドレス・レジスタ（SVA）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<0xF0234 + UOFS + (UOFS / 4)> SVA;
+		typedef rw8_t<0xF0234 + UOFS + (UOFS / 4)> SVA_;
+		static SVA_ SVA;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -61,7 +63,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1> STT;   ///< スタート・コンディション・トリガ
 			bit_rw_t<T, bitpos::B0> SPT;   ///< ストップ・コンディション・トリガ
 		};
-		static iicctl0_t< rw8_t<0xF0230 + UOFS> > IICCTL0;
+		typedef iicctl0_t< rw8_t<0xF0230 + UOFS> > IICCTL0_;
+		static IICCTL0_ IICCTL0;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -86,7 +89,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1> STD;   ///< スタート・コンディション検出
 			bit_rw_t<T, bitpos::B0> SPD;   ///< ストップ・コンディション検出
 		};
-		static iics_t< rw8_t<0xFFF51 + (UOFS / 2)> > IICS;
+		typedef iics_t< rw8_t<0xFFF51 + (UOFS / 2)> > IICS_;
+		static IICS_ IICS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -107,7 +111,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1> STCEN;   ///< 初期スタート許可トリガ
 			bit_rw_t<T, bitpos::B0> IICRSV;  ///< 通信予約機能禁止ビット
 		};
-		static iicf_t< rw8_t<0xFFF52 + (UOFS / 2)> > IICF;
+		typedef iicf_t< rw8_t<0xFFF52 + (UOFS / 2)> > IICF_;
+		static IICF_ IICF;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -130,7 +135,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B2> DFC;  ///< デジタル・フィルタの動作の制御
 			bit_rw_t<T, bitpos::B0> PRS;  ///< IICA動作クロック（f MCK ）の制御
 		};
-		static iicctl1_t< rw8_t<0xF0231 + UOFS> > IICCTL1;
+		typedef iicctl1_t< rw8_t<0xF0231 + UOFS> > IICCTL1_;
+		static IICCTL1_ IICCTL1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -138,7 +144,8 @@ namespace device {
 			@brief  ロウ・レベル幅設定レジスタ（IICWL）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<0xF0232 - (UOFS * 64) + UOFS> IICWL;
+		typedef rw8_t<0xF0232 - (UOFS * 64) + UOFS> IICWL_;
+		static IICWL_ IICWL;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -146,7 +153,8 @@ namespace device {
 			@brief  ハイ・レベル幅設定レジスタ（IICWH）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<0xF0233 - (UOFS * 64) + UOFS> IICWH;
+		typedef rw8_t<0xF0233 - (UOFS * 64) + UOFS> IICWH_;
+		static IICWH_ IICWH;
 
 
         //-----------------------------------------------------------------//
@@ -166,6 +174,23 @@ namespace device {
 		//-------------------------------------------------------------//
 		static peripheral get_peripheral() { return PER; }
 	};
+	// テンプレート内、スタティック定義、実態：
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::IICA_ iica_t<PER, UOFS>::IICA;
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::SVA_ iica_t<PER, UOFS>::SVA;
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::IICCTL0_ iica_t<PER, UOFS>::IICCTL0;
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::IICS_ iica_t<PER, UOFS>::IICS;
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::IICF_ iica_t<PER, UOFS>::IICF;
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::IICCTL1_ iica_t<PER, UOFS>::IICCTL1;
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::IICWL_ iica_t<PER, UOFS>::IICWL;
+	template <peripheral PER, uint32_t UOFS>
+		typename iica_t<PER, UOFS>::IICWH_ iica_t<PER, UOFS>::IICWH;
 
 	typedef iica_t<peripheral::IICA0, 0x00> IICA0;
 	typedef iica_t<peripheral::IICA1, 0x08> IICA1;

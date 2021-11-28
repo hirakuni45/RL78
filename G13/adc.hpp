@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/G13 グループ・Ａ／Ｄコンバーター定義（８／１０ビット）
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -18,7 +18,8 @@ namespace device {
 		@brief	A/D コンバータ・クラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	struct adc {
+	template <class _>
+	struct adc_t {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -44,7 +45,8 @@ namespace device {
 			bits_rw_t<T, bitpos::B1, 2> LV;
 			bit_rw_t <T, bitpos::B0>    ADCE;  ///< A/D電圧コンパレータの動作制御
 		};
-		static adm0_t< rw8_t<0xFFF30> > ADM0;
+		typedef adm0_t< rw8_t<0xFFF30> > ADM0_;
+		static ADM0_ ADM0;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -70,7 +72,8 @@ namespace device {
 			bit_rw_t <T, bitpos::B0>    ADTRS0;
 			bits_rw_t<T, bitpos::B0, 2> ADTRS;   ///< ハードウエア・トリガ信号の選択
 		};
-		static adm1_t< rw8_t<0xFFF32> > ADM1;
+		typedef adm1_t< rw8_t<0xFFF32> > ADM1_;
+		static ADM1_ ADM1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -96,7 +99,8 @@ namespace device {
 
 			bit_rw_t <T, bitpos::B0>    ADTYP;    ///< A/D変換分解能の選択
 		};
-		static adm2_t< rw8_t<0xF0010> > ADM2;
+		typedef adm2_t< rw8_t<0xF0010> > ADM2_;
+		static ADM2_ ADM2;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -105,7 +109,8 @@ namespace device {
 					B0 to B11
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static ro16_t<0xFFF1E> ADCR;
+		typedef ro16_t<0xFFF1E> ADCR_;
+		static ADCR_ ADCR;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -113,7 +118,8 @@ namespace device {
 			@brief	8ビットA/D変換結果レジスタ（ADCRH）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static ro8_t<0xFFF1F> ADCRH;
+		typedef ro8_t<0xFFF1F> ADCRH_;
+		static ADCRH_ ADCRH;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -138,7 +144,8 @@ namespace device {
 			bit_rw_t <T, bitpos::B0>    ADS0;
 			bits_rw_t<T, bitpos::B0, 5> ADS;
 		};
-		static ads_t< rw8_t<0xFFF31> > ADS;
+		typedef ads_t< rw8_t<0xFFF31> > ADS_;
+		static ADS_ ADS;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -146,7 +153,8 @@ namespace device {
 			@brief	変換結果比較上限値設定レジスタ（ADUL）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<0xF0011> ADUL;
+		typedef rw8_t<0xF0011> ADUL_;
+		static ADUL_ ADUL;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -154,7 +162,8 @@ namespace device {
 			@brief	変換結果比較下限値設定レジスタ（ADLL）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static rw8_t<0xF0012> ADLL;
+		typedef rw8_t<0xF0012> ADLL_;
+		static ADLL_ ADLL;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -174,7 +183,8 @@ namespace device {
 			bit_rw_t <T, bitpos::B0>    ADTES0;
 			bits_rw_t<T, bitpos::B0, 2> ADTES;  ///< A/D変換対象
 		};
-		static adtes_t< rw8_t<0xF0013> > ADTES;
+		typedef adtes_t< rw8_t<0xF0013> > ADTES_;
+		static ADTES_ ADTES;
 
 
 		//-------------------------------------------------------------//
@@ -185,4 +195,16 @@ namespace device {
 		//-------------------------------------------------------------//
 		static peripheral get_peripheral() { return peripheral::ADC; }
 	};
+	typedef adc_t<void> adc;
+
+	// テンプレート内、スタティック定義、実態：
+	template<class _> typename adc_t<_>::ADM0_ adc_t<_>::ADM0;
+	template<class _> typename adc_t<_>::ADM1_ adc_t<_>::ADM1;
+	template<class _> typename adc_t<_>::ADM2_ adc_t<_>::ADM2;
+	template<class _> typename adc_t<_>::ADCR_ adc_t<_>::ADCR;
+	template<class _> typename adc_t<_>::ADCRH_ adc_t<_>::ADCRH;
+	template<class _> typename adc_t<_>::ADS_ adc_t<_>::ADS;
+	template<class _> typename adc_t<_>::ADUL_ adc_t<_>::ADUL;
+	template<class _> typename adc_t<_>::ADLL_ adc_t<_>::ADLL;
+	template<class _> typename adc_t<_>::ADTES_ adc_t<_>::ADTES;
 }
