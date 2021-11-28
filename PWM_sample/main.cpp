@@ -29,7 +29,7 @@ namespace {
 	bool init_pwm_()
 	{
 		uint8_t intr_level = 0;
-		if(!master_.start_interval(100000, intr_level)) {
+		if(!master_.start_interval_freq(100000, intr_level)) {
 			return false;
 		}
 		if(!pwm1_.start_pwm<master::tau_type>(0, intr_level)) {

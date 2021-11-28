@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
 
 		uint8_t intr_level = 2;
 		// 1780Hz * 2: 562uS / 2
-		if(!codec_mas_.start_interval(1780 * 2, intr_level)) {
+		if(!codec_mas_.start_interval_freq(1780 * 2, intr_level)) {
 			return false;
 		}
 	}

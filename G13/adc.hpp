@@ -195,8 +195,6 @@ namespace device {
 		//-------------------------------------------------------------//
 		static peripheral get_peripheral() { return peripheral::ADC; }
 	};
-	typedef adc_t<void> adc;
-
 	// テンプレート内、スタティック定義、実態：
 	template<class _> typename adc_t<_>::ADM0_ adc_t<_>::ADM0;
 	template<class _> typename adc_t<_>::ADM1_ adc_t<_>::ADM1;
@@ -207,4 +205,6 @@ namespace device {
 	template<class _> typename adc_t<_>::ADUL_ adc_t<_>::ADUL;
 	template<class _> typename adc_t<_>::ADLL_ adc_t<_>::ADLL;
 	template<class _> typename adc_t<_>::ADTES_ adc_t<_>::ADTES;
+
+	typedef adc_t<void> adc;
 }

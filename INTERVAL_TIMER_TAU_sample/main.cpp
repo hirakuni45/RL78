@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	{
 		uint8_t intr_level = 0;
 		bool out_enable = true;
-		if(!tau_.start_interval(10000, intr_level, out_enable)) {
+		if(!tau_.start_interval_freq(10000, intr_level, out_enable)) {
 			speed = 25000;
 		}
 	}

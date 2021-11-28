@@ -20,13 +20,46 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
+		@brief  タイマ・アレイ・ユニット・ベース・クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	struct tau_base {
+
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		/*!
+			@brief  分周型
+		*/
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+		enum class DIVIDE : uint8_t {
+			F1,		///< F_CLK / 1
+			F2,		///< F_CLK / 2
+			F4,		///< F_CLK / 4
+			F8,		///< F_CLK / 8
+			F16,	///< F_CLK / 16
+			F32,	///< F_CLK / 32
+			F64,	///< F_CLK / 64
+			F128,	///< F_CLK / 128
+			F256,	///< F_CLK / 256
+			F512,	///< F_CLK / 512
+			F1024,	///< F_CLK / 1024
+			F2048,	///< F_CLK / 2048
+			F4096,	///< F_CLK / 4096
+			F8192,	///< F_CLK / 8192
+			F16384,	///< F_CLK / 16384
+			F32768,	///< F_CLK / 32768
+		};
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
 		@brief  タイマ・アレイ・ユニット・クラス・テンプレート
 		@param[in]	TAU		タイマ・アレイ・ユニット・クラス
 		@param[in]	TASK	割り込み内処理
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	template <class TAU, class TASK = utils::null_task>
-	class tau_io {
+	class tau_io : public tau_base {
 	public:
 		typedef TAU tau_type;
 
@@ -151,7 +184,7 @@ namespace device {
 			@return エラーなら「false」（設定周期範囲外）
 		 */
 		//-----------------------------------------------------------------//
-		bool start_interval(uint32_t freq, uint8_t level, bool outena = false, bool start = true)
+		bool start_interval_freq(uint32_t freq, uint8_t level, bool outena = false, bool start = true)
 		{
 			intr_level_ = level;
 
@@ -182,14 +215,14 @@ namespace device {
 		//-----------------------------------------------------------------//
 		/*!
 			@brief	インターバル・タイマー機能（レジスター直接指定）
-			@param[in]	master	マスター分周期（０～１５）
+			@param[in]	master	マスター分周型
 		   	@param[in]	value	ダウンカウンター（１６ビット）
 			@param[in]	level	割り込みレベル（１～２）、０の場合はポーリング
 			@param[in]	outena	出力ポートに信号を出す（周波数の半分）
 			@return エラーなら「false」（設定周期範囲外）
 		 */
 		//-----------------------------------------------------------------//
-		bool start_interval(uint8_t master, uint16_t value, uint8_t level, bool outena = false)
+		bool start_interval_direct(DIVIDE master, uint16_t value, uint8_t level, bool outena = false)
 		{
 			intr_level_ = level;
 
@@ -200,9 +233,9 @@ namespace device {
 			// プリスケーラーは、０～３：PRS0、４～７：PRS1
 			uint8_t cks = 0;
 			if(TAU::get_chanel_no() < 4) {
-				TAU::TPS.PRS0 = master;
+				TAU::TPS.PRS0 = static_cast<uint8_t>(master);
 			} else {
-				TAU::TPS.PRS1 = master;
+				TAU::TPS.PRS1 = static_cast<uint8_t>(master);
 				cks = 2;
 			}
 
