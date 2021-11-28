@@ -276,8 +276,6 @@ namespace device {
 		static RESF_ RESF;
 
 	};
-	typedef system_t<void> system;
-
 	// テンプレート内、スタティック定義、実態：
 	template<class _> typename system_t<_>::CMC_ system_t<_>::CMC;
 	template<class _> typename system_t<_>::CKC_ system_t<_>::CKC;
@@ -290,4 +288,6 @@ namespace device {
 	template<class _> typename system_t<_>::HIOTRM_ system_t<_>::HIOTRM;
 	template<class _> typename system_t<_>::DFLCTL_ system_t<_>::DFLCTL;
 	template<class _> typename system_t<_>::RESF_ system_t<_>::RESF;
+
+	typedef system_t<void> system;
 }

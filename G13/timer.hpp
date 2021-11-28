@@ -51,8 +51,8 @@ namespace device {
 		//-----------------------------------------------------------------//
 		static peripheral get_peripheral() { return peripheral::ITM; }
 	};
-	typedef itm_t<void> itm;
-
 	// テンプレート内、スタティック定義、実態：
 	template<class _> typename itm_t<_>::ITMC_ itm_t<_>::ITMC;
+
+	typedef itm_t<void> itm;
 }

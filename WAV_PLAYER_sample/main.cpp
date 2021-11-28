@@ -170,8 +170,8 @@ namespace {
 
 	utils::command<64> command_;
 
-	typedef device::tau_io<device::TAU00, pwm::interval_master> master;
-	master master_;
+	typedef device::tau_io<device::TAU00, pwm::interval_master> MASTER;
+	MASTER	master_;
 	device::tau_io<device::TAU01> pwm1_;
 	device::tau_io<device::TAU02> pwm2_;
 
@@ -395,16 +395,16 @@ namespace {
 
 	bool init_pwm_()
 	{
-		// 62.5 KHz (16MHz / 256)
+		// 62.5 KHz (32MHz / 2 / 256)
 		uint8_t intr_level = 3;
-		if(!master_.start_interval(1, 256 - 1, intr_level)) {
+		if(!master_.start_interval_direct(MASTER::DIVIDE::F2, 256 - 1, intr_level)) {
 			return false;
 		}
 		intr_level = 0;
-		if(!pwm1_.start_pwm<master::tau_type>(0, intr_level)) {
+		if(!pwm1_.start_pwm<MASTER::tau_type>(0, intr_level)) {
 			return false;
 		}
-		if(!pwm2_.start_pwm<master::tau_type>(0, intr_level)) {
+		if(!pwm2_.start_pwm<MASTER::tau_type>(0, intr_level)) {
 			return false;
 		}
 
