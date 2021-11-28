@@ -395,7 +395,7 @@ namespace chip {
 			RES::P = 0;  // low-power mode
 
 			/// SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV4, MSBFIRST, SPI_MODE0));
-			if(RES::port_no == 0xff) {
+			if(RES::PNO == 0xff) {
 				reset();
 			} else {  // Let us be generous: 50ms.
 				RES::P = 1;  // Device RESET are positive edge.

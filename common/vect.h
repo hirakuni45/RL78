@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	R78 グループ・ベクター関係
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -28,7 +28,7 @@ extern "C" {
 		@brief  割り込み無効
 	*/
 	//-----------------------------------------------------------------//
-	inline void di(void) { asm("di"); }
+	static inline void di(void) { asm("di"); }
 
 
 	//-----------------------------------------------------------------//
@@ -36,7 +36,7 @@ extern "C" {
 		@brief  割り込み有効
 	*/
 	//-----------------------------------------------------------------//
-	inline void ei(void) { asm("ei"); }
+	static inline void ei(void) { asm("ei"); }
 
 
 	//-----------------------------------------------------------------//

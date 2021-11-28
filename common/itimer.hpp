@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78 (G13/L1C) グループ 12 ビット・インターバルタイマー制御
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -74,7 +74,7 @@ namespace device {
 
 			manage::enable(itm::get_peripheral());
 
-			OSMC.WUTMMCK0 = 1;
+			system::OSMC.WUTMMCK0 = 1;
 
 			itm::ITMC = (v - 1) | 0x8000;
 
