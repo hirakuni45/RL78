@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:/msys64/usr/local/rl78-elf/rl78-elf/include",
+                "C:/msys64/usr/local/rl78-elf/lib/gcc/rl78-elf/4.9.4/include-fixed",
+                "C:/msys64/usr/local/rl78-elf/lib/gcc/rl78-elf/4.9.4/include",
+                "C:/msys64/usr/local/rl78-elf/rl78-elf/include/c++/4.9.4/backward",
+                "C:/msys64/usr/local/rl78-elf/rl78-elf/include/c++/4.9.4/rl78-elf",
+                "C:/msys64/usr/local/rl78-elf/rl78-elf/include/c++/4.9.4",
+                "D:/Git/RL78",
+                "C:/msys64/mingw64/include",
+                "${workspaceFolder}"
+            ],
+            "defines": [
+                "__GNUC__", "__BYTE_ORDER__=__ORDER_LITTLE_ENDIAN__",
+                "VSC_INTELL_SENSE", "F_CLK=32000000", "SIG_G13",
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "8.1",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

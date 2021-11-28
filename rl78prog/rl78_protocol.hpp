@@ -318,15 +318,16 @@ namespace rl78 {
 //			rs232c_.flush();
 
 			if(!rs232c_.send(0x3a)) {
-				std::cerr << "First byte send error..." << std::endl;
+				std::cerr << "First byte send error: 0x3A" << std::endl;
 				return false;
 			}
 			timeval tv;
 			tv.tv_sec  = 0;
-			tv.tv_usec = 1000000;  // 100ms
+			tv.tv_usec = 5000000;  // 500ms
 			int rd = rs232c_.recv(tv);
 			if(rd != 0x3a) {
-				std::cerr << boost::format("First byte recv error: %02X") % rd << std::endl;
+				std::cerr << boost::format("First byte recv error: 0x3A -> 0x%02X")
+					% rd << std::endl;
 				return false;
 			}
 			usleep(1000);

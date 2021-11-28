@@ -94,15 +94,15 @@ namespace device {
 
 			switch(per) {
 			case peripheral::ITM:
-				PER1.TMKAEN = ena;
+				system::PER1.TMKAEN = ena;
 				break;
 
 			case peripheral::ADC:
-				PER0.ADCEN = ena;
+				system::PER0.ADCEN = ena;
 				break;
 
 			case peripheral::IICA0:
-				PER0.IICA0EN = ena;
+				system::PER0.IICA0EN = ena;
 				break;
 
 			case peripheral::SAU00:
@@ -114,9 +114,9 @@ namespace device {
 					if(ena) sau_refc |= refc;
 					else sau_refc &= ~refc;
 					if(sau_refc & 0b00001111) {
-						PER0.SAU0EN = 1;
+						system::PER0.SAU0EN = 1;
 					} else {
-						PER0.SAU0EN = 0;
+						system::PER0.SAU0EN = 0;
 					}
 				}
 				break;
@@ -130,9 +130,9 @@ namespace device {
 					if(ena) sau_refc |= refc;
 					else sau_refc &= ~refc;
 					if(sau_refc & 0b11110000) {
-						PER0.SAU1EN = 1;
+						system::PER0.SAU1EN = 1;
 					} else {
-						PER0.SAU1EN = 0;
+						system::PER0.SAU1EN = 0;
 					}
 				}
 				break;
@@ -150,9 +150,9 @@ namespace device {
 					if(ena) tau_refc |= refc;
 					else tau_refc &= ~refc;
 					if(tau_refc) {
-						PER0.TAU0EN = 1;
+						system::PER0.TAU0EN = 1;
 					} else {
-						PER0.TAU0EN = 0;
+						system::PER0.TAU0EN = 0;
 					}
 				}
 				break;

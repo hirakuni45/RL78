@@ -22,7 +22,7 @@ CSOURCES	=	common/init.c \
 
 PSOURCES	=	main.cpp
 
-USER_LIBS	=	stdc++
+USER_LIBS	=	supc++
 
 LDSCRIPT	=	../G13/$(DEVICE).ld
 
@@ -34,8 +34,7 @@ INC_SYS		=
 
 INC_APP		=	. ../ ../G13
 
-# OPTIMIZE	=	-Os -flto
-OPTIMIZE	=	-Os
+OPTIMIZE	=	-O2
 
 CP_OPT		=	-Wall -Werror \
 				-Wno-unused-variable \

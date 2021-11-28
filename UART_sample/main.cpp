@@ -24,10 +24,10 @@
 #define UART1
 
 namespace {
-	void wait_()
-	{
-		asm("nop");
-	}
+
+	// 吸い込みなので、三番目のパラメーターを「false」とする。
+	// LED::P = 1 で、実際のポートは、０になり、LED が点灯する。
+	typedef device::PORT<device::port_no::P4, device::bitpos::B3, false> LED;
 
 	// 送信、受信バッファの定義
 	typedef utils::fifo<uint8_t, 64> buffer;
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 {
 	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
 
-	device::PM4.B3 = 0;  // output
+	LED::DIR = 1;
 
 	{
 		// 割り込みを使う場合、intr_level を設定
@@ -120,21 +120,24 @@ int main(int argc, char* argv[])
 	printf("Float: %d\n", b);
 #endif
 
-	bool f = false;
-	uint32_t n = 0;
+	bool f = true;
+	uint16_t n = 0;
 	while(1) {
-		for(uint32_t i = 0; i < 100000; ++i) {
-			if(uart_.recv_length()) {
-				auto ch = uart_.getch();
-				if(ch == '\r') {
-///					utils::format("%d\n") % n;
-					++n;
-				} else {
-					uart_.putch(ch);
-				}
+		utils::delay::milli_second(10);
+		if(uart_.recv_length()) {
+			auto ch = uart_.getch();
+			if(ch == '\r') {
+///				utils::format("%d\n") % n;
+			} else {
+				uart_.putch(ch);
 			}
 		}
-		device::P4.B3 = f;
-		f = !f;
+
+		++n;
+		if(n >= 25) {
+			n = 0;
+			f = !f;
+		}
+		LED::P = f;
 	}
 }

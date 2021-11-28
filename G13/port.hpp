@@ -561,7 +561,7 @@ namespace device {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  ポート番号
+		@brief  ポート名前型
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	enum class port_no : uint8_t {
@@ -587,46 +587,74 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
 		@brief  シングル・ポート定義テンプレート
-		@param[in]	port	ポート番号（０～１５）
-		@param[in]	bpos	ビット位置（０～７）	
+		@param[in]	pna		ポート名前型
+		@param[in]	bpos	ビット位置型
+		@param[in]	ASSERT	アサート論理（通常「１」）
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <port_no port, bitpos bpos>
+	template <port_no pna, bitpos bpos, bool ASSERT = true>
 	struct PORT {
 
-		static const uint8_t port_no  = static_cast<uint8_t>(port);
-		static const uint8_t port_bit = static_cast<uint8_t>(bpos);
+		static constexpr auto PNO = static_cast<uint8_t>(pna);
+		static constexpr auto BIT_POS = static_cast<uint8_t>(bpos);
 
 		//-----------------------------------------------------------------//
 		/*!
 			@brief  ポート方向レジスタ
 		*/
 		//-----------------------------------------------------------------//
-		struct dir_t {
+		struct DIR_ {
 			/// ポート・モード・レジスタ
-			static bit_rw_t<rw8_t<0xFFF20 + static_cast<uint8_t>(port)>, bpos> PM;
+			bit_rw_t<rw8_t<0xFFF20 + PNO>, bpos> PM_;
 
-			void operator = (bool val) { PM = !val; }
-			bool operator () () { return !PM(); }
+			void operator = (bool val) { PM_ = !val; }
+			bool operator () () { return !PM_(); }
 		};
-		static dir_t DIR;
+		static DIR_ DIR;
 
 		/// ポート・レジスタ
-		static bit_rw_t<rw8_t<0xFFF00 + static_cast<uint8_t>(port)>, bpos> P;
+		struct P_ {
+
+			bit_rw_t<rw8_t<0xFFF00 + PNO>, bpos> P_;
+
+			void operator = (bool val) {
+				if(ASSERT) P_ = val;
+				else P_ = !val;
+			}
+
+			bool operator () () {
+				if(ASSERT) return P_();
+				else return !P_();
+			}
+		};
+		static P_ P;
 
 		/// プルアップ抵抗オプション・レジスタ
-		static bit_rw_t<rw8_t<0xF0030 + static_cast<uint8_t>(port)>, bpos> PU;
+		typedef bit_rw_t<rw8_t<0xF0030 + PNO>, bpos> PU_;
+		static PU_ PU;
 
 		/// ポート出力モード・レジスタ（オープンドレイン出力）
-		static bit_rw_t<rw8_t<0xF0050 + static_cast<uint8_t>(port)>, bpos> OD;
-		static bit_rw_t<rw8_t<0xF0050 + static_cast<uint8_t>(port)>, bpos> POM;
+		typedef bit_rw_t<rw8_t<0xF0050 + PNO>, bpos> OD_;
+		static OD_ OD;
+		typedef bit_rw_t<rw8_t<0xF0050 + PNO>, bpos> POM_;
+		static POM_ POM;
 
 		/// ポート入力モード・レジスタ
-		static bit_rw_t<rw8_t<0xF0040 + static_cast<uint8_t>(port)>, bpos> PIM;	
+		typedef bit_rw_t<rw8_t<0xF0040 + PNO>, bpos> PIM_;
+		static PIM_ PIM;
 
 		/// ポート・モード・コントロール・レジスタ
-		static bit_rw_t<rw8_t<0xF0060 + static_cast<uint8_t>(port)>, bpos> PMC;
+		typedef bit_rw_t<rw8_t<0xF0060 + PNO>, bpos> PMC_;
+		static PMC_ PMC;
 	};
+	// テンプレート内、スタティック定義、実態：
+	template <port_no pna, bitpos bpos, bool ASSERT> typename PORT<pna, bpos, ASSERT>::DIR_ PORT<pna, bpos, ASSERT>::DIR;
+	template <port_no pna, bitpos bpos, bool ASSERT> typename PORT<pna, bpos, ASSERT>::P_ PORT<pna, bpos, ASSERT>::P;
+	template <port_no pna, bitpos bpos, bool ASSERT> typename PORT<pna, bpos, ASSERT>::PU_ PORT<pna, bpos, ASSERT>::PU;
+	template <port_no pna, bitpos bpos, bool ASSERT> typename PORT<pna, bpos, ASSERT>::OD_ PORT<pna, bpos, ASSERT>::OD;
+	template <port_no pna, bitpos bpos, bool ASSERT> typename PORT<pna, bpos, ASSERT>::POM_ PORT<pna, bpos, ASSERT>::POM;
+	template <port_no pna, bitpos bpos, bool ASSERT> typename PORT<pna, bpos, ASSERT>::PIM_ PORT<pna, bpos, ASSERT>::PIM;
+	template <port_no pna, bitpos bpos, bool ASSERT> typename PORT<pna, bpos, ASSERT>::PMC_ PORT<pna, bpos, ASSERT>::PMC;
 
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -636,8 +664,8 @@ namespace device {
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	struct NULL_PORT {
 
-		static const uint8_t port_no  = 0xff;
-		static const uint8_t port_bit = 0xff;
+		static const uint8_t PNO  = 0xff;
+		static const uint8_t BIT_POS = 0xff;
 
 		struct null_t {
 			void operator = (bool f) { }
@@ -674,6 +702,5 @@ namespace device {
 		*/
 		//-----------------------------------------------------------------//
 		static null_t P;
-
 	};
 }

@@ -3,7 +3,7 @@
 /*!	@file
 	@brief	RL78/G13 割り込み機能を制御するレジスタ定義
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
@@ -18,7 +18,8 @@ namespace device {
 		@brief  割り込みクラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	struct intr {
+	template <class _>
+	struct intr_t {
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -42,7 +43,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  LVIIF;  ///< ( 1) 電圧検出 
 			bit_rw_t<T, bitpos::B0>  WDTIIF; ///< ( 0) ウォッチドッグ・タイマのインターバル
 		};
-		static if0l_t< rw8_t<0xFFFE0> > IF0L;
+		typedef if0l_t< rw8_t<0xFFFE0> > IF0L_;
+		static IF0L_ IF0L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -83,7 +85,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B0>  CSIIF20;  ///< ( 8) CSI20の転送完了，バッファ空き割り込み
 			bit_rw_t<T, bitpos::B0>  IICIF20;  ///< ( 8) IIC20の転送完了
 		};
-		static if0h_t< rw8_t<0xFFFE1> > IF0H;
+		typedef if0h_t< rw8_t<0xFFFE1> > IF0H_;
+		static IF0H_ IF0H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -116,7 +119,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B0>  CSIIF10;  ///< (16) CSI10の転送完了，バッファ空き割り込み
 			bit_rw_t<T, bitpos::B0>  IICIF10;  ///< (16) IIC10の転送完了
 		};
-		static if1l_t< rw8_t<0xFFFE2> > IF1L;
+		typedef if1l_t< rw8_t<0xFFFE2> > IF1L_;
+		static IF1L_ IF1L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -148,7 +152,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  RTCIF;    ///< (25) リアルタイム・クロックの定周期信号／アラーム一致検出
 			bit_rw_t<T, bitpos::B0>  ADIF;     ///< (24) A/D変換終了
 		};
-		static if1h_t< rw8_t<0xFFFE3> > IF1H;
+		typedef if1h_t< rw8_t<0xFFFE3> > IF1H_;
+		static IF1H_ IF1H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -173,8 +178,9 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  TMIF06;  ///< (33) タイマ・チャネル06のカウント完了またはキャプチャ完了
 			bit_rw_t<T, bitpos::B0>  TMIF05;  ///< (32) タイマ・チャネル05のカウント完了またはキャプチャ完了
 		};
-		static if2l_t< rw8_t<0xFFFD0> > IF2L;
-
+		typedef if2l_t< rw8_t<0xFFFD0> > IF2L_;
+		static IF2L_ IF2L;
+	
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -201,7 +207,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  TMIF10;   ///< (41) タイマ・チャネル10のカウント完了またはキャプチャ完了
 			bit_rw_t<T, bitpos::B0>  PIF11;    ///< (40) 端子入力エッジ検出１１
 		};
-		static if2h_t< rw8_t<0xFFFD1> > IF2H;
+		typedef if2h_t< rw8_t<0xFFFD1> > IF2H_;
+		static IF2H_ IF2H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -224,7 +231,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  DMAIF3;  ///< (49) DMA3の転送完了
 			bit_rw_t<T, bitpos::B0>  DMAIF2;  ///< (48) DMA2の転送完了
 		};
-		static if3l_t< rw8_t<0xFFFD2> > IF3L;
+		typedef if3l_t< rw8_t<0xFFFD2> > IF3L_;
+		static IF3L_ IF3L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -249,7 +257,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  LVIMK;   ///< ( 1)
 			bit_rw_t<T, bitpos::B0>  WDTIMK;  ///< ( 0)
 		};
-		static mk0l_t< rw8_t<0xFFFE4> > MK0L;
+		typedef mk0l_t< rw8_t<0xFFFE4> > MK0L_;
+		static MK0L_ MK0L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -290,7 +299,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B0>  CSIMK20;  ///< ( 8)
 			bit_rw_t<T, bitpos::B0>  IICMK20;  ///< ( 8)
 		};
-		static mk0h_t< rw8_t<0xFFFE5> > MK0H;
+		typedef mk0h_t< rw8_t<0xFFFE5> > MK0H_;
+		static MK0H_ MK0H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -323,7 +333,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B0>  CSIMK10;  ///< (16)
 			bit_rw_t<T, bitpos::B0>  IICMK10;  ///< (16)
 		};
-		static mk1l_t< rw8_t<0xFFFE6> > MK1L;
+		typedef mk1l_t< rw8_t<0xFFFE6> > MK1L_;
+		static MK1L_ MK1L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -355,7 +366,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  RTCMK;    ///< (25)
 			bit_rw_t<T, bitpos::B0>  ADMK;     ///< (24)
 		};
-		static mk1h_t< rw8_t<0xFFFE7> > MK1H;
+		typedef mk1h_t< rw8_t<0xFFFE7> > MK1H_;
+		static MK1H_ MK1H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -380,7 +392,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  TMMK06;  ///< (33)
 			bit_rw_t<T, bitpos::B0>  TMMK05;  ///< (32)
 		};
-		static mk2l_t< rw8_t<0xFFFD4> > MK2L;
+		typedef mk2l_t< rw8_t<0xFFFD4> > MK2L_;
+		static MK2L_ MK2L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -408,7 +421,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  TMMK10;   ///< (41)
 			bit_rw_t<T, bitpos::B0>  PMK11;    ///< (40)
 		};
-		static mk2h_t< rw8_t<0xFFFD5> > MK2H;
+		typedef mk2h_t< rw8_t<0xFFFD5> > MK2H_;
+		static MK2H_ MK2H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -431,7 +445,8 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  DMAMK3;  ///< (49)
 			bit_rw_t<T, bitpos::B0>  DMAMK2;  ///< (48)
 		};
-		static mk3l_t< rw8_t<0xFFFD6> > MK3L;
+		typedef mk3l_t< rw8_t<0xFFFD6> > MK3L_;
+		static MK3L_ MK3L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -456,8 +471,10 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  LVIPR;   ///< ( 1)
 			bit_rw_t<T, bitpos::B0>  WDTIPR;  ///< ( 0)
 		};
-		static pr0l_t< rw8_t<0xFFFE8> > PR00L;
-		static pr0l_t< rw8_t<0xFFFEC> > PR10L;
+		typedef pr0l_t< rw8_t<0xFFFE8> > PR00L_;
+		static PR00L_ PR00L;
+		typedef pr0l_t< rw8_t<0xFFFEC> > PR10L_;
+		static PR10L_ PR10L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -498,8 +515,10 @@ namespace device {
 			bit_rw_t<T, bitpos::B0>  CSIPR20;  ///< ( 8)
 			bit_rw_t<T, bitpos::B0>  IICPR20;  ///< ( 8)
 		};
-		static pr0h_t< rw8_t<0xFFFE9> > PR00H;
-		static pr0h_t< rw8_t<0xFFFED> > PR10H;
+		typedef pr0h_t< rw8_t<0xFFFE9> > PR00H_;
+		static PR00H_ PR00H;
+		typedef pr0h_t< rw8_t<0xFFFED> > PR10H_;
+		static PR10H_ PR10H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -532,8 +551,10 @@ namespace device {
 			bit_rw_t<T, bitpos::B0>  CSIPR10;  ///< (16)
 			bit_rw_t<T, bitpos::B0>  IICPR10;  ///< (16)
 		};
-		static pr1l_t< rw8_t<0xFFFEA> > PR01L;
-		static pr1l_t< rw8_t<0xFFFEE> > PR11L;
+		typedef pr1l_t< rw8_t<0xFFFEA> > PR01L_;
+		static PR01L_ PR01L;
+		typedef pr1l_t< rw8_t<0xFFFEE> > PR11L_;
+		static PR11L_ PR11L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -565,8 +586,10 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  RTCPR;    ///< (25)
 			bit_rw_t<T, bitpos::B0>  ADPR;     ///< (24)
 		};
-		static pr1h_t< rw8_t<0xFFFEB> > PR01H;
-		static pr1h_t< rw8_t<0xFFFEF> > PR11H;
+		typedef pr1h_t< rw8_t<0xFFFEB> > PR01H_;
+		static PR01H_ PR01H;
+		typedef pr1h_t< rw8_t<0xFFFEF> > PR11H_;
+		static PR11H_ PR11H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -591,8 +614,10 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  TMPR06;  ///< (33)
 			bit_rw_t<T, bitpos::B0>  TMPR05;  ///< (32)
 		};
-		static pr2l_t< rw8_t<0xFFFD8> > PR02L;
-		static pr2l_t< rw8_t<0xFFFDC> > PR12L;
+		typedef pr2l_t< rw8_t<0xFFFD8> > PR02L_;
+		static PR02L_ PR02L;
+		typedef pr2l_t< rw8_t<0xFFFDC> > PR12L_;
+		static PR12L_ PR12L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -620,8 +645,10 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  TMPR10;   ///< (41)
 			bit_rw_t<T, bitpos::B0>  PPR11;    ///< (40)
 		};
-		static pr2h_t< rw8_t<0xFFFD9> > PR02H;
-		static pr2h_t< rw8_t<0xFFFDD> > PR12H;
+		typedef pr2h_t< rw8_t<0xFFFD9> > PR02H_;
+		static PR02H_ PR02H;
+		typedef pr2h_t< rw8_t<0xFFFDD> > PR12H_;
+		static PR12H_ PR12H;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -644,8 +671,10 @@ namespace device {
 			bit_rw_t<T, bitpos::B1>  DMAPR3;  ///< (49)
 			bit_rw_t<T, bitpos::B0>  DMAPR2;  ///< (48)
 		};
-		static pr3l_t< rw8_t<0xFFFDA> > PR03L;
-		static pr3l_t< rw8_t<0xFFFDE> > PR13L;
+		typedef pr3l_t< rw8_t<0xFFFDA> > PR03L_;
+		static PR03L_ PR03L;
+		typedef pr3l_t< rw8_t<0xFFFDE> > PR13L_;
+		static PR13L_ PR13L;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -653,8 +682,10 @@ namespace device {
 			@brief  外部割り込み立ち上がりエッジ許可レジスタ（EGP0, EGP1）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static basic_rw_t< rw8_t<0xFFF38> > EGP0;
-		static basic_rw_t< rw8_t<0xFFF3A> > EGP1;
+		typedef basic_rw_t< rw8_t<0xFFF38> > EGP0_;
+		static EGP0_ EGP0;
+		typedef basic_rw_t< rw8_t<0xFFF3A> > EGP1_;
+		static EGP1_ EGP1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -662,8 +693,10 @@ namespace device {
 			@brief  外部割り込み立ち下がりエッジ許可レジスタ（EGN0, EGN1）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static basic_rw_t< rw8_t<0xFFF39> > EGN0;
-		static basic_rw_t< rw8_t<0xFFF3B> > EGN1;
+		typedef basic_rw_t< rw8_t<0xFFF39> > EGN0_;
+		static EGN0_ EGN0;
+		typedef basic_rw_t< rw8_t<0xFFF3B> > EGN1_;
+		static EGN1_ EGN1;
 
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -671,7 +704,8 @@ namespace device {
 			@brief  キー・リターン・モード・レジスタ（KRM）
 		*/
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-		static basic_rw_t< rw8_t<0xFFF37> > KRM;
+		typedef basic_rw_t< rw8_t<0xFFF37> > KRM_;
+		static KRM_ KRM;
 
 
 		//-------------------------------------------------------------//
@@ -1092,4 +1126,40 @@ namespace device {
 			}
 		}
 	};
+	// テンプレート内、スタティック定義、実態：
+	template<class _> typename intr_t<_>::IF0L_ intr_t<_>::IF0L;
+	template<class _> typename intr_t<_>::IF0H_ intr_t<_>::IF0H;
+	template<class _> typename intr_t<_>::IF1L_ intr_t<_>::IF1L;
+	template<class _> typename intr_t<_>::IF1H_ intr_t<_>::IF1H;
+	template<class _> typename intr_t<_>::IF2L_ intr_t<_>::IF2L;
+	template<class _> typename intr_t<_>::IF2H_ intr_t<_>::IF2H;
+	template<class _> typename intr_t<_>::IF3L_ intr_t<_>::IF3L;
+	template<class _> typename intr_t<_>::MK0L_ intr_t<_>::MK0L;
+	template<class _> typename intr_t<_>::MK0H_ intr_t<_>::MK0H;
+	template<class _> typename intr_t<_>::MK1L_ intr_t<_>::MK1L;
+	template<class _> typename intr_t<_>::MK1H_ intr_t<_>::MK1H;
+	template<class _> typename intr_t<_>::MK2L_ intr_t<_>::MK2L;
+	template<class _> typename intr_t<_>::MK2H_ intr_t<_>::MK2H;
+	template<class _> typename intr_t<_>::MK3L_ intr_t<_>::MK3L;
+	template<class _> typename intr_t<_>::PR00L_ intr_t<_>::PR00L;
+	template<class _> typename intr_t<_>::PR10L_ intr_t<_>::PR10L;
+	template<class _> typename intr_t<_>::PR00H_ intr_t<_>::PR00H;
+	template<class _> typename intr_t<_>::PR10H_ intr_t<_>::PR10H;
+	template<class _> typename intr_t<_>::PR01L_ intr_t<_>::PR01L;
+	template<class _> typename intr_t<_>::PR11L_ intr_t<_>::PR11L;
+	template<class _> typename intr_t<_>::PR01H_ intr_t<_>::PR01H;
+	template<class _> typename intr_t<_>::PR11H_ intr_t<_>::PR11H;
+	template<class _> typename intr_t<_>::PR02L_ intr_t<_>::PR02L;
+	template<class _> typename intr_t<_>::PR12L_ intr_t<_>::PR12L;
+	template<class _> typename intr_t<_>::PR02H_ intr_t<_>::PR02H;
+	template<class _> typename intr_t<_>::PR12H_ intr_t<_>::PR12H;
+	template<class _> typename intr_t<_>::PR03L_ intr_t<_>::PR03L;
+	template<class _> typename intr_t<_>::PR13L_ intr_t<_>::PR13L;
+	template<class _> typename intr_t<_>::EGP0_ intr_t<_>::EGP0;
+	template<class _> typename intr_t<_>::EGP1_ intr_t<_>::EGP1;
+	template<class _> typename intr_t<_>::EGN0_ intr_t<_>::EGN0;
+	template<class _> typename intr_t<_>::EGN1_ intr_t<_>::EGN1;
+	template<class _> typename intr_t<_>::KRM_ intr_t<_>::KRM;
+
+	 typedef intr_t<void> intr;
 }

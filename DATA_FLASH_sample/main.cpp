@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 {
 	using namespace device;
 
-	uint8_t resf = RESF();
+	uint8_t resf = system::RESF();
 
 	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
 
