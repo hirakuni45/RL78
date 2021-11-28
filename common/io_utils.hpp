@@ -3,11 +3,19 @@
 /*!	@file
 	@brief	I/O ユーティリティー
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2013, 2017 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2013, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
+#ifdef VSC_INTELL_SENSE
+typedef char int8_t;
+typedef unsigned char uint8_t;
+typedef short int16_t;
+typedef unsigned short uint16_t;
+typedef long int32_t;
+typedef unsigned long uint32_t;
+#endif
 #include <cstdint>
 
 namespace device {

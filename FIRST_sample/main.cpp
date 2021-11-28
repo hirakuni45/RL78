@@ -8,36 +8,31 @@
 				・5.0V: 赤色 LED(VF: 1.7V)、1mA、3.3K @n
 				・5.0V: 赤色 LED(VF: 1.7V)、3mA、1.1K
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2021 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RL78/blob/master/LICENSE
 */
 //=====================================================================//
 #include "common/renesas.hpp"
-#include "common/port_utils.hpp"
 
 namespace {
 
-	void wait_()
-	{
-		asm("nop");
-	}
+	// 吸い込みなので、三番目のパラメーターを「false」とする。
+	// LED::P = 1 で、実際のポートは、０になり、LED が点灯する。
+	typedef device::PORT<device::port_no::P4, device::bitpos::B3, false> LED;
 
 }
-
 
 int main(int argc, char* argv[])
 {
 	utils::port::pullup_all();  ///< 安全の為、全ての入力をプルアップ
 
-	device::PM4.B3 = 0;  // output
+	LED::DIR = 1;  // 出力設定
 
-	bool f = false;
+	bool f = true;
 	while(1) {
-		for(uint32_t i = 0; i < 100000; ++i) {
-			wait_();
-		}
-		device::P4.B3 = f;
+		utils::delay::milli_second(250);  ///< 0.25 秒毎の点滅
+		LED::P = f;
 		f = !f;
 	}
 }
