@@ -279,7 +279,7 @@ OS-X、Linux では、各プロジェクトをビルドする際に、「Makefil
 ## RL78 プロジェクトのソースコードを取得
 
 ```
-   git clone git://github.com/hirakuni45/RL78.git
+   git clone https://github.com/hirakuni45/RL78.git
 ```
    
  - プロジェクトを全てコンパイル
