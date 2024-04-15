@@ -2,11 +2,12 @@
 /*!	@file
 	@brief	文字列操作ユーティリティー
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2016 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2016, 2017 Kunihito Hiramatsu @n
 				Released under the MIT license @n
-				https://github.com/hirakuni45/RL78/blob/master/LICENSE
+				https://github.com/hirakuni45/RX/blob/master/LICENSE
 */
 //=====================================================================//
+#include <cstdint>
 #include "string_utils.hpp"
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
