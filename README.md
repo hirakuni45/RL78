@@ -87,21 +87,22 @@ If you do not need it, you can compile the file with "_USE_LFN" set to "0" in "f
 
  - Upgrading msys2
 
-````
+````shell
    pacman -Sy pacman
    pacman -Syu
 ````
 
  - Reopen the console. (You should see a message telling you to reopen the console.)
 
-```
+```shell
    pacman -Su
 ```
  - The update will be performed multiple times, and you must follow the console's instructions.
  - You will need to reopen the console multiple times.
 
  - Install gcc, texinfo, gmp, mpfr, mpc, diffutils, automake, zlib tar, make, unzip commands, etc.
-````
+
+````shell
    pacman -S gcc
    pacman -S texinfo
    pacman -S mpc-devel
@@ -115,7 +116,8 @@ If you do not need it, you can compile the file with "_USE_LFN" set to "0" in "f
 ````
   
  - Install git commands
-```
+
+```shell
    pacman -S git
 ```
 
@@ -128,7 +130,7 @@ If you do not need it, you can compile the file with "_USE_LFN" set to "0" in "f
 
  - Upgrading macports
 
-```
+```shell
    sudo port -d self update
 ```
 
@@ -136,7 +138,7 @@ If you do not need it, you can compile the file with "_USE_LFN" set to "0" in "f
  - However, llvm is currently unable to build gcc cross-compilers.
  - So, we will install gcc with macports, and we will use the version 5 series.
 
-```
+```shell
    sudo port install gcc5
    sudo ln -sf /opt/local/bin/gcc-mp-5 /usr/local/bin/gcc
    sudo ln -sf /opt/local/bin/g++-mp-5 /usr/local/bin/g++
@@ -146,11 +148,11 @@ If you do not need it, you can compile the file with "_USE_LFN" set to "0" in "f
  - You may need to reboot.
  - Just to make sure.
 
-```
+```shell
    gcc --version
 ```
    
-```
+```shell
    gcc (MacPorts gcc5 5.4.0_0) 5.4.0
    Copyright (C) 2015 Free Software Foundation, Inc.
    This is free software; see the source for copying conditions.
@@ -158,7 +160,8 @@ If you do not need it, you can compile the file with "_USE_LFN" set to "0" in "f
 ```
    
  - Install texinfo, gmp, mpfr, mpc, diffutils, automake commands, etc.
-```
+
+```shell
    sudo port install texinfo
    sudo port install gmp
    sudo port install mpfr
@@ -173,7 +176,8 @@ If you do not need it, you can compile the file with "_USE_LFN" set to "0" in "f
 Since there are multiple Linux environments, I will write about the "Ubuntu 16.04 LTS" environment here.
 
  - Install texinfo, gmp, mpfr, mpc, diffutils, automake commands, etc.
-```
+
+```shell
    sudo apt-get install texinfo
    sudo apt-get install libgmp-dev
    sudo apt-get install libmpfr-dev
@@ -195,7 +199,7 @@ Since there are multiple Linux environments, I will write about the "Ubuntu 16.0
    
 #### build binutils-2.25.1
 
-```
+```shell
    cd
    tar xfvz binutils-2.25.1.tar.gz
    cd binutils-2.25.1
@@ -208,20 +212,21 @@ Since there are multiple Linux environments, I will write about the "Ubuntu 16.0
 
  - Pass /usr/local/rl78-elf/bin (edit .bash_profile and add the path)
 
-```
+```shell
    PATH=$PATH:/usr/local/rl78-elf/bin
 ```
 
  - Reopen the console.
 
-```
+```shell
    rl78-elf-as --version
 ```
 
  - Run the assembler commands to see if the path is valid.
 
 #### build C Compiler
-```
+
+```shell
     cd
     tar xfvz gcc-4.9.4.tar.gz
     cd gcc-4.9.4
@@ -234,7 +239,7 @@ Since there are multiple Linux environments, I will write about the "Ubuntu 16.0
   
 #### build newlib
 
-```
+```shell
     cd
     tar xfvz newlib-2.2.0.tar.gz
 	cd newlib-2.2.0
@@ -248,7 +253,7 @@ Since there are multiple Linux environments, I will write about the "Ubuntu 16.0
  - Under Linux, the sudo command does not recognize the path to the binutils locally configured, so "make install" fails.   
 Therefore, the following script should be written and executed.
 
-```
+```shell
 #!/bin/sh
 # file: rl78_install.sh
 
@@ -256,12 +261,13 @@ PATH=${PATH}:/usr/local/rl78-elf/bin
 make install
 ```
    
-```
+```shell
     sudo rl78_install.sh
 ```
 ---  
 #### build C++ Compiler
-```
+
+```shell
     cd
     cd gcc-4.9.4
     cd rl78_build
@@ -291,12 +297,13 @@ option in all environments to be safe.
 
 ## RL78 プロジェクトのソースコードを取得
 
-```
+```shell
    git clone https://github.com/hirakuni45/RL78.git
 ```
    
  - プロジェクトを全てコンパイル
-```
+
+```shell
    sh all_project_build.sh
 ```
    
@@ -304,53 +311,57 @@ option in all environments to be safe.
 
 ## How to write a program to an RL78/G13 device
 
-There are several ways to write a program to an RL78/G13 device, but the easiest and least expensive way is to use the serial interface
-The easiest and least expensive way is to use a serial interface to write the program.   
-However, it is not possible to connect directly like R8C.   
-However, it is necessary to connect 3 (5) signals from the serial interface to the microcontroller with an appropriate conversion circuit.   
-Using a USB serial conversion module, for example, is easy because it can also be powered.   
-*(Akizuki Denshi, serial conversion module) http://akizukidenshi.com/catalog/g/gK-06894/   
+- There are several ways to do this, but the easiest and least expensive way is to write using a serial interface.
+- However, it is not possible to connect directly like R8C.
+- Three (5) signals from the serial interface must be connected to the microcontroller with appropriate conversion circuitry.
+- Using a USB serial conversion module or the like, it is easy to obtain a power supply.
+
+### (Akizuki Denshi, serial conversion module) http://akizukidenshi.com/catalog/g/gK-06894/   
 (1) RXD Serial receive   
 (2) TXD Serial transmit   
 (3) RTS Hardware control signal   
 (4) VCC Power supply (5V or 3.3V)   
 (5) GND Power supply 0V   
+
 Since only a limited current can be drawn from 3.3V, it is recommended to use a regulator.   
 A conversion adapter that can take out the RTS signal is required.   
 We do not recommend cheap modules made in China because they do not have RTS or their quality is not stable.   
 Only those who understand and can deal with these issues should use these modules.  
 
 ![FlashProgrammer](rl78prog/FlashProg.png)
-   
-- See rl78prog/KiCAD/ for schematics and a simplified write circuit.   
- - The official circuit can be downloaded from the Renesas Electronics website.   
- - Of course, you can also write with Renesas Electronics E1, E2, and emulators.
- - Connect to "P40/TOOL0 (5)" and "/RESET (6)" of RL78/G13 (64-pin product).
- - Serial communication is often used in the development process, so it is convenient to be able to switch between them with a switch.   
 
-A reference circuit for switching is available in "rl78prog/KiCAD".   
-It is possible to write with a serial conversion circuit at a very high speed, so it may be better to purchase a new E1 for the RL78 for cost consideration.   
-It may be better to consider the cost of purchasing a new E1 for the RL78.  
-Currently, writing is only possible in the Windows environment.    
+- Refer to rl78prog/KiCAD/ for the schematic, which has a simple write circuit.
+- It seems that the above circuit can also be written using Renesas Flash Programmer (not confirmed).
+- The regular circuit can be downloaded from the Renesas Electronics homepage.
+- (Of course, you can also write with Renesas Electronics E1, E2, and emulators sold by Renesas Electronics.
+- Connect to “P40/TOOL0 (5)” and “/RESET (6)” of RL78/G13 (64-pin product)
+- Serial communication is often used in the development process, so it is convenient to be able to switch between them with a switch.
+- A reference circuit for switching is provided in “rl78prog/KiCAD”.
+- It is possible to write with the serial conversion circuit at very high speed, so it may be better to consider the cost of purchasing a new E1 for the RL78.
+- Currently, the rl78prog can only be written to in a Windows environment.
+- In that case, please consider using Renesas Flash Programmer.
 
 ## Building RL78 flash programmer
 
- - boost_1_60_0" is required to build rl78prog. (For MSYS2 environment)
- - In non-Windows environment, use "port" or "apt-get" to install.
- - If the USB serial chip is FTDI, the standard driver does not work on OS-X and Linux.
- - Also, on OS-X, depending on the OS version, you may need to make a special effort to install the FTDI driver.
- - We have not investigated other USB serial chips.
- - Since boost uses only headers, it does not need to be built.
- - I use pacman to install boost in a mingw64 environment, for example.
+- boost_1_74_0" is required to build rl78prog. (For MSYS2/MSYS environment)
+- We have not investigated other USB serial chips.
+- Since boost uses only headers, it does not need to be built.
+- Boost_1_74_0 should be extracted to the root of the C drive.
  
-``` 
-    pacman -S mingw-w64-x86_64-boost
+```shell
+    cd /c/
+    tar xfvz boost_1_74_0.tar.gz
+    cd boost_1_74_0
+    ls
+boost/     boost-build.jam  bootstrap.sh*  index.html  libs/            README.md  tools/
+boost.css  boostcpp.jam     doc/           INSTALL     LICENSE_1_0.txt  rst.css
+boost.png  bootstrap.bat    index.htm      Jamroot     more/            status/
 ```
 
  - Build rl78prog (MSYS2)
  - Place the built executable in /usr/local/bin.
 
-```
+```shell
     cd rl78prog
     make
     make install
@@ -472,13 +483,13 @@ Now, data flash operation can be performed normally.
 
  - Build. (It will automatically generate the dependency rules for you.)
 
-```
+```shell
     make
 ```
 
  - write the program (requires rl78_prog)
 
-```
+```shell
     make
     make run
 ```
