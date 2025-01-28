@@ -78,44 +78,46 @@ SD カードのファイルシステム「fatfs」では、「LFN」（長いフ
 これはメモリーを多く消費します、もし必要無いのであれば、「ff12a/src/ffconf.h」の「_USE_LFN」を   
 「０」にして、コンパイルすれば、文字列コードは OEM、（CP932 の場合 ShiftJIS）となり、最小限の   
 メモリー消費になります、長いファイル名も無効になり、8.3 形式になります。   
-   
-## RL78 開発環境準備（Windows、MSYS2）
+
+---
+
+## RL78 開発環境準備（Windows、MSYS2/MSYS）
    
  - Windows では、事前に MSYS2 環境をインストールしておきます。
- - MSYS2 には、msys2、mingw32、mingw64 と３つの異なった環境がありますが、msys2 で行います。 
+ - MSYS2/MSYS には、msys、mingw32、mingw64 と３つの異なった環境がありますが、msys で行います。 
 
  - msys2 のアップグレード
 
-```
-   pacman -Sy pacman
-   pacman -Syu
+```shell
+pacman -Sy pacman
+pacman -Syu
 ```
 
  - コンソールを開きなおす。（コンソールを開きなおすように、メッセージが表示されるはずです）
 
-```
-   pacman -Su
+```shell
+pacman -Su
 ```
  - アップデートは、複数回行われ、その際、コンソールの指示に従う事。
  - ※複数回、コンソールを開きなおす必要がある。
 
  - gcc、texinfo、gmp、mpfr、mpc、diffutils、automake、zlib tar、make、unzip コマンドなどをインストール
-```
-   pacman -S gcc
-   pacman -S texinfo
-   pacman -S mpc-devel
-   pacman -S diffutils
-   pacman -S automake
-   pacman -S zlib
-   pacman -S tar
-   pacman -S make
-   pacman -S unzip
-   pacman -S zlib-devel
+```shell
+pacman -S gcc
+pacman -S texinfo
+pacman -S mpc-devel
+pacman -S diffutils
+pacman -S automake
+pacman -S zlib
+pacman -S tar
+pacman -S make
+pacman -S unzip
+pacman -S zlib-devel
 ```
   
  - git コマンドをインストール
-```
-   pacman -S git
+```shell
+pacman -S git
 ```
 
 ---
@@ -127,40 +129,43 @@ SD カードのファイルシステム「fatfs」では、「LFN」（長いフ
 
  - macports のアップグレード
 
-```
-   sudo port -d self update
+```shell
+sudo port -d self update
 ```
 
  - ご存知とは思いますが、OS−X では初期段階では、gcc の呼び出しで llvm が起動するようになっています。
  - しかしながら、現状では llvm では、gcc のクロスコンパイラをビルドする事は出来ません。
  - そこで、macports で gcc をインストールします、バージョンは５系を使う事とします。
-```
-   sudo port install gcc5
-   sudo ln -sf /opt/local/bin/gcc-mp-5  /usr/local/bin/gcc
-   sudo ln -sf /opt/local/bin/g++-mp-5  /usr/local/bin/g++
-   sudo ln -sf /opt/local/bin/g++-mp-5  /usr/local/bin/c++
+
+```shell
+sudo port install gcc5
+sudo ln -sf /opt/local/bin/gcc-mp-5  /usr/local/bin/gcc
+sudo ln -sf /opt/local/bin/g++-mp-5  /usr/local/bin/g++
+sudo ln -sf /opt/local/bin/g++-mp-5  /usr/local/bin/c++
 ```
  - 再起動が必要かもしれません。
  - 一応、確認してみて下さい。
-```
-   gcc --version
+
+```shell
+gcc --version
 ```
    
 ```
-   gcc (MacPorts gcc5 5.4.0_0) 5.4.0
-   Copyright (C) 2015 Free Software Foundation, Inc.
-   This is free software; see the source for copying conditions.  There is NO
-   warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+gcc (MacPorts gcc5 5.4.0_0) 5.4.0
+Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ```
    
  - texinfo、gmp、mpfr、mpc、diffutils、automake コマンドなどをインストール
-```
-   sudo port install texinfo
-   sudo port install gmp
-   sudo port install mpfr
-   sudo port install libmpc
-   sudo port install diffutils
-   sudo port install automake
+
+```shell
+sudo port install texinfo
+sudo port install gmp
+sudo port install mpfr
+sudo port install libmpc
+sudo port install diffutils
+sudo port install automake
 ```
 
 ---
@@ -169,78 +174,92 @@ SD カードのファイルシステム「fatfs」では、「LFN」（長いフ
 Linux 環境は、複数あるので、ここでは「Ubuntu 16.04 LTS」環境の場合を書いておきます。
 
  - texinfo、gmp、mpfr、mpc、diffutils、automake コマンドなどをインストール
-```
-   sudo apt-get install texinfo
-   sudo apt-get install libgmp-dev
-   sudo apt-get install libmpfr-dev
-   sudo apt-get install libmpc-dev
-   sudo apt-get install diffutils
-   sudo apt-get install automake
-   sudo apt-get install zlib1g-dev
+
+```shell
+sudo apt-get install texinfo
+sudo apt-get install libgmp-dev
+sudo apt-get install libmpfr-dev
+sudo apt-get install libmpc-dev
+sudo apt-get install diffutils
+sudo apt-get install automake
+sudo apt-get install zlib1g-dev
 ```
 
 ---
 ## RL78 開発環境構築
 
- - RL78 用コンパイラ（rl78-elf-gcc,g++）は gcc-4.9.4 を使います。
- - binutils-2.25.1.tar.gz をダウンロードしておく
- - gcc-4.9.4.tar.gz をダウンロードしておく
- - newlib-2.2.0.tar.gz をダウンロードしておく
+ - RL78 用コンパイラ（rl78-elf-gcc,g++）は gcc-6.4.0 を使います。
+ - binutils-2.28.1.tar.gz をダウンロードしておく
+ - gcc-6.4.0.tar.gz をダウンロードしておく
+ - newlib-2.4.0.tar.gz をダウンロードしておく
    
 ---
    
-#### binutils-2.25.1 をビルド
-```
-   cd
-   tar xfvz binutils-2.25.1.tar.gz
-   cd binutils-2.25.1
-   mkdir rl78_build
-   cd rl78_build
-   ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf --disable-nls --with-system-zlib
-   make
-   make install     OS-X,Linux: (sudo make install)
+#### binutils-2.28.1 をビルド
+
+```shell
+cd
+tar xfvz binutils-2.28.1.tar.gz
+cd binutils-2.28.1
+mkdir rl78_build
+cd rl78_build
+../configure --target=rl78-elf --prefix=/usr/local/rl78-elf --disable-nls --with-system-zlib
+make
+make install     OS-X,Linux: (sudo make install)
 ```
 
  -  /usr/local/rl78-elf/bin へパスを通す（.bash_profile を編集して、パスを追加）
 
-```
+```shell
    PATH=$PATH:/usr/local/rl78-elf/bin
 ```
 
  -  コンソールを開きなおす。
+ -  アセンブラコマンドを実行してみて、パスが有効か確かめる。
 
-```
+```shell
    rl78-elf-as --version
 ```
 
- -  アセンブラコマンドを実行してみて、パスが有効か確かめる。
+```
+GNU assembler (GNU Binutils) 2.28.1
+Copyright (C) 2017 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or later.
+This program has absolutely no warranty.
+This assembler was configured for a target of `rl78-elf'.
+```
+
   
 #### C コンパイラをビルド
-```
-    cd
-    tar xfvz gcc-4.9.4.tar.gz
-    cd gcc-4.9.4
-    mkdir rl78_build
-	cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto --with-system-zlib
-    make
-    make install     OS-X,Linux: (sudo make install)
+
+```shell
+cd
+tar xfvz gcc-4.9.4.tar.gz
+cd gcc-4.9.4
+mkdir rl78_build
+cd rl78_build
+../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto --with-system-zlib
+make
+make install     OS-X,Linux: (sudo make install)
 ```
   
 #### newlib をビルド
-```
-    cd
-    tar xfvz newlib-2.2.0.tar.gz
-	cd newlib-2.2.0
-    mkdir rl78_build
-    cd rl78_build
-    ../configure --target=rl78-elf --prefix=/usr/local/rl78-elf
-	make
-    make install     OS-X: (sudo make install)
+
+```shell
+cd
+tar xfvz newlib-2.2.0.tar.gz
+cd newlib-2.2.0
+mkdir rl78_build
+cd rl78_build
+../configure --target=rl78-elf --prefix=/usr/local/rl78-elf
+make
+make install     OS-X: (sudo make install)
 ```
  - Linux 環境では、sudo コマンドで、ローカルで設定した binutils のパスを認識しないので、
 「make install」が失敗する、その為、以下のようなスクリプトを書いて実行する。
-```
+
+```shell
 #!/bin/sh
 # file: rl78_install.sh
 
@@ -248,18 +267,19 @@ PATH=${PATH}:/usr/local/rl78-elf/bin
 make install
 ```
    
-```
-    sudo rl78_install.sh
+```shell
+sudo rl78_install.sh
 ```
 ---  
 #### C++ コンパイラをビルド
-```
-    cd
-    cd gcc-4.9.4
-    cd rl78_build
-    ../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto --with-system-zlib
-    make
-    make install     OS-X,Linux: (sudo make install)
+
+```shell
+cd
+cd gcc-4.9.4
+cd rl78_build
+../configure --prefix=/usr/local/rl78-elf --target=rl78-elf --enable-languages=c,c++ --disable-libssp --with-newlib --disable-nls --disable-threads --disable-libgomp --disable-libmudflap --disable-libstdcxx-pch --disable-multilib --enable-lto --with-system-zlib
+make
+make install     OS-X,Linux: (sudo make install)
 ```
    
 ---
@@ -281,75 +301,79 @@ OS-X、Linux では、各プロジェクトをビルドする際に、「Makefil
    
 ## RL78 プロジェクトのソースコードを取得
 
-```
-   git clone https://github.com/hirakuni45/RL78.git
+```shell
+git clone https://github.com/hirakuni45/RL78.git
 ```
    
  - プロジェクトを全てコンパイル
-```
-   sh all_project_build.sh
+
+```shell
+sh all_project_build.sh
 ```
    
 --- 
    
 ## RL78/G13 デバイスへのプログラム書き込み方法
 
-幾つかの方法がありますが、最も簡単で、コストがかからない方法は、シリアルインターフェースを使って
-書き込む方法です。   
-但し、Ｒ８Ｃのように直接接続する事は出来ません。   
-シリアルインターフェースからの３つ（５つ）の信号を適切な変換回路でマイコンと接続する必要があります。   
-※USB シリアル変換モジュールなどを使うと、電源も取れて簡単です。   
-※（秋月電子、シリアル変換モジュール）http://akizukidenshi.com/catalog/g/gK-06894/   
+- 幾つかの方法がありますが、最も簡単で、コストがかからない方法は、シリアルインターフェースを使って書き込む方法です
+- 但し、Ｒ８Ｃのように直接接続する事は出来ません
+- シリアルインターフェースからの３つ（５つ）の信号を適切な変換回路でマイコンと接続する必要があります
+- USB シリアル変換モジュールなどを使うと、電源も取れて簡単です
+   
+### （秋月電子、シリアル変換モジュール）http://akizukidenshi.com/catalog/g/gK-06894/   
 (1) RXD シリアル受信   
 (2) TXD シリアル送信   
 (3) RTS ハードウェアー制御信号   
 (4) VCC 電源（５Ｖ又は３．３Ｖ）   
 (5) GND 電源 ０Ｖ   
-※３．３Ｖは限られた電流しか取り出せない為、レギュレーターを入れる事を推奨します。   
-※ RTS 信号が取り出せる変換アダプターが必要です、DCD 信号では代用できません。   
-※中国製の格安なモジュールは、RTS が無い物や、品質が安定していない為、お勧めしません、それらの事   
-項を理解していて対処出来る人だけ利用すると良いと思います。   
+- ３．３Ｖは限られた電流しか取り出せない為、レギュレーターを入れる事を推奨します
+-  RTS 信号が取り出せる変換アダプターが必要です、DCD 信号では代用できません
+- 中国製の格安なモジュールは、RTS が無い物や、品質が安定していない為、お勧めしません、それらの事項を理解していて対処出来る人だけ利用すると良いと思います
 
 ![FlashProgrammer](rl78prog/FlashProg.png)
    
- - 回路図は、rl78prog/KiCAD/ を参照して下さい、簡易書き込み回路があります。   
- - 正規の回路は、ルネサスエレクトロニクスのホームページからダウンロード出来ます。   
- - もちろん、ルネサスエレクトロニクス販売のＥ１、又は、Ｅ２、エミュレーターでも書き込む事が出来ます。
- - RL78/G13（６４ピン製品） の「P40/TOOL0 (5)」、「/RESET (6)」に接続します。
- - シリアル通信は、開発過程では良く利用するので、スイッチで切り替えられるようにしておくと便利です。   
-※切り替えの参考回路が、「rl78prog/KiCAD」にあります。   
-※シリアル変換回路で書き込んでも、かなり高速に書き込めますので、RL78の為にE1を新規に購入   
-するのは、コストを考えた方が良いかもしれません。  
-※現在のところ、Windows 環境でしか書き込みが出来ません。    
+- 回路図は、rl78prog/KiCAD/ を参照して下さい、簡易書き込み回路があります
+- 上記回路でも、Renesas Flash Programmer を使って書き込む事が出来るようです（確認していません）
+- 正規の回路は、ルネサスエレクトロニクスのホームページからダウンロード出来ます
+- もちろん、ルネサスエレクトロニクス販売のＥ１、又は、Ｅ２、エミュレーターでも書き込む事が出来ます
+- RL78/G13（６４ピン製品） の「P40/TOOL0 (5)」、「/RESET (6)」に接続します
+- シリアル通信は、開発過程では良く利用するので、スイッチで切り替えられるようにしておくと便利です
+- 切り替えの参考回路が、「rl78prog/KiCAD」にあります
+- シリアル変換回路で書き込んでも、かなり高速に書き込めますので、RL78の為にE1を新規に購入するのは、コストを考えた方が良いかもしれません
+- 現在のところ、rl78prog は Windows 環境でしか書き込みが出来ません
+- 又、色々な相性により、上手く書き込めない場合があるようです、その場合、Renesas Flash Programmer の利用を検討下さい
    
 ## RL78 フラッシュプログラマーの構築
 
- - rl78prog のビルドには「boost_1_60_0」が必要です。（MSYS2 環境の場合）
- - Windows 以外の環境では、「port」、「apt-get」を使ってインストールして下さい。
- - USB シリアルチップが、FTDI の場合、OS-X、Linux では、標準のドライバーでは、動作しません。
- - また、OS-X では、OS のバージョンによっては、FTDI のドライバーインストールに工夫が必要です。
- - その他の USB シリアルチップの場合は調査していません。
- - boost はヘッダーのみ利用なので、ビルドの必要はありません。
- - mingw64 環境などに pacman を使い boost をインストールして使っています。
+- rl78prog のビルドには「boost_1_74_0」が必要です。（MSYS2/MSYS 環境の場合）
+- その他の USB シリアルチップの場合は調査していません
+- boost はヘッダーのみ利用なので、ビルドの必要はありません
+- boost_1_74_0 は C ドライブのルートに展開しておきます
  
-``` 
-    pacman -S mingw-w64-x86_64-boost
+```shell
+    cd /c/
+    tar xfvz boost_1_74_0.tar.gz
+    cd boost_1_74_0
+    ls
+boost/     boost-build.jam  bootstrap.sh*  index.html  libs/            README.md  tools/
+boost.css  boostcpp.jam     doc/           INSTALL     LICENSE_1_0.txt  rst.css
+boost.png  bootstrap.bat    index.htm      Jamroot     more/            status/
 ```
 
  - rl78prog のビルド（MSYS2）
  - ビルドした実行ファイルは、/usr/local/bin に配置します。
 
-```
-    cd rl78prog
-    make
-    make install
-　　※ /usr/local/bin にパスを通しておく。
+```shell
+% cd rl78prog
+% make
+% make install
+※ /usr/local/bin にパスを通しておく。
 ```
  - rl78_prog.conf を編集して、接続する COM ポート、ボーレートの設定をする。
  - ボーレートは、RL78 の仕様と termios の制限から「115200」、「500000」、「1000000」のみ対応しています。
  - /dev/ttyS10 -> COM11 に相当します。（数字に＋１する）
  - rl78prog/KiCAD/ に、RL78 プログラマー（書き込み機）の参考回路などが含まれます。
-
+   
  - 動作確認シリアルデバイス   
    
 |        |FT231X|CP2102|CH340|
@@ -454,12 +478,14 @@ RAM や I/O 領域は、0xF0000 以降にアサインされており、この領
    
 ---
  - ビルドします。（自動で、従属規則が生成されます）
-```
+
+```shell
     make
 ```
 
  - プログラムの書き込み（rl78_prog が必要）
-```
+
+```shell
     make run
 ```
 
