@@ -295,13 +295,13 @@ option in all environments to be safe.
    
 ---
 
-## RL78 プロジェクトのソースコードを取得
+## Get source code for RL78 projects
 
 ```shell
    git clone https://github.com/hirakuni45/RL78.git
 ```
    
- - プロジェクトを全てコンパイル
+- Compile all projects
 
 ```shell
    sh all_project_build.sh
